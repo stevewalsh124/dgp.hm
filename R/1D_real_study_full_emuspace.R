@@ -9,22 +9,21 @@ vecchia <- F
 pmx <- F
 one_layer <- F
 force_id_warp <- F
-load("w0_from_mte1_50k.rda")
+load("rda/w0_from_mte1_50k.rda")
 
 # Smooth the precision info so it's not a step function for each data type (pt, lo, hi)?
 smooth_precs <- T
 if(smooth_precs) k_sm <- 10 #rolling mean uses k numbers
 
-if(one_layer) {source("../dgp.hm/R/logl_cov_1L.R")} else {source("../dgp.hm/R/logl_cov.R")}
-source("../dgp.hm/R/bohman.R")
-source("../dgp.hm/R/matrix.Moore.Penrose.R")
-source("../dgp.hm/R/plot_fns.R") #plot.krig, plot.true, plot.warp
-source("../dgp.hm/R/predict.R")
-source("../dgp.hm/R/trim.R")
-source("../dgp.hm/R/vecchia.R")
+if(one_layer) {source("logl_cov_1L.R")} else {source("logl_cov.R")}
+source("bohman.R")
+source("matrix.Moore.Penrose.R")
+source("plot_fns.R") #plot.krig, plot.true, plot.warp
+source("trim.R")
+source("vecchia.R")
 
 # load the precision data (k, prec_highres, prec_lowres, index_list)
-load("Mira-Titan-IV-data/precision_and_indexes.Rdata")
+load("Mira-Titan-IV-Data/precision_and_indexes.Rdata")
 
 library(MASS) #ginv
 library(fields) #image.plot
@@ -60,8 +59,8 @@ cov_fn <- "matern"#"exp2"#
 
 if(taper_cov) tau_b <- .2
 nrun <- 16
-nmcmc <- 15000
-nburn <- 10000
+nmcmc <- 1500#0
+nburn <- 1000#0
 kth <- 4
 
 bte <- 3 # cols 3-18 are low res
@@ -120,7 +119,7 @@ if(smooth_precs){
 # subtract a linear model
 # temp_avg <- rowMeans(log10(pk2[k_sub,3:18]))
 # temp_lm <- lm(temp_avg ~ log10(pk2[k_sub,1]))$fitted.values
-load("rda/avg_of_wt_avg_10.rda")
+# load("rda/avg_of_wt_avg_10.rda")
 temp_lm <- rep(0,length(k_sub)) #log10(orig_loess*k^1.5/(2*pi^2))[k_sub]
 #avg_loess[k_sub]
 matplot(log10(k),log10(pk2[,3:18]))
@@ -209,12 +208,12 @@ if(use_hi){
 
 if(cf_errors){
   # # logl_cov* files use the same names (eg: logl_SW, fit_two_layer_SW)
-  # if(!one_layer) source("../dgp.hm/R/logl_cov_1L.R")
+  # if(!one_layer) source("logl_cov_1L.R")
   # varvec <- 1/precc
   # Sigma_hat_ho <- get_matern(x, Y_sim - colMeans(Y_sim), nmcmc = err_mcmc, nburn = err_burn, 
   #                         cov = err_cov, v = err_v, true_g = err_g, varvec = varvec)
   # Sigma_hat <- diag(sqrt(varvec)) %*% Sigma_hat_ho %*% diag(sqrt(varvec))
-  # if(!one_layer) source("../dgp.hm/R/logl_cov.R")
+  # if(!one_layer) source("logl_cov.R")
   # D <- plgp::distance(x)
   if(loess_span != 0){
     loess_fit <- loess(y_avg ~ x, span = loess_span)
@@ -302,16 +301,6 @@ if(force_id_warp){
 
 fitcov <- trim_SW(fitcov, nburn, kth)
 plot(fitcov)
-if(krig) {
-  fitcov <- predict.dgp2_SW(object = fitcov, xx, cores=ncores, precs_pred = precs_pred)
-  
-  ## MASSIVE HACK
-  fitcov$s2 <- ifelse(fitcov$s2 < 0, 0, fitcov$s2)
-  fitcov$s2_smooth <- ifelse(fitcov$s2_smooth < 0, 0, fitcov$s2_smooth)
-  
-  par(mfrow=c(1,1))
-  plot.krig(fitcov)
-}
 
 v <- fitcov$v
 
@@ -319,20 +308,20 @@ par(mfrow=c(1,1))
 fitcov <- est.true(fitcov)
 plot.true(fitcov)
 if(mte %in% 1:111){
-  cosmicEmu <- read.csv(paste0("~/CosmicEmu/2022-Mira-Titan-IV/P_tot/orig_111/EMU",
+  cosmicEmu <- read.csv(paste0("CosmicEmu/2022-Mira-Titan-IV/P_tot/orig_111/EMU",
                                mte-1,".txt"),sep="", header = F)
 } else {
-  if(mte==0) cosmicEmu <- read.csv("~/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU5.txt",
+  if(mte==0) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU5.txt",
                                    sep="", header = F)
-  if(mte==112) cosmicEmu <- read.csv("~/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU0.txt",
+  if(mte==112) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU0.txt",
                                      sep="", header = F)
-  if(mte==113) cosmicEmu <- read.csv("~/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU1.txt",
+  if(mte==113) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU1.txt",
                                      sep="", header = F)
-  if(mte==114) cosmicEmu <- read.csv("~/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU2.txt",
+  if(mte==114) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU2.txt",
                                      sep="", header = F)
-  if(mte==115) cosmicEmu <- read.csv("~/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU3.txt",
+  if(mte==115) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU3.txt",
                                      sep="", header = F)
-  if(mte==116) cosmicEmu <- read.csv("~/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU4.txt",
+  if(mte==116) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU4.txt",
                                      sep="", header = F)
 
 }
@@ -391,6 +380,6 @@ toc <- proc.time()[3]
 
 (timing <- toc - tic)
 
-if(saveImage) save.image(file = paste0("/projects/precipit/1D_real_study/rda/emuspace_",nmcmc,"_",one_layer,if(pmx){"_pmx"},
+if(saveImage) save.image(file = paste0("rda/emuspace_",nmcmc,"_",one_layer,if(pmx){"_pmx"},
                                        if(cf_errors){paste0("_cfe",err_v,err_g_msg)},if(taper_cov){paste0("tpr",tau_b)},
                                        if(force_id_warp){"_fiw"},if(vecchia){"_vec"},"model",mte,"_",k_sm,".rda"))
