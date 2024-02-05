@@ -380,6 +380,11 @@ toc <- proc.time()[3]
 
 (timing <- toc - tic)
 
+fitcov$Cs <- fitcov$Ms <- fitcov$Ss <- 0
+rm(Sigma_hat); rm(Sigma_hatty); rm(sum_YYt)
+rm(A); rm(D); rm(Lam_hi); rm(Lam_lo)
+rm(Lam_pt); rm(Lam_z); rm(Lam_zi)
+
 if(saveImage) save.image(file = paste0("rda/emuspace_",nmcmc,"_",one_layer,if(pmx){"_pmx"},
                                        if(cf_errors){paste0("_cfe",err_v,err_g_msg)},if(taper_cov){paste0("tpr",tau_b)},
                                        if(force_id_warp){"_fiw"},if(vecchia){"_vec"},"model",mte,"_",k_sm,".rda"))
