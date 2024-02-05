@@ -9,7 +9,7 @@ vecchia <- F
 pmx <- F
 one_layer <- F
 force_id_warp <- F
-load("rda/w0_from_mte1_50k.rda")
+w0_from_mte1_50k <- read.csv("csv/w0_from_mte1_50k.csv")
 
 # Smooth the precision info so it's not a step function for each data type (pt, lo, hi)?
 smooth_precs <- T
