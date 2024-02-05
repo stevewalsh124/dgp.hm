@@ -11,7 +11,7 @@ do_BSS   <- F
 do_BSSM  <- F
 
 if(do_GPMSA) library(GPfit)
-if(do_BSS | do_BSSM) source("bssanova.R")
+if(do_BSS | do_BSSM) source("dgp.hm/bssanova.R")
 
 ####################################
 # Which data do will you train on? #

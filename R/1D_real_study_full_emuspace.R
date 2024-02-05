@@ -15,12 +15,12 @@ load("rda/w0_from_mte1_50k.rda")
 smooth_precs <- T
 if(smooth_precs) k_sm <- 10 #rolling mean uses k numbers
 
-if(one_layer) {source("logl_cov_1L.R")} else {source("logl_cov.R")}
-source("bohman.R")
-source("matrix.Moore.Penrose.R")
-source("plot_fns.R") #plot.krig, plot.true, plot.warp
-source("trim.R")
-source("vecchia.R")
+if(one_layer) {source("dgp.hm/logl_cov_1L.R")} else {source("dgp.hm/logl_cov.R")}
+source("dgp.hm/bohman.R")
+source("dgp.hm/matrix.Moore.Penrose.R")
+source("dgp.hm/plot_fns.R") #plot.krig, plot.true, plot.warp
+source("dgp.hm/trim.R")
+source("dgp.hm/vecchia.R")
 
 # load the precision data (k, prec_highres, prec_lowres, index_list)
 load("Mira-Titan-IV-Data/precision_and_indexes.Rdata")
