@@ -19,13 +19,7 @@ gibbs_two_layer <- deepgp:::gibbs_two_layer
 gibbs_two_layer_vec <- deepgp:::gibbs_two_layer_vec
 MaternFun <- deepgp:::MaternFun
 Exp2Fun <- deepgp:::Exp2Fun
-invdet <- function (M){
-  n <- nrow(M)
-  out <- .C("inv_det_R", n = as.integer(n), M = as.double(M), 
-            Mi = as.double(diag(n)), ldet = double(1))
-  if(is.nan(out$ldet)) out$ldet <- c(determinant(M, logarithm = TRUE)$modulus)
-  return(list(Mi = matrix(out$Mi, ncol = n), ldet = out$ldet))
-}
+invdet <- deepgp:::invdet
 sample_theta <- deepgp:::sample_theta
 sample_theta_vec <- deepgp:::sample_theta_vec
 eps <- sqrt(.Machine$double.eps)
@@ -37,15 +31,15 @@ update_obs_in_approx <- deepgp:::update_obs_in_approx
 fit_two_layer_SW <- function (x, y, D = ifelse(is.matrix(x), ncol(x), 1), nmcmc = 10000, 
                               verb = TRUE, w_0 = NULL, g_0 = 0.01, theta_y_0 = 0.1, theta_w_0 = 0.1, 
                               true_g = NULL, settings = NULL, cov = c("matern", "exp2"), 
-                              v = 2.5, vecchia = FALSE, m = min(25, length(y) - 1), Sigma_hat = NULL,
-                              pmx = FALSE) {
-  
+                              v = 2.5, vecchia = FALSE, m = min(25, length(y) - 1), Sigma_hat = NULL) {
   tic <- proc.time()[3]
   cov <- match.arg(cov)
   if (vecchia & cov == "exp2") {
     message("vecchia = TRUE requires matern covariance, proceeding with cov = 'matern'")
     cov <- "matern"
   }
+  if (vecchia & sum(duplicated(x)) > 0) 
+    stop("unable to handle duplicate training locations")
   if (is.numeric(x)) 
     x <- as.matrix(x)
   test <- check_inputs(x, y, true_g)
@@ -59,23 +53,14 @@ fit_two_layer_SW <- function (x, y, D = ifelse(is.matrix(x), ncol(x), 1), nmcmc 
   if (cov == "matern") 
     if (!(v %in% c(0.5, 1.5, 2.5))) 
       stop("v must be one of 0.5, 1.5, or 2.5")
-  
-  ### NEW
-  if (pmx) { 
-    if (ncol(x) != D) stop("for pmx, D must equal dimension of x")
-    settings$w_prior_mean <- x
-  } else settings$w_prior_mean <- matrix(0, nrow = nrow(x), ncol = ncol(x))
-  
-  out <- list(x = x, y = y, nmcmc = nmcmc, settings = settings, cov = cov)
-  
+  out <- list(x = x, y = y, nmcmc = nmcmc, settings = settings, 
+              cov = cov)
   if (cov == "matern") 
     out$v <- v
   if (vecchia) 
     out$m <- m
   if (vecchia) {
     if(is.null(Sigma_hat)){
-      ### NEW
-      if (pmx) message("non-zero w_prior_mean is NOT implemented for this setting")
       samples <- gibbs_two_layer_vec(x, y, nmcmc, D, verb, initial, 
                                      true_g, settings, v, m)
     } else {
@@ -87,8 +72,6 @@ fit_two_layer_SW <- function (x, y, D = ifelse(is.matrix(x), ncol(x), 1), nmcmc 
   } else {
     # check if length(Sigma_hat) is NULL, or nrow(as.matrix(x))
     if(is.null(Sigma_hat)){
-      ### NEW
-      if (pmx) message("non-zero w_prior_mean is NOT implemented for this setting")
       samples <- gibbs_two_layer(x, y, nmcmc, D, verb, initial, 
                                  true_g, settings, cov, v)
     } else {
@@ -139,7 +122,6 @@ gibbs_two_layer_SW <- function (x, y, nmcmc, D, verb, initial, true_g, settings,
                           v = v, cov = cov, Sigma_hat = Sigma_hat)
       g[j] <- samp$g
       ll_outer <- samp$ll
-      # NOTE - outer layer unaffected by pmx
     } else {g[j] <- true_g}
     samp <- sample_theta_SW(y, dw, g[j], theta_y[j - 1], alpha = settings$alpha$theta_y, 
                             beta = settings$beta$theta_y, l = settings$l, u = settings$u, 
@@ -150,29 +132,24 @@ gibbs_two_layer_SW <- function (x, y, nmcmc, D, verb, initial, true_g, settings,
     if (is.null(samp$tau2)) 
       tau2[j] <- tau2[j - 1]
     else tau2[j] <- samp$tau2
-    # NOTE - outer layer unaffected by pmx
-    
-    for (i in 1:D) {
-      ### NEW - sample_theta_new function accepts prior mean as argument
-      ### NEW - calls logl_new which accepts prior mean as argument
-      samp <- sample_theta_new(w[[j - 1]][, i], dx, g = eps, 
-                           theta_w[j - 1, i], alpha = settings$alpha$theta_w, 
-                           beta = settings$beta$theta_w, l = settings$l, 
-                           u = settings$u, outer = FALSE, v = v,
-                           prior_mean = settings$w_prior_mean[, i])
-      theta_w[j, i] <- samp$theta
-    }
-    
-    samp <- sample_w_SW(y, w[[j - 1]], dw, dx, g[j], theta_y[j], 
-                        theta_w[j, ], ll_prev = ll_outer, v = v, cov = cov, 
-                        prior_mean = settings$w_prior_mean, Sigma_hat = Sigma_hat)
-    w[[j]] <- samp$w
+    # for (i in 1:D) {
+    #   samp <- sample_theta(w[[j - 1]][, i], dx, g = eps, 
+    #                        theta_w[j - 1, i], alpha = settings$alpha$theta_w, 
+    #                        beta = settings$beta$theta_w, l = settings$l, 
+    #                        u = settings$u, outer = FALSE, v = v)
+    #   theta_w[j, i] <- samp$theta
+    # }
+    # samp <- sample_w_SW(y, w[[j - 1]], dw, dx, g[j], theta_y[j], 
+    #                     theta_w[j, ], ll_prev = ll_outer, v = v, cov = cov, 
+    #                     prior_mean = settings$w_prior_mean, Sigma_hat = Sigma_hat)
+    w[[j]] <- x#w
     ll_outer <- samp$ll
-    dw <- samp$dw
+    dw <- dx#samp$dw
   }
   return(list(g = g, theta_y = theta_y, theta_w = theta_w, 
               w = w, tau2 = tau2))
 }
+
 
 sample_g_SW <- function (out_vec, in_dmat, g_t, theta, alpha, beta, l, u, ll_prev = NULL, v, cov, Sigma_hat){
   g_star <- runif(1, min = l * g_t/u, max = u * g_t/l)
@@ -211,50 +188,6 @@ sample_theta_SW <- function (out_vec, in_dmat, g, theta_t, alpha, beta, l, u, ou
   else {
     return(list(theta = theta_t, ll = ll_prev, tau2 = NULL))
   }
-}
-
-### NEW FUNCTION for sampling inner theta values
-sample_theta_new <- function (out_vec, in_dmat, g, theta_t, alpha, beta, l, u, outer, 
-          ll_prev = NULL, v, tau2 = FALSE, prior_mean = 0) 
-{
-  theta_star <- runif(1, min = l * theta_t/u, max = u * theta_t/l)
-  ru <- runif(1, min = 0, max = 1)
-  if (is.null(ll_prev)) 
-    ll_prev <- logl_new(out_vec, in_dmat, g, theta_t, outer, 
-                    v, mean = prior_mean)$logl
-  lpost_threshold <- ll_prev + dgamma(theta_t - eps, alpha, 
-                                      beta, log = TRUE) + log(ru) - log(theta_t) + log(theta_star)
-  ll_new <- logl_new(out_vec, in_dmat, g, theta_star, outer, v, 
-                 tau2 = tau2, mean = prior_mean)
-  new <- ll_new$logl + dgamma(theta_star - eps, alpha, beta, 
-                              log = TRUE)
-  if (new > lpost_threshold) {
-    return(list(theta = theta_star, ll = ll_new$logl, tau2 = ll_new$tau2))
-  }
-  else {
-    return(list(theta = theta_t, ll = ll_prev, tau2 = NULL))
-  }
-}
-
-### NEW FUNCTION for logl with prior mean
-logl_new <- function (out_vec, in_dmat, g, theta, outer = TRUE, v, tau2 = FALSE, mean = 0) 
-{
-  n <- length(out_vec)
-  if (v == 999) {
-    K <- Exp2Fun(in_dmat, c(1, theta, g))
-  }
-  else K <- MaternFun(in_dmat, c(1, theta, g, v))
-  id <- invdet(K)
-  quadterm <- t(out_vec - mean) %*% id$Mi %*% (out_vec - mean)
-  if (outer) {
-    logl <- (-n * 0.5) * log(quadterm) - 0.5 * id$ldet
-  }
-  else logl <- (-0.5) * id$ldet - 0.5 * quadterm
-  if (tau2) {
-    tau2 <- c(quadterm)/n
-  }
-  else tau2 <- NULL
-  return(list(logl = c(logl), tau2 = tau2))
 }
 
 # change sample_w (not the prior, just logl)
@@ -304,23 +237,116 @@ sample_w_SW <- function (out_vec, w_t, w_t_dmat, in_dmat, g, theta_y, theta_w,
   return(list(w = w_t, ll = ll_prev, dw = dw))
 }
 
-# change the log likelihood evaluation
-# MaternFun, Exp2Fun: didn't change these, just add the diagonal outside of C code
-logl_SW <- function (out_vec, in_dmat, g, theta, outer = FALSE, v, cov, tau2 = FALSE, Sigma_hat){
-  n <- length(out_vec)
-  if (cov == "matern") {
-    K <- MaternFun(in_dmat, c(1, theta, g, v)) + Sigma_hat #+ diag(x = eps, nrow = n) #tau2=1, nug=tau2*g
+#################################
+# Prediction code modifications #
+#################################
+
+clean_prediction <- deepgp:::clean_prediction
+
+predict.dgp2_SW <- function (object, x_new, lite = TRUE, store_latent = FALSE, mean_map = TRUE, 
+                             EI = FALSE, cores = detectCores() - 1, precs_pred = NULL, ...){
+  tic <- proc.time()[3]
+  # print(object$cov); print(object$v); print(object$nmcmc)
+  # object <- clean_prediction(object)
+  # print(object$cov); print(object$v); print(object$nmcmc)
+  if(object$cov == "exp2"){object$v <- 999}
+  if (is.numeric(x_new)) 
+    x_new <- as.matrix(x_new)
+  object$x_new <- x_new
+  n_new <- nrow(object$x_new)
+  D <- ncol(object$w[[1]])
+  dx <- sq_dist(object$x)
+  d_new <- sq_dist(object$x_new)
+  d_cross <- sq_dist(object$x_new, object$x)
+  iters <- 1:object$nmcmc
+  if (cores == 1) {
+    chunks <- list(iters)
   }
-  else K <- Exp2Fun(in_dmat, c(1, theta, g)) + Sigma_hat #+ diag(x = eps, nrow = n) #tau2=1, nug=tau2*g
-  id <- invdet(K)
-  quadterm <- t(out_vec) %*% id$Mi %*% (out_vec)
-  if (outer) {
-    logl <- (-n * 0.5) * log(quadterm) - 0.5 * id$ldet
+  else chunks <- split(iters, sort(cut(iters, cores, labels = FALSE)))
+  if (cores > detectCores()) 
+    warning("cores is greater than available nodes")
+  cl <- makeCluster(cores)
+  clusterExport(cl, c("krig_SW", "MaternFun", "eps", "invdet", "sq_dist", "Exp2Fun"))
+  registerDoParallel(cl)
+  thread <- NULL
+  result <- foreach(thread = 1:cores) %dopar% {
+    out <- list()
+    if (store_latent) 
+      out$w_new <- list()
+    out$mu_t <- matrix(nrow = n_new, ncol = length(chunks[[thread]]))
+    if (lite) {
+      out$s2_sum <- rep(0, times = n_new)
+    }
+    else out$sigma_sum <- matrix(0, nrow = n_new, ncol = n_new)
+    if (EI) 
+      out$ei_sum <- rep(0, times = n_new)
+    j <- 1
+    for (t in chunks[[thread]]) {
+      w_t <- object$w[[t]]
+      w_new <- matrix(nrow = n_new, ncol = D)
+      for (i in 1:D) {
+        if (mean_map) {
+          k <- krig_SW(w_t[, i], dx, NULL, d_cross, object$theta_w[t, i], 
+                       g = eps, v = object$v, Sigma_hat = object$Sigma_hat, precs_pred = precs_pred)
+          w_new[, i] <- k$mean
+        }
+        else {
+          k <- krig_SW(w_t[, i], dx, d_new, d_cross, object$theta_w[t, i], 
+                       g = eps, sigma = TRUE, v = object$v, Sigma_hat = object$Sigma_hat, precs_pred = precs_pred)
+          w_new[, i] <- mvtnorm::rmvnorm(1, k$mean, k$sigma)
+        }
+      }
+      if (store_latent) 
+        out$w_new[[j]] <- w_new
+      k <- krig_SW(object$y, sq_dist(w_t), sq_dist(w_new), 
+                   sq_dist(w_new, w_t), object$theta_y[t], object$g[t], 
+                   object$tau2[t], s2 = lite, sigma = !lite, f_min = EI, 
+                   v = object$v, Sigma_hat = object$Sigma_hat, precs_pred = precs_pred)
+      out$mu_t[, j] <- k$mean
+      if (lite) {
+        out$s2_sum <- out$s2_sum + k$s2
+      }
+      else out$sigma_sum <- out$sigma_sum + k$sigma
+      if (EI) {
+        if (lite) {
+          sig2 <- k$s2 - (object$tau2[t] * object$g[t])
+        }
+        else sig2 <- diag(k$sigma) - (object$tau2[t] * object$g[t])
+        out$ei_sum <- out$ei_sum + exp_improv(k$mean, sig2, k$f_min)
+      }
+      j <- j + 1
+    }
+    return(out)
   }
-  else logl <- (-0.5) * id$ldet - 0.5 * quadterm
-  if (tau2) {
-    tau2 <- 1#c(quadterm)/n
+  stopCluster(cl)
+  mu_t <- do.call(cbind, lapply(result, with, eval(parse(text = "mu_t"))))
+  if (lite) {
+    s2_sum <- Reduce("+", lapply(result, with, eval(parse(text = "s2_sum"))))
   }
-  else tau2 <- NULL
-  return(list(logl = c(logl), tau2 = tau2))
+  else {
+    sigma_sum <- Reduce("+", lapply(result, with, eval(parse(text = "sigma_sum"))))
+  }
+  if (store_latent) 
+    w_new <- unlist(lapply(result, with, eval(parse(text = "w_new"))), 
+                    recursive = FALSE)
+  if (EI) 
+    ei_sum <- Reduce("+", lapply(result, with, eval(parse(text = "ei_sum"))))
+  mu_cov <- cov(t(mu_t))
+  object$mean <- rowMeans(mu_t)
+  if (store_latent) 
+    object$w_new <- w_new
+  if (lite) {
+    object$s2 <- s2_sum/object$nmcmc + diag(mu_cov)
+    object$s2_smooth <- object$s2 - mean(object$g * object$tau2)/precs_pred
+  }
+  else {
+    object$Sigma <- sigma_sum/object$nmcmc + mu_cov
+    object$Sigma_smooth <- object$Sigma - diag(mean(object$g * object$tau2)/precs_pred, n_new)
+  }
+  if (EI) 
+    object$EI <- ei_sum/object$nmcmc
+  toc <- proc.time()[3]
+  object$time <- object$time + (toc - tic)
+  return(object)
 }
+
