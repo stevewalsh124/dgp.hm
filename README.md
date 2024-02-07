@@ -1,5 +1,12 @@
 # dgp.hm
 
+The `dgp.hm` folder contains the R package.  To build and install, run
+
+```
+R CMD build dgp.hm
+R CMD INSTALL dgp.hm_0.1.0
+```
+
 Steps for reproducing results.
 
 ### 1) `1D_real_study_full_emuspace.R`

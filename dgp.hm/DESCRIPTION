@@ -1,0 +1,20 @@
+Package: dgp.hm
+Type: Package
+Title: DGPs for cosmology data
+Version: 0.1.0
+Date: 02-06-2023
+Author: Steve Walsh and Annie S. Booth
+Maintainer: Annie S. Booth
+Depends: R (>= 3.6)
+Description: TBD
+License: LGPL
+Encoding: UTF-8
+NeedsCompilation: yes
+Imports:
+    grDevices,
+    graphics,
+    stats,
+LinkingTo:
+    Rcpp,
+    RcppArmadillo,
+RoxygenNote: 7.1.2
