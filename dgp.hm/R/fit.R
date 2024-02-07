@@ -101,11 +101,11 @@ sample_g_SW <- function (out_vec, in_dmat, g_t, theta, alpha, beta, l, u,
   if (is.null(ll_prev)) 
     ll_prev <- logl_SW(out_vec, in_dmat, g_t, theta, outer = TRUE, 
                        v, Sigma_hat = Sigma_hat)$logl
-  lpost_threshold <- ll_prev + dgamma(g_t - eps, alpha, beta, log = TRUE) + 
+  lpost_threshold <- ll_prev + dgamma(g_t - deepgp:::eps, alpha, beta, log = TRUE) + 
       log(ru) - log(g_t) + log(g_star)
   ll_new <- logl_SW(out_vec, in_dmat, g_star, theta, outer = TRUE, 
                     v, Sigma_hat = Sigma_hat)$logl
-  new <- ll_new + dgamma(g_star - eps, alpha, beta, log = TRUE)
+  new <- ll_new + dgamma(g_star - deepgp:::eps, alpha, beta, log = TRUE)
   if (new > lpost_threshold) {
     return(list(g = g_star, ll = ll_new))
   } else return(list(g = g_t, ll = ll_prev))
@@ -145,7 +145,7 @@ sample_w_SW <- function (out_vec, w_t, w_t_dmat, in_dmat, g, theta_y, theta_w,
     ll_prev <- logl_SW(out_vec, w_t_dmat, g, theta_y, outer = TRUE, 
                        v = v, Sigma_hat = Sigma_hat)$logl
   for (i in 1:D) {
-    if (v = 999) {
+    if (v == 999) {
       w_prior <- mvtnorm::rmvnorm(1, mean = prior_mean[, i], 
                                   sigma = deepgp:::Exp2(in_dmat, 1, theta_w[i], 0))
     } else w_prior <- mvtnorm::rmvnorm(1, mean = prior_mean[, i], 
@@ -187,19 +187,17 @@ sample_w_SW <- function (out_vec, w_t, w_t_dmat, in_dmat, g, theta_y, theta_w,
 
 logl_SW <- function (out_vec, in_dmat, g, theta, outer = FALSE, v, 
                      tau2 = FALSE, mu = 0, Sigma_hat) {
-  # ANNIE CHANGED - remove cov as input
   n <- length(out_vec)
-  if (v = 999) {
+  if (v == 999) {
     K <- deepgp:::Exp2(in_dmat, 1, theta, g) + Sigma_hat
   } else K <- deepgp:::Matern(in_dmat, 1, theta, g, v) + Sigma_hat
-  id <- invdet(K)
+  id <- deepgp:::invdet(K)
   quadterm <- t(out_vec - mu) %*% id$Mi %*% (out_vec - mu)
   if (outer) {
     logl <- (-n * 0.5) * log(quadterm) - 0.5 * id$ldet
   } else logl <- (-0.5) * id$ldet - 0.5 * quadterm
   if (tau2) {
-    tau2 <- 1#c(quadterm)/n
-    # WHY NOT ESTIMATE TAU2?
+    tau2 <- c(quadterm) / n
   } else tau2 <- NULL
   
   return(list(logl = c(logl), tau2 = tau2))
