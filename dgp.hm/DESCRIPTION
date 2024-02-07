@@ -11,11 +11,5 @@ License: LGPL
 Encoding: UTF-8
 NeedsCompilation: yes
 Imports:
-    grDevices,
-    graphics,
-    stats,
     deepgp
-LinkingTo:
-    Rcpp,
-    RcppArmadillo,
 RoxygenNote: 7.2.3

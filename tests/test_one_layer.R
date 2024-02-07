@@ -34,7 +34,7 @@ y_avg <- c((mu_z - mean(mu_z)) / sd(mu_z))
 # Get Sigma_hat
 Sigma_hat <- cov(Y) / 16
 
-fitcov <- fit_one_layer_SW(x, y_avg, nmcmc = 5000, Sigma_hat = Sigma_hat)
+fitcov <- fit_one_layer_SW(x, y_avg, nmcmc = 5000, true_g = 1e-6, Sigma_hat = Sigma_hat)
   # could fix true_g = 1e-6
 plot(fitcov) # from deepgp package
 

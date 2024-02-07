@@ -2,6 +2,7 @@
 
 export(bohman)
 export(fit_one_layer_SW)
+export(get_Sigma_hat)
 export(matrix.Moore.Penrose)
 export(matrix.Moore.Penrose2)
 export(matrix.sqrt)
