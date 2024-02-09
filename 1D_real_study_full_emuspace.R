@@ -2,12 +2,12 @@
 
 tic <- proc.time()[3]
 
-saveImage <- T
-PDF <- T
+saveImage <- F
+PDF <- F
 
 vecchia <- F
 pmx <- F
-one_layer <- F
+one_layer <- T
 force_id_warp <- F
 w0_from_mte1_50k <- read.csv("csv/w0_from_mte1_50k.csv", row.names = 1)
 
@@ -15,12 +15,8 @@ w0_from_mte1_50k <- read.csv("csv/w0_from_mte1_50k.csv", row.names = 1)
 smooth_precs <- T
 if(smooth_precs) k_sm <- 10 #rolling mean uses k numbers
 
-if(one_layer) {source("dgp.hm/logl_cov_1L.R")} else {source("dgp.hm/logl_cov.R")}
-source("dgp.hm/bohman.R")
-source("dgp.hm/matrix.Moore.Penrose.R")
-source("dgp.hm/plot_fns.R") #plot.krig, plot.true, plot.warp
-source("dgp.hm/trim.R")
-source("dgp.hm/vecchia.R")
+if(one_layer) {source("OLD/OLD_logl_cov_1L.R")} else {source("OLD/OLD_logl_cov.R")}
+source("OLD/plot_fns.R")
 
 # load the precision data (k, prec_highres, prec_lowres, index_list)
 load("Mira-Titan-IV-Data/precision_and_indexes.Rdata")
@@ -59,8 +55,8 @@ cov_fn <- "matern"#"exp2"#
 
 if(taper_cov) tau_b <- .2
 nrun <- 16
-nmcmc <- 1500#0
-nburn <- 1000#0
+nmcmc <- 15000
+nburn <- 10000
 kth <- 4
 
 bte <- 3 # cols 3-18 are low res
@@ -290,16 +286,23 @@ image.plot(Sigma_hat/nrunn, main = "input as sigma_hat")
 # run for sim data #
 ####################
 
-if(force_id_warp){
-  fitcov <- fit_two_layer_SW(x = x, y = c(y_avg), nmcmc = nmcmc, Sigma_hat = Sigma_hat/nrunn, cov = cov_fn, pmx = pmx, 
-                             vecchia = vecchia, settings = list(alpha =list(theta_w=1000), beta=list(theta_w=.0001/1000)))
+if(one_layer){
+  fitcov <- fit_one_layer_SW(x = x, y = c(y_avg), nmcmc = nmcmc, true_g = 1e-10,
+                             Sigma_hat = Sigma_hat/nrunn, cov = cov_fn)
 } else {
-  fitcov <- fit_two_layer_SW(x = x, y = c(y_avg), nmcmc = nmcmc, w_0 = w0_from_mte1_50k, 
-                             Sigma_hat = Sigma_hat/nrunn, cov = cov_fn, pmx = pmx, 
-                             vecchia = vecchia)
+  if(force_id_warp){
+    fitcov <- fit_two_layer_SW(x = x, y = c(y_avg), nmcmc = nmcmc, Sigma_hat = Sigma_hat/nrunn, cov = cov_fn, pmx = pmx, true_g = 1e-10,
+                               vecchia = vecchia, settings = list(alpha =list(theta_w=1000), beta=list(theta_w=.0001/1000)))
+  } else {
+    fitcov <- fit_two_layer_SW(x = x, y = c(y_avg), nmcmc = nmcmc, w_0 = w0_from_mte1_50k, true_g = 1e-10,
+                               Sigma_hat = Sigma_hat/nrunn, cov = cov_fn, pmx = pmx,
+                               vecchia = vecchia)
+  }
 }
 
-fitcov <- trim_SW(fitcov, nburn, kth)
+
+
+fitcov <- trim(fitcov, nburn, kth)
 plot(fitcov)
 
 v <- fitcov$v
@@ -308,20 +311,20 @@ par(mfrow=c(1,1))
 fitcov <- est.true(fitcov)
 plot.true(fitcov)
 if(mte %in% 1:111){
-  cosmicEmu <- read.csv(paste0("CosmicEmu/2022-Mira-Titan-IV/P_tot/orig_111/EMU",
+  cosmicEmu <- read.csv(paste0("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/orig_111/EMU",
                                mte-1,".txt"),sep="", header = F)
 } else {
-  if(mte==0) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU5.txt",
+  if(mte==0) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU5.txt",
                                    sep="", header = F)
-  if(mte==112) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU0.txt",
+  if(mte==112) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU0.txt",
                                      sep="", header = F)
-  if(mte==113) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU1.txt",
+  if(mte==113) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU1.txt",
                                      sep="", header = F)
-  if(mte==114) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU2.txt",
+  if(mte==114) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU2.txt",
                                      sep="", header = F)
-  if(mte==115) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU3.txt",
+  if(mte==115) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU3.txt",
                                      sep="", header = F)
-  if(mte==116) cosmicEmu <- read.csv("CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU4.txt",
+  if(mte==116) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU4.txt",
                                      sep="", header = F)
 
 }

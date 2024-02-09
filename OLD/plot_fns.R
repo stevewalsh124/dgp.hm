@@ -189,16 +189,16 @@ est.true <- function(fit, S_e = fit$Sigma_hat, ne = 1, tolpower = -10,
   Ss <- St <- Sw <- Sx <- matrix(NA, length(fit$x), fit$nmcmc*ne)
   for (i in 1:fit$nmcmc){
     if( i %% 2500 == 0) print(i)
-    theta <- fit$theta_y[i]
+    if(one_layer) theta <- fit$theta[i] else theta <- fit$theta_y[i]
     # tau2 <- fit$tau2[i]
     # t2S_ei <- 1/tau2 * S_ei
     g <- fit$g[i]
-    W <- fit$w[[i]]
-    dw <- sq_dist(W)
+    if(!one_layer) W <- fit$w[[i]]
+    if(one_layer) dw <- sq_dist(D) else dw <- sq_dist(W)
     if(v==999){
-      S_si <- solve(Exp2Fun(distmat = dw, covparms = c(1, theta, g))) #1/tau2 * 
+      S_si <- solve(deepgp:::Exp2(distmat = dw, tau2=1, theta=theta, g=g, v=v)) #1/tau2 * 
     } else {
-      S_si <- solve(MaternFun(distmat = dw, covparms = c(1, theta, g, v))) #1/tau2 * 
+      S_si <- solve(deepgp:::Matern(distmat = dw, tau2=1, theta=theta, g=g, v=v)) #1/tau2 * 
     }
     S_si <- (S_si+t(S_si))/2
     C <- Cs[,i] <- solve(S_si + S_ei)

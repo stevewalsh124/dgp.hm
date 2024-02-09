@@ -17,8 +17,8 @@ check_settings <- deepgp:::check_settings
 check_initialization <- deepgp:::check_initialization
 gibbs_two_layer <- deepgp:::gibbs_two_layer
 gibbs_two_layer_vec <- deepgp:::gibbs_two_layer_vec
-MaternFun <- deepgp:::MaternFun
-Exp2Fun <- deepgp:::Exp2Fun
+MaternFun <- deepgp:::Matern#Fun
+Exp2Fun <- deepgp:::Exp2#Fun
 invdet <- function (M){
   n <- nrow(M)
   out <- .C("inv_det_R", n = as.integer(n), M = as.double(M), 
