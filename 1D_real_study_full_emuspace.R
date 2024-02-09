@@ -1,25 +1,7 @@
 # real data study
 
+# Keep track of timing
 tic <- proc.time()[3]
-
-saveImage <- F
-PDF <- F
-
-vecchia <- F
-pmx <- F
-one_layer <- T
-force_id_warp <- F
-w0_from_mte1_50k <- read.csv("csv/w0_from_mte1_50k.csv", row.names = 1)
-
-# Smooth the precision info so it's not a step function for each data type (pt, lo, hi)?
-smooth_precs <- T
-if(smooth_precs) k_sm <- 10 #rolling mean uses k numbers
-
-if(one_layer) {source("OLD/OLD_logl_cov_1L.R")} else {source("OLD/OLD_logl_cov.R")}
-source("OLD/plot_fns.R")
-
-# load the precision data (k, prec_highres, prec_lowres, index_list)
-load("Mira-Titan-IV-Data/precision_and_indexes.Rdata")
 
 library(MASS) #ginv
 library(fields) #image.plot
@@ -27,40 +9,73 @@ library(mvtnorm) #rmvnorm
 library(plgp) #distance (which is squared distances)
 library(zoo) #rollmean
 library(Matrix)
-# library(latex2exp) #TeX in axis label
+
+# Fit a shallow (one_layer) GP, or a (two_layer) deep GP (DGP)?
+one_layer <- T
+
+# Source functions to fit a shallow or deep GP, and also
+# estimate the true power matter spectra, given the (D)GP fit (est.true in plot_fns.R)
+if(one_layer) {source("OLD/OLD_logl_cov_1L.R")} else {source("OLD/OLD_logl_cov.R")}
+source("OLD/plot_fns.R")
+
+# load the precision data (k, prec_highres, prec_lowres, index_list)
+load("Mira-Titan-IV-Data/precision_and_indexes.Rdata")
+
+# This loads a burned-in estimate of the warping for model 1
+# This can be called as w0 to help with burning in the other models (cosmologies)
+w0_from_mte1_50k <- read.csv("csv/w0_from_mte1_50k.csv", row.names = 1)
+
+# Save global environment when script completes?
+saveImage <- F
+
+# Save all plots on a PDF?
+PDF <- F
+
+# Use the vecchia approximation?
+vecchia <- F
+
+# For the two_layer case, set prior mean of W equal to X (apriori no warping)?
+pmx <- F
+
+# For the two layer case, set hyperpars to force an identity-like warping? 
+force_id_warp <- F
+
+# Smooth precision info so it's not a step function for each data type (pt/lo/hi)?
+# smooth_precs <- T improves average's continuity when switching from pt/lo and lo/hi
+smooth_precs <- T
+if(smooth_precs) k_sm <- 10 #rolling mean uses k numbers
 
 # Taper the covariance matrix before the MCMC fit?
 taper_cov <- F
+if(taper_cov) tau_b <- .2 # bohman correlation function
 
-# Do a kriging step?
-krig <- F
-
-# Use hi res in Ybar calculation?
+# Use the hi res run in Ybar calculation?
 use_hi <- T
 
 # Model the correlated errors with a covariance function?
+# i.e., model Sigma_epsilon with a Matern/Exp2 cov fn?
 cf_errors <- T
 if(cf_errors){
   err_cov <- "matern"#"exp2"#
-  loess_span <- 0.15
+  loess_span <- 0.15 #LOESS-smoothing param for the mean
   err_v   <- paste0("est", loess_span)#ifelse(err_cov == "matern", 2.5, 999)
   err_g   <- NULL#sqrt(.Machine$double.eps)#
   err_g_msg <- ifelse(is.null(err_g),"estg","fixg")
 }
 
-ncores <- 2
-tolpower <- -10
-
+# Model the true power matter spectrum with cov fn (matern vs exp2)
+# Sigma_S
 cov_fn <- "matern"#"exp2"#
 
-if(taper_cov) tau_b <- .2
+# Number of low res runs to avg over
 nrun <- 16
-nmcmc <- 15000
-nburn <- 10000
+
+# MCMC settings
+nmcmc <- 1500#0
+nburn <- 1000#0
 kth <- 4
 
-bte <- 3 # cols 3-18 are low res
-
+# mte: Model to evaluate
 # Model 1, choose from 1-111 for training set, or c(0, 112:116) for test set
 mte <- 1
 
@@ -75,9 +90,12 @@ if(PDF) pdf(paste0("pdf/realstudydgpact_",nmcmc,"_",nrun,"_",
                    if(use_hi){"_uh"},if(pmx){"_pmx"},if(force_id_warp){"_fiw"},if(vecchia){"_vec"},
                    if(one_layer){"_1L"},"_",cov_fn,tolpower,"model",mte,"_",k_sm,".pdf"))
 
+# This step means that z=0 (cosmological redshift setting)
 step <- 499
 
-# first col is k, 2nd is linear pert theory, 3:18 is lowres, 19 is hires
+# read in the runs for the model to evaluate (mte)
+# first column is k, 2nd is linear pert theory, 3:18 is low-res, 19 is hi-res
+# training models are 1-111, testing are c(0,112:116)
 if(mte %in% 0:111){
   pk2 <- read.table(paste0("Mira-Titan-IV-data/Mira-Titan-2021/STEP",step,"/pk_M",
                            if(mte<100){"0"},if(mte<10){"0"},mte,"_test.dat"))
@@ -94,14 +112,16 @@ if(mte %in% 0:111){
                                         step,"/pk_E010_test.dat"))
 }
 
-
+# obtain length of k values for each model
 n <- nrow(pk2)
-k_sub <- 1:nrow(pk2) #index_list$lowres.ix
+# k_sub <- 1:nrow(pk2) #index_list$lowres.ix
 
+# Get precision info for eadh data type (low-res, hi-res, pert theory)
 precs_lo <- ifelse(1:n %in% index_list$lowres.ix, prec_lowres, 0) * nrun
 precs_hi <- ifelse(1:n %in% index_list$highres.ix, prec_highres, 0)
 precs_pt <- ifelse(1:n %in% index_list$pert.ix, 10000, 0)
 
+# Either smooth the precision information (to remove steps), or don't
 if(smooth_precs){
   Lam_lo <- diag(rollmean(precs_lo, k = k_sm, fill = "extend"))
   Lam_hi <- diag(rollmean(precs_hi, k = k_sm, fill = "extend"))
@@ -112,36 +132,46 @@ if(smooth_precs){
   Lam_pt <- diag(precs_pt)
 }
 
-# subtract a linear model
-# temp_avg <- rowMeans(log10(pk2[k_sub,3:18]))
-# temp_lm <- lm(temp_avg ~ log10(pk2[k_sub,1]))$fitted.values
-# load("rda/avg_of_wt_avg_10.rda")
-temp_lm <- rep(0,length(k_sub)) #log10(orig_loess*k^1.5/(2*pi^2))[k_sub]
-#avg_loess[k_sub]
-matplot(log10(k),log10(pk2[,3:18]))
-matplot(log10(k)[k_sub],log10(pk2[k_sub,3:18]))
+# plot the runs on log10 space
+matplot(log10(k), log10(pk2[,3:18]), type="l")
 
-Y <- t(apply(t(pk2[k_sub,3:18]),1,function(x){log10(x*(k^1.5)[k_sub]/(2*pi^2))}))
+# get the runs on the emulation space (script P in Mira-Titan IV, Moran et. al)
+scrP <- function(x){log10(x*(k^1.5)/(2*pi^2))}
+Y <- t(apply(t(pk2[,3:18]),1,scrP))
+
+# for any infinite values, change to zero
 Y <- ifelse(is.infinite(Y), 0, Y)
 
-# wavenumber is X, a particular lowres run in Y
-y_lo_avg <- colMeans(Y - temp_lm)
-kl <- k[k_sub]
-x <- log10(kl)
-y <- log10(pk2[k_sub, bte]*kl^1.5/(2*pi^2)) - temp_lm
-y_pt <- log10(pk2[k_sub, 2]*kl^1.5/(2*pi^2)) - temp_lm
+# log10 of wavenumber (k) is X, a particular lowres run in Y
+x <- log10(k)
+
+# obtain different outputs and combine them
+# low-res run average
+y_lra <- colMeans(Y)
+
+# pert theory in emulation space
+y_pt <- scrP(pk2[,2])
 y_pt <- ifelse(is.infinite(y_pt), 0, y_pt)
-y_lra <- y_lo_avg#log10(y_lo_avg*k^1.5/(2*pi^2))[k_sub] - temp_lm
-y_hi <- log10(pk2[k_sub, 19]*(k^1.5)[k_sub]/(2*pi^2)) - temp_lm
+
+# hi-res in emulation space
+y_hi <- scrP(pk2[, 19])
 y_hi <- ifelse(is.infinite(y_hi), 0, y_hi)
 
-# get a weighted average across low, high and pert
+# get a weighted average (mu_z) across low, high and pert theory
+# See "Weighted average from multiple computer experiments"
+# in Walsh dissertation: 3.7.1 Appendix E: Derivations
+
+# precision matrix for weighted average, mu_z
 Lam_z <- Lam_pt+Lam_lo+Lam_hi
 precs <- diag(Lam_z)
 Lam_zi <- solve(Lam_z)
-mu_z <- Lam_zi %*% (Lam_pt %*% y_pt + Lam_lo %*% t(t(y_lo_avg)) + Lam_hi %*% y_hi)
 
-matplot(log10(k)[k_sub], t(Y), col="gray",type="l",lty=1, ylim = range(y_pt, y_lra, y_hi, Y))
+# calculate weighted average of all data types
+mu_z <- Lam_zi %*% (Lam_pt %*% y_pt + Lam_lo %*% t(t(y_lra)) + Lam_hi %*% y_hi)
+
+# Plot the different data types, each in emulation space
+# Also include the weighted average, mu_z
+matplot(x, t(Y), col="gray",type="l",lty=1, ylim = range(y_pt, y_lra, y_hi, Y))
 lines(x, y_pt, col="green")
 lines(x, y_lra, col="blue")
 lines(x, y_hi, col="red")
@@ -151,57 +181,54 @@ lines(x[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)), col = 
 lines(x, mu_z, col="orange",lty=2, lwd=4)
 
 # hi res precs on the low res index (for comparison)
-precs_hi <- prec_highres[k_sub]
+precs_hi <- prec_highres
 if(use_hi){
-  # Weighted average of low res runs and 
+  # Weighted average of low res runs and hi-res
   hi_wt <- unique(prec_highres/prec_lowres)[1]
-  y_avg <- mu_z#(hi_wt*y_hi+nrun*y_lra)/(hi_wt+nrun)
+  y_avg <- mu_z
+  # 16 low-res, and hi-res is 3.72x more precise than low-res
+  # adjust effective sample size accordingly
   nrunn <- nrun + hi_wt
 } else {
-  y_avg <- mu_z#y_lra
+  y_avg <- y_lra
   nrunn <- nrun
 }
 
-# wavenumber is X, a particular lowres run in Y
+# standardize the inputs (x) and outputs (y)
+# get x to live in [0,1]
+x <- (x - min(x))/(max(x)-min(x))
+
+# make each y approx. mean 0, sd 1
 mean_sz <- mean(y_avg)
 sd_sz <- sd(y_avg)
-x <- (x - min(x))/(max(x)-min(x))
-y <- (y - mean_sz)/sd_sz
 y_avg <- (y_avg - mean_sz)/sd_sz
 y_lra <- (y_lra - mean_sz)/sd_sz
 y_hi <- (y_hi - mean_sz)/sd_sz
 for (i in 1:nrow(Y)) { Y[i,] <- (Y[i,] - mean_sz)/sd_sz  }
 
+# get (squared) distance matrix for the inputs
 D <- plgp:::distance(x)
 
-# sd_sz is based on real data (sd for standardizing)
+# adjust the precision info based on this standardization (sd_sz above)
 precc <- precs*sd_sz^2
 sdd <- sqrt(1/precc)
 A <- diag(sdd)
 
-if(krig){
-  # get predictions for xx and have corresponding prec info
-  xx <- setdiff(seq(0,1,by=.01), x)
-  lmfit <- lm(log10(precs) ~ x) #precs for logl_g.R, 1/diag(covY) for logl_cov.R
-  betahat <- coef(lmfit)
-  precs_pred <- as.numeric(10^(cbind(1,xx) %*% betahat))
-}
-
+# one way to get Sigma_hat
 if(use_hi){
   n <- ncol(Y)
   r <- nrow(Y)
-  # Ybar <- (r*y_lra+hi_wt*y_hi)/(r+hi_wt); same as y_avg above
-  
+
   sum_YYt <- matrix(0, n, n)
   for (i in 1:r) { sum_YYt <- sum_YYt + (Y[i,]-y_avg)%*%t(Y[i,]-y_avg) }
   sum_YYt <- sum_YYt + hi_wt*(y_hi-y_avg)%*%t(y_hi-y_avg)
-  # image.plot(cov(Y), zlim = range(c(cov(Y),1/(r+hi_wt-1)*sum_YYt)))
-  # image.plot(1/(r+hi_wt-1)*sum_YYt, zlim = range(c(cov(Y),1/(r+hi_wt-1)*sum_YYt)))  
+
   Sigma_hat <- 1/(r+hi_wt-1) * sum_YYt
 } else {
   Sigma_hat <- cov(Y)
 }
 
+# This is the way to get Sigma_hat we will focus on
 if(cf_errors){
   # # logl_cov* files use the same names (eg: logl_SW, fit_two_layer_SW)
   # if(!one_layer) source("logl_cov_1L.R")
@@ -273,8 +300,10 @@ if(cf_errors){
                      solve(A[hi_only,hi_only])^0.5 %*% diag((precs_hi[hi_only]*sd_sz^2)^-1) %*% solve(A[hi_only,hi_only])^0.5)) 
 }
 
+# if tapering Sigma_hat, use the bohman correlation function
 if(taper_cov) Sigma_hat <- Sigma_hat * bohman(sqrt(D), tau=tau_b)
 
+# plot the weighted average and also look at the values in Sigma_hat
 par(mfrow=c(1,2))
 matplot(x,t(Y),type="l",col="gray", ylim = range(y_hi, Y, y_avg, y_pt))
 lines(x,y_hi,col="blue",lwd=2)
@@ -359,17 +388,17 @@ m <- fitcov$m
 
 # png(paste0("png/model",mte,"_emuspace_rmAvg.png"), width=4000, height = 2400, res=400)
 par(mar=c(4,4.5,1,1), mfrow=c(1,1))
-plot(log10(kl), fitcov$y - m, type="n", #xlim = log10(c(.04,.35)),
+plot(log10(k), fitcov$y - m, type="n", #xlim = log10(c(.04,.35)),
      ylim = c(-.33,.33),
      xlab=expression(log[10](k)),
      ylab='script P')#TeX(r'($log_{10}(k^{1.5}P(k)/2\pi^2)$)'))
-for (i in 1:16) lines(log10(kl), Y[i,] - m, col="gray", lwd=1)
-lines(log10(kl), colMeans(Y) - m, col=cb_cols[2], lwd=2)
-lines(log10(kl), y_hi - m, col=cb_cols[3], lwd=2)
-# lines(log10(kl), fitcov$Ms[,1], col="red", lwd=2)
-lines(log10(kl), fitcov$ubb - m, col=cb_cols[4], lwd=2, lty=3)
-lines(log10(kl), fitcov$lbb - m, col=cb_cols[4], lwd=2, lty=3)
-lines(log10(kl), cosmscrPsz - m, col=cb_cols[8], lwd=2, lty=2)
+for (i in 1:16) lines(log10(k), Y[i,] - m, col="gray", lwd=1)
+lines(log10(k), colMeans(Y) - m, col=cb_cols[2], lwd=2)
+lines(log10(k), y_hi - m, col=cb_cols[3], lwd=2)
+# lines(log10(k), fitcov$Ms[,1], col="red", lwd=2)
+lines(log10(k), fitcov$ubb - m, col=cb_cols[4], lwd=2, lty=3)
+lines(log10(k), fitcov$lbb - m, col=cb_cols[4], lwd=2, lty=3)
+lines(log10(k), cosmscrPsz - m, col=cb_cols[8], lwd=2, lty=2)
 legend("topleft",legend = c("low res","low res avg","hi res", "UQ","cosmicEMU"), 
        col = c("gray",cb_cols[c(2,3,4,8)]), lty=c(1,1,1,3,2), lwd=2)
 # dev.off()
