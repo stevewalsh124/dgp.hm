@@ -107,10 +107,12 @@ Sigma_hat <- as.matrix(Matrix::bdiag(diag(block1), block2, diag(block3)))
 
 # Run MCMC --------------------------------------------------------------------
 
-fitcov <- fit_one_layer_SW(x, y_avg, nmcmc = 1500, true_g = 1e-8,
-                             Sigma_hat = Sigma_hat/nrun)
-fitcov <- trim(fitcov, 1000, 5) # from deepgp
-plot(fitcov)
+fit1 <- fit_one_layer_SW(x, y_avg, nmcmc = 1500, Sigma_hat = Sigma_hat / nrun)
+plot(fit1) # investigate trace plots
+fit1 <- trim(fit1, 1000, 5)
+
+fit2 <- fit_two_layer_SW(x, y_avg, nmcmc = 1500, Sigma_hat = Sigma_hat / nrun)
+plot(fit2) # investigate trace plots and ESS samples
 
 # STOPPED HERE
 # TODO: add this to the package

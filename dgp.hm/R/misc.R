@@ -1,14 +1,15 @@
 
 # Function contents -----------------------------------------------------------
 # External:
-#   bohman
-#   matrix.Moore.Penrose
-#   matix.Moore.Penrose2
-#   matrix.sqrt
+#   opt_matern
+#   scrP
+# Internal:
+#   nl_matern
+#   moore_penrose
 
 # Optimize Matern -------------------------------------------------------------
 #' @export
-#' 
+
 opt_matern <- function(dx, y, sdd, init = c(0.1, -5, 0.1, 0.1), 
                        lower = c(-5, -35, -5, 0.2),
                        upper = c(4, 3, 4, 100)) { 
@@ -57,56 +58,16 @@ scrP <- function(x, k) {
   return(y)
 }
 
-# bohman ----------------------------------------------------------------------
-#' @export
-
-bohman <- function(t, tau = 0.25) {
-  boh <- (1 - t / tau) * cos(pi * t / tau) + sin(pi * t / tau) / pi
-  boh <- ifelse(t >= tau, 0, boh)
-  return(boh)
-}
-
-# matrix.Moore.Penrose --------------------------------------------------------
+# moore_penrose ---------------------------------------------------------------
 # Computes Moore-Penrose generalized inverse of symmetric matrix using 
 # spectral decomposition
 # By M.A.R. Ferreira
-#' @export
 
-matrix.Moore.Penrose <- function(H) {
+moore_penrose <- function(H, tolpower = -10) {
   H.eigen <- eigen(H)
   inverse.values <- rep(0, nrow(H))
-  inverse.values[abs(H.eigen$values) > 10^(-10)] <- 1 / H.eigen$values[abs(H.eigen$values) > 10^(-10)]
+  i <- (H.eigen$values > 10^(tolpower))
+  inverse.values[i] <- 1 / H.eigen$values[i]
   H.MP <- H.eigen$vectors %*% diag(inverse.values) %*% t(H.eigen$vectors)
   return(H.MP)
-}
-
-# matrix.Moore.Penrose2 -------------------------------------------------------
-# Computes Moore-Penrose generalized inverse of symmetric matrix using 
-# spectral decomposition
-# By M.A.R. Ferreira
-#' @export
-
-matrix.Moore.Penrose2 <- function(H, tolp = -10) {
-  H.eigen <- eigen(H)
-  inverse.values <- rep(0, nrow(H))
-  inverse.values[(H.eigen$values) > 10^(tolp)] <- 1 / H.eigen$values[(H.eigen$values) > 10^(tolp)]
-  H.MP <- H.eigen$vectors %*% diag(inverse.values) %*% t(H.eigen$vectors)
-  return(H.MP)
-}
-
-# matrix.sqrt -----------------------------------------------------------------
-# Computes square root of nonnegative definite symmetric matrix using 
-# spectral decomposition
-#' @export
-
-matrix.sqrt <- function(H) {
-  if(nrow(H) == 1) {
-    H.sqrt <- matrix(sqrt(H), nrow = 1, ncol = 1)
-  } else {
-    H.eigen <- eigen(H)
-    H.eigen.values <- H.eigen$values    
-    H.eigen.values[abs(H.eigen$values) < 10^(-20)] <- 0
-    H.sqrt <- H.eigen$vectors %*% diag(sqrt(H.eigen.values)) %*% t(H.eigen$vectors)
-  }  
-  return(H.sqrt)
 }
