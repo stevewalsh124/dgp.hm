@@ -73,27 +73,24 @@ nrun <- nrun + hi_wt
 # Scale the responses
 mean_y <- mean(y_avg)
 sd_y <- sd(y_avg)
-y_avg <- (y_avg - mean_y) / sd_y # USED
-y_lra <- (y_lra - mean_y) / sd_y
-y_hi <- (y_hi - mean_y) / sd_y
-y_lo <- (y_lo - mean_y) / sd_y # USED
-y_pt <- (y_pt - mean_y) / sd_y
-
-# Get smoothed mean and subtract it from the low res runs
-loess_fit <- loess(y_avg ~ x, span = 0.15)
-y_lo <- y_lo - loess_fit$fitted
+y_avg <- (y_avg - mean_y) / sd_y
+y_lo <- (y_lo - mean_y) / sd_y 
 
 # Get Sigma_hat ---------------------------------------------------------------
-
-# Adjust the precision info based on the scaling of the response
-prec <- Lam_z * sd_y^2
-sdd <- sqrt(1 / prec)
 
 # Get indices
 lo_ind <- index_list$lowres.ix
 hi_ind <- index_list$highres.ix
 pt_ind <- index_list$pert.ix
 hi_only <- hi_ind[which(!(hi_ind %in% lo_ind))]
+
+# Adjust the precision info based on the scaling of the response
+prec <- Lam_z * sd_y^2
+sdd <- sqrt(1 / prec)
+
+# Get smoothed mean and subtract it from the low res runs
+loess_fit <- loess(y_avg ~ x, span = 0.15)
+y_lo <- y_lo - loess_fit$fitted
 
 # Optimize kernel hyperparameters for Matern kernel of low res 
 params <- opt_matern(dx[lo_ind, lo_ind], y_lo[lo_ind, ], sdd[lo_ind])
@@ -112,7 +109,7 @@ Sigma_hat <- as.matrix(Matrix::bdiag(diag(block1), block2, diag(block3)))
 
 fitcov <- fit_one_layer_SW(x, y_avg, nmcmc = 1500, true_g = 1e-8,
                              Sigma_hat = Sigma_hat/nrun)
-fitcov <- trim(fitcov, 1000, 5)
+fitcov <- trim(fitcov, 1000, 5) # from deepgp
 plot(fitcov)
 
 # STOPPED HERE
