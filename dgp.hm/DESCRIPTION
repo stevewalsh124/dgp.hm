@@ -12,4 +12,4 @@ Encoding: UTF-8
 NeedsCompilation: yes
 Imports:
     deepgp
-RoxygenNote: 7.3.1
+RoxygenNote: 7.2.3

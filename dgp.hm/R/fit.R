@@ -53,7 +53,7 @@ fit_one_layer_SW <- function(x, y, nmcmc = 10000, verb = TRUE, g_0 = 0.01,
 
 gibbs_one_layer_SW <- function (x, y, nmcmc, verb, initial, true_g, settings, 
                                 v, Sigma_hat) {
-  dx <- sq_dist(x)
+  dx <- deepgp::sq_dist(x)
   g <- vector(length = nmcmc)
   if (is.null(true_g)) g[1] <- initial$g else g[1] <- true_g
   theta <- vector(length = nmcmc)
@@ -65,7 +65,7 @@ gibbs_one_layer_SW <- function (x, y, nmcmc, verb, initial, true_g, settings,
   ll <- NULL
   
   for (j in 2:nmcmc) {
-    if (verb & (j %% 1000 == 0)) cat(j, "\n")
+    if (verb & (j %% 500 == 0)) cat(j, "\n")
     
     # Sample nugget (g)
     if (is.null(true_g)) {
@@ -161,7 +161,7 @@ sample_w_SW <- function (out_vec, w_t, w_t_dmat, in_dmat, g, theta_y, theta_w,
     while (accept == FALSE) {
       count <- count + 1
       w_t[, i] <- w_prev * cos(a) + w_prior * sin(a)
-      dw <- sq_dist(w_t)
+      dw <- deepgp::sq_dist(w_t)
       new_logl <- logl_SW(out_vec, dw, g, theta_y, outer = TRUE, 
                           v = v, Sigma_hat = Sigma_hat)$logl
       if (new_logl > ll_threshold) {

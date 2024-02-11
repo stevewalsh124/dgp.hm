@@ -6,6 +6,48 @@
 #   matix.Moore.Penrose2
 #   matrix.sqrt
 
+# Optimize Matern -------------------------------------------------------------
+#' @export
+#' 
+opt_matern <- function(dx, y, sdd, init = c(0.1, -5, 0.1, 0.1), 
+                       lower = c(-5, -35, -5, 0.2),
+                       upper = c(4, 3, 4, 100)) { 
+  out <- optim(init, nl_matern, method = "L-BFGS-B", lower = lower,
+               upper = upper, dx = dx, y = y, sdd = sdd)
+  return(list(kappa_hat = out$par[4], 
+              phi_hat = exp(out$par[1]),
+              theta_hat = exp(out$par[1]) * out$par[4], 
+              g_hat = exp(out$par[2]),
+              tau2_hat = exp(out$par[3])))
+}
+
+# Negative log likelihood Matern ----------------------------------------------
+
+nl_matern <- function(par, dx, y, sdd) {
+  # par: c(theta, g, tau2, kappa)
+  # dx: squared distances of inputs
+  # y: vector of response
+  # sdd: scaled precisions
+  
+  theta <- exp(par[1])
+  g <- exp(par[2])
+  tau2 <- exp(par[3])
+  kappa <- par[4]
+  n <- nrow(y)
+  d <- ncol(y)
+  
+  K <- tau2 * (geoR::matern(sqrt(dx), phi = theta, kappa = kappa) + diag(g, n))
+  Ki <- solve(K)
+  ldetK <- determinant(K, logarithm = TRUE)$modulus
+  
+  ll <- 0
+  for (i in 1:d) {
+    yit <- y[, i] / sdd
+    ll <- ll - (1/2)*(t(yit) %*% Ki %*% yit) - (1/2)*ldetK 
+  }
+  return(-ll)
+}
+
 # scrP ------------------------------------------------------------------------
 #' @export
 
