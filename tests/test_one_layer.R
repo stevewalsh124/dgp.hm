@@ -106,7 +106,7 @@ Matern_hat <- params$tau2_hat * (geoR::matern(sqrt(dx[lo_ind, lo_ind]),
 block1 <- (1 / sdd[pt_ind]) * (1/10000)
 block2 <-  sdd[lo_ind]^2 * Matern_hat
 block3 <- (1/sdd[hi_only]) * (1 / (precs_hi[hi_only] * sd_y^2))
-Sigma_hat <- Matrix::bdiag(diag(block1), block2, diag(block3))
+Sigma_hat <- as.matrix(Matrix::bdiag(diag(block1), block2, diag(block3)))
 
 # Run MCMC --------------------------------------------------------------------
 
