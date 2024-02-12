@@ -1,13 +1,19 @@
 
 # Function contents -----------------------------------------------------------
 # External:
-#   est_true.gpSW
-#   est_true.dgp2SW
+#   est_true (applies to both gpSW and dgp2SW classes)
 
-est_true.gpSW <- function(fit, tolpower = -10) {
+# est_true --------------------------------------------------------------------
+#' @export 
+
+est_true <- function(fit, tolpower = -10) {
   
   n <- nrow(fit$x)
-  dx <- deepgp::sq_dist(fit$x)
+  if (!(class(fit) %in% c("gpSW", "dgp2SW")))
+    stop("only applicable to gpSW or dgp2SW classes")
+  
+  deep <- (class(fit) == "dgp2SW")
+  if (!deep) d2 <- deepgp::sq_dist(fit$x)
   
   S_e <- fit$Sigma_hat
   S_ei <- moore_penrose(S_e, tolpower)
@@ -21,7 +27,12 @@ est_true.gpSW <- function(fit, tolpower = -10) {
     
     if (i %% 500 == 0) cat(i, "\n")
     
-    S <- deepgp:::Matern(dx, 1, fit$theta[i], 1e-8, fit$v)
+    if (deep) {
+      d2 <- deepgp:::sq_dist(fit$w[[i]])
+      theta <- fit$theta_y[i]
+    } else theta <- fit$theta[i]
+    
+    S <- deepgp:::Matern(d2, 1, theta, 1e-8, fit$v)
     S_si <- solve(S)
     S_si <- (S_si + t(S_si)) / 2
     
@@ -30,15 +41,17 @@ est_true.gpSW <- function(fit, tolpower = -10) {
     
     M <- Ms[, i] <- C %*% S_ei %*% fit$y
     
-    Ss[, ((i - 1) + 1):i] <- t(mvtnorm::rmvnorm(n = 1, mean = M, sigma = C, method = "eigen"))
+    Ss[, ((i - 1) + 1):i] <- t(mvtnorm::rmvnorm(n = 1, mean = M, sigma = C, 
+                                                method = "eigen"))
   }
   
-  m <- rowMeans(Ss)
-  ub <- apply(Ss, 1, quantile, p = 0.975)
-  lb <- apply(Ss, 1, quantile, p = 0.025)
-  ubb <- apply(Ss, 1, quantile, p = 0.995)
-  lbb <- apply(Ss, 1, quantile, p = 0.005)
+  fit$m <- rowMeans(Ss)
+  fit$ub <- apply(Ss, 1, quantile, p = 0.975)
+  fit$lb <- apply(Ss, 1, quantile, p = 0.025)
+  fit$ubb <- apply(Ss, 1, quantile, p = 0.995)
+  fit$lbb <- apply(Ss, 1, quantile, p = 0.005)
+  # fit$Ms <- Ms; fit$Ss <- Ss; fit$Cs <- Cs
   
-  return(append(fit, list(m=m, ub=ub, lb=lb, ubb=ubb, lbb=lbb, Ms=Ms, Ss=Ss, Cs=Cs)))
+  return(fit)
   
 }

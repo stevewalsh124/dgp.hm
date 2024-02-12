@@ -1,22 +1,46 @@
 
+###############################################################################
+# This script fits the Bayesian hierarchical model for a particular cosmology
+# and writes the results to a csv file.
+#
+# Command line arguments:
+#    model: number of particular model (0-116)
+#    deep: indicator for whether to fit a DGP or GP (1 = deep, 0 = not deep)
+# 
+# Outputs:
+#    writes csv file of predicted values to the results folder
+#
+###############################################################################
+
 library(dgp.hm)
 library(zoo) # rollmean
 library(Matrix) # bdiag
 
+# Read command line arguments -------------------------------------------------
+
+model <- 1 # integer 0-116 (0, 112:116 are testing)
+deep <- 1 
+
+args <- commandArgs(TRUE)
+if(length(args) > 0) 
+  for(i in 1:length(args)) 
+    eval(parse(text = args[[i]]))
+
+cat("model is ", model, "\n")
+if (deep) cat("model is deep \n") else cat("model is NOT deep \n")
+
 # Load data for a particular model --------------------------------------------
 
-# Model: choose from 1-111 for training set, or c(0, 112:116) for test set
-mte <- 1
-if (mte <= 111) {
-  mte_name <- paste0("M", if(mte < 100) {"0"}, if (mte < 10) {"0"}, mte) 
+if (model <= 111) {
+  model_name <- paste0("M", if(model < 100) {"0"}, if (model < 10) {"0"}, model) 
 } else {
   test_names <- c("E001", "E002", "E003", "E009", "E010")
-  mte_name <- test_names[mte - 111]
+  model_name <- test_names[model - 111]
 }
 
 # 1st column is k, 2nd is linear pert theory, 3:18 is low-res, 19 is hi-res
 file_name <- paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP499/pk_", 
-                    mte_name, "_test.dat")
+                    model_name, "_test.dat")
 pk2 <- read.table(file_name)
 n <- nrow(pk2)
 nrun <- 16 # number of low res runs
@@ -107,15 +131,19 @@ Sigma_hat <- as.matrix(Matrix::bdiag(diag(block1), block2, diag(block3)))
 
 # Run MCMC --------------------------------------------------------------------
 
-fit1 <- fit_one_layer_SW(x, y_avg, nmcmc = 1500, Sigma_hat = Sigma_hat / nrun)
-plot(fit1) # investigate trace plots
-fit1 <- trim(fit1, 1000, 5)
+if (deep) {
+  w_0 <- read.csv("w0_from_mte1_50k.csv")[[1]]
+  fit <- fit_two_layer_SW(x, y_avg, nmcmc = 1500, w_0 = w_0,
+                          Sigma_hat = Sigma_hat / nrun)
+} else {
+  fit <- fit_one_layer_SW(x, y_avg, nmcmc = 1500, Sigma_hat = Sigma_hat / nrun)
+}
 
-fit2 <- fit_two_layer_SW(x, y_avg, nmcmc = 1500, Sigma_hat = Sigma_hat / nrun)
-plot(fit2) # investigate trace plots and ESS samples
+# plot(fit) # optionally investigate trace plots
+fit <- trim(fit, 1000, 5)
+fit <- est_true(fit)
 
-# STOPPED HERE
-# TODO: add this to the package
-par(mfrow=c(1,1))
-fitcov <- est.true(fitcov)
-plot.true(fitcov)
+results <- data.frame(x = x, y = y_avg, m = fit$m, ub = fit$ub, lb = fit$lb,
+                      ubb = fit$ubb, lbb = fit$lbb)
+write.csv(results, paste0("results/", ifelse(deep, "dgp", "gp"), "_", 
+                          model_name, ".csv"), row.names = FALSE)
