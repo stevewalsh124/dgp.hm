@@ -27,7 +27,6 @@ nrun <- 16
 # Get inputs
 load("../Mira-Titan-IV-Data/precision_and_indexes.Rdata")
 x <- log10(k)
-x <- (x - min(x)) / (max(x) - min(x))
 
 # Get precision info 
 precs_lo <- ifelse(1:n %in% index_list$lowres.ix, prec_lowres, 0) * nrun
