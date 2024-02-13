@@ -98,7 +98,7 @@ nrun <- nrun + hi_wt
 mean_y <- mean(y_avg)
 sd_y <- sd(y_avg)
 y_avg <- (y_avg - mean_y) / sd_y
-y_lo <- (y_lo - mean_y) / sd_y 
+for (i in 1:ncol(y_lo)) y_lo[, i] <- (y_lo[, i] - mean_y) / sd_y 
 
 # Get Sigma_hat ---------------------------------------------------------------
 

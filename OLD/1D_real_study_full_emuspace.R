@@ -9,21 +9,22 @@ library(mvtnorm) #rmvnorm
 library(plgp) #distance (which is squared distances)
 library(zoo) #rollmean
 library(Matrix)
+library(dgp.hm)
 
 # Fit a shallow (one_layer) GP, or a (two_layer) deep GP (DGP)?
 one_layer <- T
 
 # Source functions to fit a shallow or deep GP, and also
 # estimate the true power matter spectra, given the (D)GP fit (est.true in plot_fns.R)
-if(one_layer) {source("OLD/OLD_logl_cov_1L.R")} else {source("OLD/OLD_logl_cov.R")}
-source("OLD/plot_fns.R")
+#if(one_layer) {source("OLD/OLD_logl_cov_1L.R")} else {source("OLD/OLD_logl_cov.R")}
+#source("OLD/plot_fns.R")
 
 # load the precision data (k, prec_highres, prec_lowres, index_list)
-load("Mira-Titan-IV-Data/precision_and_indexes.Rdata")
+load("../Mira-Titan-IV-Data/precision_and_indexes.Rdata")
 
 # This loads a burned-in estimate of the warping for model 1
 # This can be called as w0 to help with burning in the other models (cosmologies)
-w0_from_mte1_50k <- read.csv("csv/w0_from_mte1_50k.csv", row.names = 1)
+w0_from_mte1_50k <- read.csv("../fitting/w0_from_mte1_50k.csv")[[1]]
 
 # Save global environment when script completes?
 saveImage <- F
@@ -97,18 +98,18 @@ step <- 499
 # first column is k, 2nd is linear pert theory, 3:18 is low-res, 19 is hi-res
 # training models are 1-111, testing are c(0,112:116)
 if(mte %in% 0:111){
-  pk2 <- read.table(paste0("Mira-Titan-IV-data/Mira-Titan-2021/STEP",step,"/pk_M",
+  pk2 <- read.table(paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP",step,"/pk_M",
                            if(mte<100){"0"},if(mte<10){"0"},mte,"_test.dat"))
 } else {
-  if(mte==112) pk2 <- read.table(paste0("Mira-Titan-IV-data/Mira-Titan-2021/STEP",
+  if(mte==112) pk2 <- read.table(paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP",
                                         step,"/pk_E001_test.dat"))
-  if(mte==113) pk2 <- read.table(paste0("Mira-Titan-IV-data/Mira-Titan-2021/STEP",
+  if(mte==113) pk2 <- read.table(paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP",
                                         step,"/pk_E002_test.dat"))
-  if(mte==114) pk2 <- read.table(paste0("Mira-Titan-IV-data/Mira-Titan-2021/STEP",
+  if(mte==114) pk2 <- read.table(paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP",
                                         step,"/pk_E003_test.dat"))
-  if(mte==115) pk2 <- read.table(paste0("Mira-Titan-IV-data/Mira-Titan-2021/STEP",
+  if(mte==115) pk2 <- read.table(paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP",
                                         step,"/pk_E009_test.dat"))
-  if(mte==116) pk2 <- read.table(paste0("Mira-Titan-IV-data/Mira-Titan-2021/STEP",
+  if(mte==116) pk2 <- read.table(paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP",
                                         step,"/pk_E010_test.dat"))
 }
 
