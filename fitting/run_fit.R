@@ -118,7 +118,6 @@ y_lo <- y_lo - loess_fit$fitted
 
 # Optimize kernel hyperparameters for Matern kernel of low res 
 params <- opt_matern(dx[lo_ind, lo_ind], y_lo[lo_ind, ], sdd[lo_ind])
-if (params$g_hat < 1e-6) params$g_hat <- 1e-6
 Matern_hat <- params$tau2_hat * (geoR::matern(sqrt(dx[lo_ind, lo_ind]), 
                                               phi = params$phi_hat, 
                                               kappa = params$kappa_hat) + 
@@ -126,7 +125,7 @@ Matern_hat <- params$tau2_hat * (geoR::matern(sqrt(dx[lo_ind, lo_ind]),
 
 # Create block matrix (blocks correspond to pert, lo, high)
 block1 <- (1 / sdd[pt_ind]) * (1/10000)
-block2 <-  sdd[lo_ind]^2 * Matern_hat
+block2 <-  diag(sdd[lo_ind]^2) * Matern_hat
 block3 <- (1/sdd[hi_only]) * (1 / (precs_hi[hi_only] * sd_y^2))
 Sigma_hat <- as.matrix(Matrix::bdiag(diag(block1), block2, diag(block3)))
 
