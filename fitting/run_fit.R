@@ -32,7 +32,7 @@ if (deep) cat("model is deep \n") else cat("model is NOT deep \n")
 # Load data for a particular model --------------------------------------------
 
 if (model <= 111) {
-  model_name <- paste0("M", if(model < 100) {"0"}, if (model < 10) {"0"}, model) 
+  model_name <- paste0("M", if (model < 100) {"0"}, if (model < 10) {"0"}, model) 
 } else {
   test_names <- c("E001", "E002", "E003", "E009", "E010")
   model_name <- test_names[model - 111]
@@ -62,12 +62,12 @@ Lam_pt <- rollmean(precs_pt, k = 10, fill = "extend")
 
 # Precision matrix for weighted average, mu_z
 Lam_z <- Lam_pt + Lam_lo + Lam_hi
+sdd <- sqrt(1 / Lam_z)
 
 # Get inputs ------------------------------------------------------------------
 
-# log10 of wavenumber (k) is x, then standardize to [0, 1]
+# log10 of wavenumber (k) is x
 x <- log10(k)
-x <- (x - min(x)) / (max(x) - min(x))
 dx <- deepgp::sq_dist(x)
 
 # Get response ----------------------------------------------------------------
@@ -94,12 +94,6 @@ y_avg <- (1 / Lam_z) * (Lam_pt * y_pt + Lam_lo * y_lra + Lam_hi * y_hi)
 hi_wt <- unique(prec_highres / prec_lowres)[1]
 nrun <- nrun + hi_wt
 
-# Scale the responses
-mean_y <- mean(y_avg)
-sd_y <- sd(y_avg)
-y_avg <- (y_avg - mean_y) / sd_y
-y_lo <- (y_lo - mean_y) / sd_y 
-
 # Get Sigma_hat ---------------------------------------------------------------
 
 # Get indices
@@ -107,10 +101,6 @@ lo_ind <- index_list$lowres.ix
 hi_ind <- index_list$highres.ix
 pt_ind <- index_list$pert.ix
 hi_only <- hi_ind[which(!(hi_ind %in% lo_ind))]
-
-# Adjust the precision info based on the scaling of the response
-prec <- Lam_z * sd_y^2
-sdd <- sqrt(1 / prec)
 
 # Get smoothed mean and subtract it from the low res runs
 loess_fit <- loess(y_avg ~ x, span = 0.15)
@@ -126,7 +116,7 @@ Matern_hat <- params$tau2_hat * (geoR::matern(sqrt(dx[lo_ind, lo_ind]),
 # Create block matrix (blocks correspond to pert, lo, high)
 block1 <- (1 / sdd[pt_ind]) * (1/10000)
 block2 <-  sdd[lo_ind]^2 * Matern_hat
-block3 <- (1/sdd[hi_only]) * (1 / (precs_hi[hi_only] * sd_y^2))
+block3 <- (1/sdd[hi_only]) * (1 / (precs_hi[hi_only]))
 Sigma_hat <- as.matrix(Matrix::bdiag(diag(block1), block2, diag(block3)))
 
 # Run MCMC --------------------------------------------------------------------
