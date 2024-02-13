@@ -1,6 +1,13 @@
 # dgp.hm
 
-The `dgp.hm` folder contains the R package.  To build and install, run
+# New folder structure
+
+* **dgp.hm**: This folder contains the R package for hierarchical modeling.
+* **fitting**: This folder contains the R script to fit a hierarchical model (shallow or deep) to a particular model.  A bash script offers easily parallel computation of multiple models.  Results are stored in csv files.  The `collect_means.R` script (will) collect and compile the predicted posterior means of all testing and training models.
+* **plotting**: This folder contains R scripts to generate useful figures.
+
+
+To build and install the `dgp.hm` R package, run
 
 ```
 R CMD build dgp.hm
