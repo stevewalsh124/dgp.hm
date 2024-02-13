@@ -62,12 +62,12 @@ Lam_pt <- rollmean(precs_pt, k = 10, fill = "extend")
 
 # Precision matrix for weighted average, mu_z
 Lam_z <- Lam_pt + Lam_lo + Lam_hi
-sdd <- sqrt(1 / Lam_z)
 
 # Get inputs ------------------------------------------------------------------
 
 # log10 of wavenumber (k) is x
 x <- log10(k)
+x <- (x - min(x)) / (max(x) - min(x))
 dx <- deepgp::sq_dist(x)
 
 # Get response ----------------------------------------------------------------
@@ -94,6 +94,12 @@ y_avg <- (1 / Lam_z) * (Lam_pt * y_pt + Lam_lo * y_lra + Lam_hi * y_hi)
 hi_wt <- unique(prec_highres / prec_lowres)[1]
 nrun <- nrun + hi_wt
 
+# Scale the responses
+mean_y <- mean(y_avg)
+sd_y <- sd(y_avg)
+y_avg <- (y_avg - mean_y) / sd_y
+y_lo <- (y_lo - mean_y) / sd_y 
+
 # Get Sigma_hat ---------------------------------------------------------------
 
 # Get indices
@@ -102,12 +108,17 @@ hi_ind <- index_list$highres.ix
 pt_ind <- index_list$pert.ix
 hi_only <- hi_ind[which(!(hi_ind %in% lo_ind))]
 
+# Adjust the precision info based on the scaling of the response
+prec <- Lam_z * sd_y^2
+sdd <- sqrt(1 / prec)
+
 # Get smoothed mean and subtract it from the low res runs
 loess_fit <- loess(y_avg ~ x, span = 0.15)
 y_lo <- y_lo - loess_fit$fitted
 
 # Optimize kernel hyperparameters for Matern kernel of low res 
 params <- opt_matern(dx[lo_ind, lo_ind], y_lo[lo_ind, ], sdd[lo_ind])
+if (params$g_hat < 1e-6) params$g_hat <- 1e-6
 Matern_hat <- params$tau2_hat * (geoR::matern(sqrt(dx[lo_ind, lo_ind]), 
                                               phi = params$phi_hat, 
                                               kappa = params$kappa_hat) + 
@@ -116,7 +127,7 @@ Matern_hat <- params$tau2_hat * (geoR::matern(sqrt(dx[lo_ind, lo_ind]),
 # Create block matrix (blocks correspond to pert, lo, high)
 block1 <- (1 / sdd[pt_ind]) * (1/10000)
 block2 <-  sdd[lo_ind]^2 * Matern_hat
-block3 <- (1/sdd[hi_only]) * (1 / (precs_hi[hi_only]))
+block3 <- (1/sdd[hi_only]) * (1 / (precs_hi[hi_only] * sd_y^2))
 Sigma_hat <- as.matrix(Matrix::bdiag(diag(block1), block2, diag(block3)))
 
 # Run MCMC --------------------------------------------------------------------
@@ -133,7 +144,13 @@ if (deep) {
 fit <- trim(fit, 1000, 5)
 fit <- est_true(fit)
 
-results <- data.frame(x = x, y = y_avg, m = fit$m, ub = fit$ub, lb = fit$lb,
-                      ubb = fit$ubb, lbb = fit$lbb)
+# Unscale results before storing
+results <- data.frame(x = log10(k), 
+                      y = y_avg * sd_y + mean_y, 
+                      m = fit$m * sd_y + mean_y, 
+                      ub = fit$ub * sd_y + mean_y, 
+                      lb = fit$lb * sd_y + mean_y,
+                      ubb = fit$ubb * sd_y + mean_y, 
+                      lbb = fit$lbb * sd_y + mean_y)
 write.csv(results, paste0("results/", ifelse(deep, "dgp", "gp"), "_", 
                           model_name, ".csv"), row.names = FALSE)
