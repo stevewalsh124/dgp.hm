@@ -230,7 +230,7 @@ logl_SW <- function(out_vec, in_dmat, theta, outer = FALSE, v,
                     calc_tau2 = FALSE, Sigma_hat) {
   
   n <- length(out_vec)
-  K <- deepgp:::Matern(in_dmat, 1, theta, 1e-8, v) + Sigma_hat
+  K <- deepgp:::Matern(in_dmat, 1, theta, 1e-6, v) + Sigma_hat
   id <- deepgp:::invdet(K)
   quadterm <- t(out_vec) %*% id$Mi %*% out_vec
   if (outer) {
