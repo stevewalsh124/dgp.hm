@@ -10,6 +10,7 @@ library(plgp) #distance (which is squared distances)
 library(zoo) #rollmean
 library(Matrix)
 library(dgp.hm)
+source("plot_fns.R")
 
 # Fit a shallow (one_layer) GP, or a (two_layer) deep GP (DGP)?
 one_layer <- T
@@ -72,8 +73,8 @@ cov_fn <- "matern"#"exp2"#
 nrun <- 16
 
 # MCMC settings
-nmcmc <- 150#0#0
-nburn <- 100#0#0
+nmcmc <- 1500#0
+nburn <- 1000#0
 kth <- 4
 
 # mte: Model to evaluate
@@ -339,7 +340,6 @@ v <- fitcov$v
 
 par(mfrow=c(1,1))
 fitcov <- est_true(fitcov)
-source("plot_fns.R")
 plot.true(fitcov)
 if(mte %in% 1:111){
   cosmicEmu <- read.csv(paste0("../Mira-Titan-IV-Data/CosmicEmu/2022-Mira-Titan-IV/P_tot/orig_111/EMU",
