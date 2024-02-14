@@ -243,9 +243,6 @@ plot.true <- function(fit, S_e = fit$Sigma_hat, ne = 1, tolpower = -10,
   lbb=fit$lbb
   emp_cover=fit$emp_cover
   emp_cover99=fit$emp_cover99
-  Ms=fit$Ms
-  Ss=fit$Ss
-  Cs=fit$Cs
   
   plot(fit$x, fit$y, type="n",
        ylim = range(c(m, lb, ub, lbb, ubb, Y)), 
@@ -263,22 +260,25 @@ plot.true <- function(fit, S_e = fit$Sigma_hat, ne = 1, tolpower = -10,
   legend("bottomright", legend = c("true", "sample avg", "UQ"), 
          col=c("red","black", "blue"), lty=c(1,2,1), lwd=c(2,2,1))
   
-  # Using law of total expectation and variance instead
-  mu_bar <- rowMeans(Ms)
-  C_bar <- matrix(rowMeans(Cs),  length(fit$x),  length(fit$x))
-  cov_mut <- cov(t(Ms))
-  
-  plot(x, mu_bar, type="n", main = "law of total E & V; MPI version", col="blue",
-       ylim=range(Y))
-  for (i in 1:nrun) lines(fit$x, Y[i,], col="gray")
-  lines(x, mu_bar, col="blue")
-  if(exists("y_hi")) lines(x, y_hi, col="red")
-  if(exists("ytrue")) lines(x, ytrue, col="red")
-  lines(x, fit$y, lty=2)
-  lines(x, mu_bar - 2*sqrt(diag(C_bar+cov_mut)), col="blue")
-  lines(x, mu_bar + 2*sqrt(diag(C_bar+cov_mut)), col="blue")
-  legend("bottomright", legend = c("true", "sample avg", "UQ"), 
-         col=c("red","black", "blue"), lty=c(1,2,1), lwd=c(2,2,1))
+  # # Using law of total expectation and variance instead
+  # Ms=fit$Ms
+  # Ss=fit$Ss
+  # Cs=fit$Cs
+  # mu_bar <- rowMeans(Ms)
+  # C_bar <- matrix(rowMeans(Cs),  length(fit$x),  length(fit$x))
+  # cov_mut <- cov(t(Ms))
+  # 
+  # plot(x, mu_bar, type="n", main = "law of total E & V; MPI version", col="blue",
+  #      ylim=range(Y))
+  # for (i in 1:nrun) lines(fit$x, Y[i,], col="gray")
+  # lines(x, mu_bar, col="blue")
+  # if(exists("y_hi")) lines(x, y_hi, col="red")
+  # if(exists("ytrue")) lines(x, ytrue, col="red")
+  # lines(x, fit$y, lty=2)
+  # lines(x, mu_bar - 2*sqrt(diag(C_bar+cov_mut)), col="blue")
+  # lines(x, mu_bar + 2*sqrt(diag(C_bar+cov_mut)), col="blue")
+  # legend("bottomright", legend = c("true", "sample avg", "UQ"), 
+  #        col=c("red","black", "blue"), lty=c(1,2,1), lwd=c(2,2,1))
   
 }
 

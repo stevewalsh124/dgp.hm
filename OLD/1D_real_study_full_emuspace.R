@@ -72,8 +72,8 @@ cov_fn <- "matern"#"exp2"#
 nrun <- 16
 
 # MCMC settings
-nmcmc <- 1500#0
-nburn <- 1000#0
+nmcmc <- 150#0#0
+nburn <- 100#0#0
 kth <- 4
 
 # mte: Model to evaluate
@@ -317,8 +317,8 @@ image.plot(Sigma_hat/nrunn, main = "input as sigma_hat")
 ####################
 
 if(one_layer){
-  fitcov <- fit_one_layer_SW(x = x, y = c(y_avg), nmcmc = nmcmc, true_g = 1e-10,
-                             Sigma_hat = Sigma_hat/nrunn, cov = cov_fn)
+  fitcov <- fit_one_layer_SW(x = x, y = c(y_avg), nmcmc = nmcmc, 
+                             Sigma_hat = Sigma_hat/nrunn)
 } else {
   if(force_id_warp){
     fitcov <- fit_two_layer_SW(x = x, y = c(y_avg), nmcmc = nmcmc, Sigma_hat = Sigma_hat/nrunn, cov = cov_fn, pmx = pmx, true_g = 1e-10,
@@ -338,23 +338,24 @@ plot(fitcov)
 v <- fitcov$v
 
 par(mfrow=c(1,1))
-fitcov <- est.true(fitcov)
+fitcov <- est_true(fitcov)
+source("plot_fns.R")
 plot.true(fitcov)
 if(mte %in% 1:111){
-  cosmicEmu <- read.csv(paste0("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/orig_111/EMU",
+  cosmicEmu <- read.csv(paste0("../Mira-Titan-IV-Data/CosmicEmu/2022-Mira-Titan-IV/P_tot/orig_111/EMU",
                                mte-1,".txt"),sep="", header = F)
 } else {
-  if(mte==0) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU5.txt",
+  if(mte==0) cosmicEmu <- read.csv("../Mira-Titan-IV-Data/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU5.txt",
                                    sep="", header = F)
-  if(mte==112) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU0.txt",
+  if(mte==112) cosmicEmu <- read.csv("../Mira-Titan-IV-Data/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU0.txt",
                                      sep="", header = F)
-  if(mte==113) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU1.txt",
+  if(mte==113) cosmicEmu <- read.csv("../Mira-Titan-IV-Data/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU1.txt",
                                      sep="", header = F)
-  if(mte==114) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU2.txt",
+  if(mte==114) cosmicEmu <- read.csv("../Mira-Titan-IV-Data/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU2.txt",
                                      sep="", header = F)
-  if(mte==115) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU3.txt",
+  if(mte==115) cosmicEmu <- read.csv("../Mira-Titan-IV-Data/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU3.txt",
                                      sep="", header = F)
-  if(mte==116) cosmicEmu <- read.csv("R/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU4.txt",
+  if(mte==116) cosmicEmu <- read.csv("../Mira-Titan-IV-Data/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU4.txt",
                                      sep="", header = F)
 
 }
