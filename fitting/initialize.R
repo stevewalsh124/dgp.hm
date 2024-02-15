@@ -1,14 +1,15 @@
 
 ###############################################################################
 # This script fits the Bayesian hierarchical model for a particular cosmology
-# and writes the results to a csv file.
+# and writes the results to a csv file. Run first to initialize future fits.
 #
 # Command line arguments:
 #    model: number of particular model (0-116)
 #    deep: indicator for whether to fit a DGP or GP (1 = deep, 0 = not deep)
 # 
 # Outputs:
-#    writes csv file of predicted values to the results folder
+#    writes csv file of final mcmc iteration for w and hyperparameters
+#    (theta_y, theta_w)
 #
 ###############################################################################
 
@@ -39,7 +40,7 @@ if (model <= 111) {
 }
 
 # 1st column is k, 2nd is linear pert theory, 3:18 is low-res, 19 is hi-res
-file_name <- paste0("../Mira-Titan-IV-Data/Mira-Titan-2021/STEP499/pk_", 
+file_name <- paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP499/pk_", 
                     model_name, "_test.dat")
 pk2 <- read.table(file_name)
 n <- nrow(pk2)
@@ -132,28 +133,19 @@ Sigma_hat <- as.matrix(Matrix::bdiag(diag(block1), block2, diag(block3)))
 # Run MCMC --------------------------------------------------------------------
 
 if (deep) {
-  # load in initialized estimates for warping and hyperparameters for fit
-  w_0 <- read.csv("results/w0.csv")[[1]]
-  params0 <- read.csv("results/params0.csv")
-  fit <- fit_two_layer_SW(x, y_avg, nmcmc = 1500, w_0 = w_0, 
-                          theta_y_0 = params0$theta_y0,
-                          theta_w_0 = params0$theta_w0,
+  fit <- fit_two_layer_SW(x, y_avg, nmcmc = 50000, 
                           Sigma_hat = Sigma_hat / nrun)
 } else {
-  fit <- fit_one_layer_SW(x, y_avg, nmcmc = 1500, Sigma_hat = Sigma_hat / nrun)
+  fit <- fit_one_layer_SW(x, y_avg, nmcmc = 50000, Sigma_hat = Sigma_hat / nrun)
 }
 
 # plot(fit) # optionally investigate trace plots
-fit <- trim(fit, 1000, 5)
-fit <- est_true(fit)
+fit <- trim(fit, 40000, 10)
 
 # Unscale results before storing
-results <- data.frame(x = log10(k), 
-                      y = y_avg * sd_y + mean_y, 
-                      m = fit$m * sd_y + mean_y, 
-                      ub = fit$ub * sd_y + mean_y, 
-                      lb = fit$lb * sd_y + mean_y,
-                      ubb = fit$ubb * sd_y + mean_y, 
-                      lbb = fit$lbb * sd_y + mean_y)
-write.csv(results, paste0("results/", ifelse(deep, "dgp", "gp"), "_", 
-                          model_name, ".csv"), row.names = FALSE)
+w0 <- c(fit$w[[length(fit$w)]])
+params0 <- data.frame(theta_y0 = fit$theta_y[length(fit$theta_y)],
+                      theta_w0 = fit$theta_w[length(fit$theta_w)])
+
+write.csv(params0, paste0("results/params0.csv"), row.names = FALSE)
+write.csv(w0, paste0("results/w0.csv"), row.names = FALSE)
