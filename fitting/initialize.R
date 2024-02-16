@@ -1,11 +1,9 @@
 
 ###############################################################################
-# This script fits the Bayesian hierarchical model for a particular cosmology
-# and writes the results to a csv file. Run first to initialize future fits.
-#
-# Command line arguments:
-#    model: number of particular model (0-116)
-#    deep: indicator for whether to fit a DGP or GP (1 = deep, 0 = not deep)
+# This script fits the deep Bayesian hierarchical model for M001 for many 
+# MCMC iterations and saves the resulting hyperparameters (w_0, theta_w_0, and
+# theta_y_0) to csv files.  They will be used to initialize fits for other 
+# models.
 # 
 # Outputs:
 #    writes csv file of final mcmc iteration for w and hyperparameters
@@ -17,27 +15,9 @@ library(dgp.hm)
 library(zoo) # rollmean
 library(Matrix) # bdiag
 
-# Read command line arguments -------------------------------------------------
+# Load data for M001 ----------------------------------------------------------
 
-model <- 1 # integer 0-116 (0, 112:116 are testing)
-deep <- 1 
-
-args <- commandArgs(TRUE)
-if(length(args) > 0) 
-  for(i in 1:length(args)) 
-    eval(parse(text = args[[i]]))
-
-cat("model is ", model, "\n")
-if (deep) cat("model is deep \n") else cat("model is NOT deep \n")
-
-# Load data for a particular model --------------------------------------------
-
-if (model <= 111) {
-  model_name <- paste0("M", if (model < 100) {"0"}, if (model < 10) {"0"}, model) 
-} else {
-  test_names <- c("E001", "E002", "E003", "E009", "E010")
-  model_name <- test_names[model - 111]
-}
+model_name <- "M001"
 
 # 1st column is k, 2nd is linear pert theory, 3:18 is low-res, 19 is hi-res
 file_name <- paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP499/pk_", 
@@ -119,10 +99,8 @@ y_lo <- y_lo - loess_fit$fitted
 
 # Optimize kernel hyperparameters for Matern kernel of low res 
 params <- opt_matern(dx[lo_ind, lo_ind], y_lo[lo_ind, ], sdd[lo_ind])
-Matern_hat <- params$tau2_hat * (geoR::matern(sqrt(dx[lo_ind, lo_ind]), 
-                                              phi = params$phi_hat, 
-                                              kappa = params$kappa_hat) + 
-                                   diag(params$g_hat, length(lo_ind)))
+Matern_hat <- deepgp:::Matern(dx[lo_ind, lo_ind], params$tau2_hat, 
+                              params$theta_hat, 1e-8, 1.5)
 
 # Create block matrix (blocks correspond to pert, lo, high)
 block1 <- (1 / sdd[pt_ind]) * (1/10000)
@@ -132,12 +110,7 @@ Sigma_hat <- as.matrix(Matrix::bdiag(diag(block1), block2, diag(block3)))
 
 # Run MCMC --------------------------------------------------------------------
 
-if (deep) {
-  fit <- fit_two_layer_SW(x, y_avg, nmcmc = 50000, 
-                          Sigma_hat = Sigma_hat / nrun)
-} else {
-  fit <- fit_one_layer_SW(x, y_avg, nmcmc = 50000, Sigma_hat = Sigma_hat / nrun)
-}
+fit <- fit_two_layer_SW(x, y_avg, nmcmc = 50000, Sigma_hat = Sigma_hat / nrun)
 
 # plot(fit) # optionally investigate trace plots
 fit <- trim(fit, 40000, 10)

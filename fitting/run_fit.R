@@ -118,10 +118,8 @@ y_lo <- y_lo - loess_fit$fitted
 
 # Optimize kernel hyperparameters for Matern kernel of low res 
 params <- opt_matern(dx[lo_ind, lo_ind], y_lo[lo_ind, ], sdd[lo_ind])
-Matern_hat <- params$tau2_hat * (geoR::matern(sqrt(dx[lo_ind, lo_ind]), 
-                                              phi = params$phi_hat, 
-                                              kappa = params$kappa_hat) + 
-                                   diag(params$g_hat, length(lo_ind)))
+Matern_hat <- deepgp:::Matern(dx[lo_ind, lo_ind], params$tau2_hat, 
+                              params$theta_hat, 1e-8, 1.5)
 
 # Create block matrix (blocks correspond to pert, lo, high)
 block1 <- (1 / sdd[pt_ind]) * (1/10000)

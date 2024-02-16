@@ -99,23 +99,10 @@ sdd <- sqrt(1 / prec)
 loess_fit <- loess(y_avg ~ x, span = 0.15)
 y_lo <- y_lo - loess_fit$fitted
 
-# OLD VERSION 
+# Optimize kernel hyperparameters for Matern kernel of low res 
 params <- opt_matern(dx[lo_ind, lo_ind], y_lo[lo_ind, ], sdd[lo_ind])
-params
-Matern_hat <- params$tau2_hat * (geoR::matern(sqrt(dx[lo_ind, lo_ind]), 
-                                              phi = params$phi_hat, 
-                                              kappa = params$kappa_hat) + 
-                                   diag(params$g_hat, length(lo_ind)))
-
-# NEW VERSION
-params <- opt_matern2(dx[lo_ind, lo_ind], y_lo[lo_ind, ], sdd[lo_ind])
-params
-Matern_hat2 <- deepgp:::Matern(dx[lo_ind, lo_ind], params$tau2_hat, 
+Matern_hat <- deepgp:::Matern(dx[lo_ind, lo_ind], params$tau2_hat, 
                               params$theta_hat, 1e-8, 1.5)
-
-par(mfrow = c(1, 2))
-image.plot(Matern_hat, main = "Old version, est nugget and kappa")
-image.plot(Matern_hat2, main = "New version, g = 1e-8, v = 1.5")
 
 # Create block matrix (blocks correspond to pert, lo, high)
 block1 <- (1 / sdd[pt_ind]) * (1/10000)
