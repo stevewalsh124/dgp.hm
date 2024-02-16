@@ -11,14 +11,14 @@ library(dgp.hm)
 library(zoo)
 
 # Get model data
-model <- 1 
+model <- 4
 if (model <= 111) {
-  model_name <- paste0("M", if(model < 100) {"0"}, if (model < 10) {"0"}, model) 
+  model_name <- paste0("M", if (model < 100) {"0"}, if (model < 10) {"0"}, model) 
 } else {
   test_names <- c("E001", "E002", "E003", "E009", "E010")
   model_name <- test_names[model - 111]
 }
-file_name <- paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP499/pk_", 
+file_name <- paste0("../Mira-Titan-IV-Data/Mira-Titan-2021/STEP499/pk_", 
                     model_name, "_test.dat")
 pk2 <- read.table(file_name)
 n <- nrow(pk2)

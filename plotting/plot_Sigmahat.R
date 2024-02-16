@@ -22,7 +22,7 @@ if (model <= 111) {
   model_name <- test_names[model - 111]
 }
 
-file_name <- paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP499/pk_", 
+file_name <- paste0("../Mira-Titan-IV-Data/Mira-Titan-2021/STEP499/pk_", 
                     model_name, "_test.dat")
 pk2 <- read.table(file_name)
 n <- nrow(pk2)
