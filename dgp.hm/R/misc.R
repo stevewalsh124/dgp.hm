@@ -10,11 +10,11 @@
 # Optimize Matern -------------------------------------------------------------
 #' @export
 
-opt_matern <- function(dx, y, sdd, init = c(0.1, 0.1), lower = c(-10, -5),
-                       upper = c(8, 4)) { 
+opt_matern <- function(dx, y, sdd, init = c(0.1, 0.1), lower = c(-10, -10),
+                       upper = c(10, 10)) { 
   out <- optim(init, nl_matern, method = "L-BFGS-B", lower = lower,
                upper = upper, dx = dx, y = y, sdd = sdd)
-  return(list(theta_hat = exp(out$par[1]), 
+  return(list(theta_hat = exp(out$par[2] - out$par[1]), 
               tau2_hat = exp(out$par[2])))
 }
 
@@ -25,14 +25,20 @@ nl_matern <- function(par, dx, y, sdd) {
   # dx: squared distances of inputs
   # y: vector of response
   # sdd: scaled precisions
-  # UPDATED: fixed kappa = 1.5 and g = 1e-8, used deepgp instead of geo
+  # fix kappa = 2.5 and g = 1e-8
   
-  theta <- exp(par[1])
-  tau2 <- exp(par[2])
+  # optimize (theta1, theta2) in lieu of (tau2, theta); see Walsh et. al 2023
+  # theta1 = log(tau2/theta); theta2 = log(tau2)
+  theta1 <- par[1]
+  theta2 <- par[2]
+  
+  tau2 <- exp(theta2)
+  theta <- exp(theta2-theta1)
+  
   n <- nrow(y)
   d <- ncol(y)
   
-  K <- deepgp:::Matern(dx, tau2, theta, 1e-8, 1.5)
+  K <- deepgp:::Matern(dx, tau2, theta, 1e-8, 2.5)
   id <- deepgp:::invdet(K)
 
   ll <- 0
