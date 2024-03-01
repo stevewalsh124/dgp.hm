@@ -20,7 +20,7 @@ library(Matrix) # bdiag
 model_name <- "M001"
 
 # 1st column is k, 2nd is linear pert theory, 3:18 is low-res, 19 is hi-res
-file_name <- paste0("../Mira-Titan-IV-data/Mira-Titan-2021/STEP499/pk_", 
+file_name <- paste0("../Mira-Titan-IV-Data/Mira-Titan-2021/STEP499/pk_", 
                     model_name, "_test.dat")
 pk2 <- read.table(file_name)
 n <- nrow(pk2)
