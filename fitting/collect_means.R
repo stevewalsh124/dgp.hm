@@ -15,7 +15,7 @@ for (i in 1:10) {
   post_means[, i] <- results$m
   colnames(post_means)[i] <- model_name
 }
-write.csv(post_means, "post_means_train.csv", row.names = FALSE)
+write.csv(post_means, "results/post_means_train.csv", row.names = FALSE)
 
 # Testing models (STILL NEED TO BE RUN FIRST)
 #post_means <- data.frame(matrix(NA, nrow = 351, ncol = 7))
