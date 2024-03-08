@@ -47,12 +47,12 @@ n_pc = 10        # number of principal components to model
 if(n_pc < 1 | n_pc > 111) stop("number of PCs has to be between 1 and 111")
 
 # choose the power for powered-exponential covariance function 
-pwdExp = 1.95
+pwdExp = 1.9
 
 PDF=F    # do we make pdfs?
-WRITE=F  # write csvs and rda files?
+WRITE=F  # write rda file?
 
-if(PDF) pdf(paste0("pdf/pca-nPC",n_pc,"_",pwdExp,".pdf"))
+if(PDF) pdf(paste0("pca-nPC",n_pc,"_",pwdExp,".pdf"))
 
 # number of low-to-high variations for each input
 # to visualize the main effects
@@ -71,12 +71,14 @@ mean0mat = matrix(apply(eta,1,mean),nrow=n_k,ncol=nruns)
 eta0 = eta - mean0mat
 a = svd(eta0)
 plot(a$d)   # looks like 3 pc's should work
+
 # plot the basis elements
 matplot(kvals,a$u%*%sqrt(diag(a$d)),type='l')
 
 # look at coefficients for each basis function
 coef1 = a$v[,1]
 hist(coef1)
+
 # scale the coefficients so they have variance = 1
 coef = a$v*sqrt(nruns)
 # accordingly, scale the bases so when multiplied by
@@ -119,13 +121,13 @@ for (i in 1:n_pc) {
   aps[[i]] = predict(as[[i]],des_test)
 }
 
-
 mean0pred = matrix(mean0mat[,1],nrow=n_k,ncol=nrow(des_test))
 
 # create GP-PC predictions
 eta_preds <- list()
 for (i in 1:n_pc) eta_preds[[i]] = outer(bases[,i],aps[[i]]$Y_hat)
 etaEmu <- mean0pred + Reduce('+', eta_preds)
+write.csv(etaEmu, paste0("etaEmu",n_pc,"_",pwdExp,".csv"), row.names = FALSE)
 
 # show emulator output compared to training data
 par(mfrow=c(1,2),oma=c(0,0,0,0),mar=c(4,4,1.5,1))
@@ -134,7 +136,6 @@ mtext(paste0(nruns,'-run training set'),side=3,line=.1,cex=.9)
 
 matplot(kvals,etaEmu,type='l',ylab='emulator')
 mtext(paste0(ntest,'-run design, GP-PC'),side=3,line=.1,cex=.9)
-
 
 # compute the main effects for each param
 mainEffs_gppc = array(NA,c(n_k,nv,p))
@@ -191,8 +192,10 @@ for (i in 1:ntest) {
     des_testK[(i-1)*(n_k) + j,] <- as.numeric(cbind(kvals[j], des_test[i,]))
   }
 }
+
 # appropriately reshape the model output
 yEmu = as.vector(etaEmu)
+
 # convert columns of des_testK to factors
 for(k in 1:ncol(des_testK)) des_testK[,k] = as.factor(des_testK[,k])
 colnames(des_testK) = c("k",paste0("p",1:p))
@@ -229,5 +232,5 @@ toc <- proc.time()[3]
 toc - tic
 
 if(PDF) dev.off()
-if(WRITE) save.image(paste0("results/pca-nPC",n_pc,"_",pwdExp,".rda"))
+if(WRITE) save.image(paste0("pca-nPC",n_pc,"_",pwdExp,".rda"))
 
