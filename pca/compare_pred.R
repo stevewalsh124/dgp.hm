@@ -53,7 +53,7 @@ for(i in 1:6){
   pk2 <- read.table(file_name)
   
   # load the test file's posterior mean (excluded from the training set)
-  post_means_test <- read.csv("../fitting/post_means_test.csv")
+  post_means_test <- read.csv("../fitting/results/post_means_test.csv")
   
   # read in Cosmic Emu prediction, then convert to script P
   cosmicEmu <- read.csv(paste0("~/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU",
