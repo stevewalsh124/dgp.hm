@@ -29,7 +29,7 @@ colnames(etaEmu) <- c("E001", "E002", "E003", "E009", "E010", "M000")
 
 # import Kelly and Jared's process convolution estimates
 # this is not emulating, this is estimating (so it should do better)
-convln_pred <- read.csv("~/dgptc/1D_examples/csv/z_zero_test.txt", sep = "", header=F)
+convln_pred <- read.csv("../CosmicEmu_etc/z_zero_test.txt", sep = "", header=F)
 
 # record MSEs for each of three approaches
 mses <- mses_emu <- mses_conv <- matrix(NA, 6, 351)
@@ -56,7 +56,7 @@ for(i in 1:6){
   post_means_test <- read.csv("../fitting/results/post_means_test.csv")
   
   # read in Cosmic Emu prediction, then convert to script P
-  cosmicEmu <- read.csv(paste0("~/CosmicEmu/2022-Mira-Titan-IV/P_tot/test_6/EMU",
+  cosmicEmu <- read.csv(paste0("../CosmicEmu_etc/test_6/EMU",
                                i-1,".txt"), sep="", header = F)
   cosmscrPsz <- scrP(cosmicEmu[,2],k)
   
