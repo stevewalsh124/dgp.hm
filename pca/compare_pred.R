@@ -56,7 +56,7 @@ for(i in 1:6){
   post_means_test <- read.csv("../fitting/results/post_means_test.csv")
   
   # read in Cosmic Emu prediction, then convert to script P
-  cosmicEmu <- read.csv(paste0("../CosmicEmu_etc/test_6/EMU",
+  cosmicEmu <- read.csv(paste0("../CosmicEmu_etc/EMU",
                                i-1,".txt"), sep="", header = F)
   cosmscrPsz <- scrP(cosmicEmu[,2],k)
   
