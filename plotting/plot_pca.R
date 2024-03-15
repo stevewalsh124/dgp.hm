@@ -24,7 +24,7 @@ if(length(args) > 0)
 if(PDF) pdf(paste0("compare_pred_",n_pc,"_",pwdExp,".pdf"))
 
 # read in predicted power matter spectra for 6 test models
-etaEmu <- read.csv(paste0("etaEmu",n_pc,"_",pwdExp,".csv"))
+etaEmu <- read.csv(paste0("../pca/etaEmu",n_pc,"_",pwdExp,".csv"))
 colnames(etaEmu) <- c("E001", "E002", "E003", "E009", "E010", "M000")
 
 # import Kelly and Jared's process convolution estimates
