@@ -1,0 +1,110 @@
+\documentclass[11pt]{article}
+\usepackage{hyperref}
+\usepackage{amsmath, amsfonts, amssymb, mathrsfs}
+\usepackage{dcolumn}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{filemod}
+\usepackage{natbib}
+\usepackage[ruled, vlined]{algorithm2e}
+\usepackage{floatrow}
+\usepackage{setspace}
+\usepackage{verbatim}
+\usepackage{graphicx}
+
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue, 
+    urlcolor=black,
+    citecolor=blue, 
+    }
+
+\oddsidemargin=0.25in
+\evensidemargin=0.25in
+\textwidth=7in
+\textheight=8.75in
+\topmargin=-.5in
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\evensidemargin}{-.5in}
+\footskip=0.5in
+%\doublespacing
+
+\title{Article Title}
+\author{Stephen A. Walsh\thanks{Corresponding author: Division of Natural Sciences, 
+        Math and Technology, Elms College, {\tt walshst@elms.edu}} \and 
+        Annie S. Booth\thanks{Department of Statistics, North Carolina State University} \and
+        David Higdon\thanks{Department of Statistics, Virginia Tech} \and
+        Marco A.R. Ferreira\footnotemark[3]}
+\date{\today}
+
+
+\begin{document}
+
+\maketitle
+\bigskip
+
+\begin{abstract} 
+This document serves as a tentative outline of our anticipated DGP-cosmology paper.
+\end{abstract}
+
+%\vfill
+
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{itemize}
+    \item Introduce the cosmology application - why is it important?  What type of data do we have?  What do we want to do with it?
+    \item Review what has been done (Mira Titan, cosmic EMU, process convolutions?)
+    \item Overview our contribution (two-fold, see below) and describe the layout of the manuscript
+    \item Annie says: I would prefer not to have any section labelled "review", but rather to provide relevant review and citations as we go along.  Our contribution is in the folding together of many methods, not in proposing a true novel method, so I think this will flow more nicely.
+    \item Provide the link to the github repository where all our codes are provided.
+\end{itemize}
+
+\section{The data}
+
+Example reference: \citep{damianou2013deep}
+
+Here, we provide further details on the form of the data (in the introduction, we only briefly introduce it).  Include a figure of the raw data for a particular cosmology.  We describe the different modeling components and the regions of the space where they are trusted.  We also describe how each cosmology is a simulation based on 8 inputs.  
+
+We will handle the data in two stages.  First, we will focus on an individual cosmology and obtain the best predicted curve.  Second, we will use these curves to predict the curve for a held-out cosmology.  These two stages form the main two sections of this paper.
+
+\section{Bayesian Hierarchical Modeling for Particular Cosmologies}
+
+The main purpose of this section is to describe our first contribution: the use of a Bayesian hierarchical model to estimate the true curve (and provide UQ) for a particular cosmology.  We focus solely on one cosmology, independent of the others.
+
+\subsection{Gaussian Process Model}
+
+Here, we introduce the Bayesian GP model.  We mention the tapering and the formulation of the block covariance matrix.  As well as the posterior conditioning that provides the closed-form solution for the posterior mean and variance.  We can cite Steve's dissertation.
+
+\subsection{Deep Gaussian Process Model}
+
+Here, we expand on the previous section by incorporating a latent layer warping.  We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in to the methods of the previous section with very few changes.
+
+\subsection{Simulation Study}
+
+Here, we can provide results from a sim study comparing the GP and DGP, in which case the true curve is known.
+
+\subsection{Actual results (but more aptly named)}
+
+Here we can provide figures of the predicted mean and variances for a subset of the actual cosmologies.
+
+\section{Prediction for new cosmologies}
+
+This section details our second contribution - the use of the Bayesian DGP model of the previous section to predict the curve for held-out cosmologies.
+
+\subsection{The model}
+
+Here we describe the PCA-GP model.  We discuss how we use the predicted curves that we got previously as training data.
+
+\subsection{Actual results (but more aptly named)}
+
+Here we show results on held-out cosmologies.  We compare to cosmicEMU and Jared's convolution approach.
+
+\section{Discussion}
+
+Brief recap, directions for future research.
+
+\bibliographystyle{jasa}
+\bibliography{references}
+
+\end{document}
