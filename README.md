@@ -1,6 +1,6 @@
 # dgp.hm
 
-This repository contains work on Bayesian hierarchical models for cosmology data (including Gaussian processes and deep Gaussian processes).
+This repository contains work on Bayesian hierarchical models for cosmology data using deep Gaussian processes and principal components analysis.
 
 Maintainers: Steve Walsh (<walshst@elms.edu>) and Annie Booth (<annie_booth@ncsu.edu>)
 
