@@ -6,7 +6,19 @@ Maintainers: Steve Walsh (<walshst@elms.edu>) and Annie Booth (<annie_booth@ncsu
 
 ## Data Description 
 
-@Steve - add some comments here on the data (pert, low res, high res, when they are used, what the precision data is, etc.)
+The Mira-Titan IV dataset is comprised of output from a computer model where the inputs represent a particular cosmology (i.e., a 9-dimensional parameter setting). Three different types of model simulations were obtained (see Moran et. al 2022) with varying degrees of computational cost:
+
+* an inexpensive model based on perturbation theory
+* an expensive simulation model with lower resolution
+* a very expensive model with higher resolution
+
+Each of these three models produce an output for the dark matter power spectrum for the given inputs (cosmology). This output can be viewed as a function over the wavenumber, $k$. Each of these models have different values for $k$ where the estimated spectra will be useful:
+
+* Perturbation theory: $0.001000 \leq k <  0.04$
+* Low resolution: $0.04 \leq k < 0.25$
+* High resolution: $0.04 \leq k \leq 5$
+
+Additionally, we leverage estimates of the precision of these outputs at different $k$ values based on the findings from Moran et. al 2022 to estimate the posterior mean of the underlying power matter spectrum for a given cosmology, conditional on all of the model outputs available.
 
 ## Modeling
 
@@ -31,8 +43,7 @@ For all of these steps, R codes that may be used to generate relevant plots is p
 A summary of this repository's folder structure is provided below.
 
 * `CosmicEmu_etc`: contains the predictions from the Cosmic Emu model for the 6 testing cosmologies (used for comparison of final predictions)
-* `Mira-Tital-IV-Data`: contains the original cosmology data, including 8-dimensional specifications, pert theory, low res runs, high res runs, and precision info (@Steve - not all of these scripts are actually pushed up to the repo)
-* `OLD`: this is an archive folder that contains old scripts for reference only (@Steve - can we delete these now?)
+* `Mira-Tital-IV-Data`: contains the original cosmology data, including 8-dimensional specifications, pert theory, low res runs, high res runs, and precision info
 * `dgp.hm`: contains the `dgp.hm` R package which is used for fitting the hierarchical models
 * `fitting`: contains R scripts and results for fitting the Bayesian hierarchical models
 * `paper`: contains files for the writing of our journal article
