@@ -10,3 +10,4 @@
 
 # Ignore Rhistory
 *.Rhistory
+.Rproj.user
