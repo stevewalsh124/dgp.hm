@@ -54,9 +54,9 @@ This document serves as a tentative outline of our anticipated DGP-cosmology pap
 
 \begin{itemize}
     \item Introduce the cosmology application - why is it important?  What type of data do we have?  What do we want to do with it?
-    \item Review what has been done (Mira Titan, cosmic EMU, process convolutions?)
+    \item Review what has been done (Mira Titan, cosmic EMU, process convolutions)
     \item Overview our contribution (two-fold, see below) and describe the layout of the manuscript
-    \item Annie says: I would prefer not to have any section labelled "review", but rather to provide relevant review and citations as we go along.  Our contribution is in the folding together of many methods, not in proposing a true novel method, so I think this will flow more nicely.
+    \item Our contribution is in the synthesis of hierarchical modeling, DGPs, PCs.
     \item Provide the link to the github repository where all our codes are provided.
 \end{itemize}
 
@@ -64,9 +64,14 @@ This document serves as a tentative outline of our anticipated DGP-cosmology pap
 
 Example reference: \citep{damianou2013deep}
 
-Here, we provide further details on the form of the data (in the introduction, we only briefly introduce it).  Include a figure of the raw data for a particular cosmology.  We describe the different modeling components and the regions of the space where they are trusted.  We also describe how each cosmology is a simulation based on 8 inputs.  
+Here, we provide further details on the form of the data (in the introduction, we only briefly introduce it).  Include a figure of the raw data for a particular cosmology.  We describe the different modeling components and the regions of the space where they are trusted.  We also describe how each cosmology is a simulation based on 8 inputs, and the output $\mathcal{P}(k)$ is functional.
 
 We will handle the data in two stages.  First, we will focus on an individual cosmology and obtain the best predicted curve.  Second, we will use these curves to predict the curve for a held-out cosmology.  These two stages form the main two sections of this paper.
+
+Images:
+\begin{itemize}
+    \item Example cosmology showing 16 low res, 1 high res, 1 pert, wt avg, and where each output is deemed unbiased
+\end{itemize}
 
 \section{Bayesian Hierarchical Modeling for Particular Cosmologies}
 
@@ -86,7 +91,15 @@ Here, we can provide results from a sim study comparing the GP and DGP, in which
 
 \subsection{Actual results (but more aptly named)}
 
+Estimate one cosmology with 50,000 runs, and use this as a starting point for each of the others
 Here we can provide figures of the predicted mean and variances for a subset of the actual cosmologies.
+
+Images:
+\begin{itemize}
+    \item Illustration of DGP fit (post mean and UQ, could show cosmicEMU as well?)
+    \item estimated warping (or, how all 111 warpings compare)
+\end{itemize}
+
 
 \section{Prediction for new cosmologies}
 
@@ -96,13 +109,27 @@ This section details our second contribution - the use of the Bayesian DGP model
 
 Here we describe the PCA-GP model.  We discuss how we use the predicted curves that we got previously as training data.
 
+\begin{itemize}
+    \item show breakdown of estimated mean trend, basis functions/PCs, and weights of a particular PC/BF.
+\end{itemize}
+
 \subsection{Actual results (but more aptly named)}
 
-Here we show results on held-out cosmologies.  We compare to cosmicEMU and Jared's convolution approach.
+Here we show results on held-out cosmologies.  We compare to cosmicEMU and Jared's convolution approach. We can also discuss estimation of main effects, interactions amongst the 8 parameters, and variance decomposition.
+
+\begin{itemize}
+    \item compare the 4 with boxplot: our DGP training, DGP testing, vs proc conv training (aka Jared's files), proc conv testing (aka Cosmic EMU)
+    \item compare the 4's RMSEs as a function of $k$
+    \item Main effects
+\end{itemize}
 
 \section{Discussion}
 
 Brief recap, directions for future research.
+
+\section{Appendix}
+
+The different appendices from dissertation as necessary. Can also put details of dataset in supplementary material.
 
 \bibliographystyle{jasa}
 \bibliography{references}
