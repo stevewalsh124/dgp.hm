@@ -1,7 +1,8 @@
 
 ###############################################################################
 # For a particular model, plot the different data types in the emulation space.
-#
+# Additionally, plot the fitted mean and variance alongside the original data.
+# 
 # Specifications:
 #    model: model number (0-116)
 #
@@ -11,7 +12,7 @@ library(dgp.hm)
 library(zoo)
 
 # Get model data
-model <- 4
+model <- 1
 if (model <= 111) {
   model_name <- paste0("M", if (model < 100) {"0"}, if (model < 10) {"0"}, model) 
 } else {
@@ -47,7 +48,10 @@ y_hi <- scrP(y_hi, k)
 y_lra <- rowMeans(y_lo)
 y_avg <- (1 / Lam_z) * (Lam_pt * y_pt + Lam_lo * y_lra + Lam_hi * y_hi)
 
-# Plot data types
+###################
+# Plot data types #
+###################
+
 matplot(x, y_lo, col = "gray", type = "l", lty = 1, ylim = range(y_pt, y_lo, y_hi),
         xlab = "x", ylab = "y")
 lines(x, y_pt, col = "green")
@@ -60,5 +64,39 @@ lines(x[index_list$lowres.ix], rep(-1.1, length(index_list$lowres.ix)),
 lines(x[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)), 
       col = "red", lty = 3)
 lines(x, y_avg, col = "orange", lty = 2, lwd = 4)
+legend(x = "right", legend = c("pert","low res","low res avg","hi res", "wt avg"),
+       col = c("green","gray","blue","red","orange"), lty = c(1,1,1,1,2), 
+       lwd = c(1,1,1,1,4), cex=0.75)
 
 
+######################
+# Plot fitted values #
+######################
+
+fit <- read.csv(paste0("../fitting/results/dgp_", model_name, ".csv"))
+
+# Plot fitted values over the original data
+plot(fit$x, y_lo[,1], type = "l", col="gray",
+     ylim = range(c(fit$y, fit$lbb, fit$ubb)))
+for (i in 2:16) lines(fit$x, y_lo[, i], col = "gray")
+lines(fit$x, y_hi, col="red", lwd=1.5)
+lines(fit$x, fit$y, lwd = 1.5, lty=2)
+lines(fit$x, fit$m, col = "blue", lty=3)
+lines(fit$x, fit$lb, col = "blue", lty = 3)
+lines(fit$x, fit$ub, col = "blue", lty = 3)
+legend(x = "right", legend = c("pert","low res","low res avg","hi res", "wt avg"),
+       col = c("green","gray","blue","red","orange"), lty = c(1,1,1,1,2), 
+       lwd = c(1,1,1,1,4), cex=0.75)
+
+# Plot fitted values over the original data
+plot(fit$x, y_lo[,1] - fit$y, type = "l", col="gray",
+     ylim = c(-.03,.03))#range(c(0, fit$lbb - fit$y, fit$ubb - fit$y)))
+for (i in 2:16) lines(fit$x, y_lo[, i], col = "gray")
+lines(fit$x, y_hi - fit$y, col="red", lwd=1.5)
+lines(fit$x, fit$y - fit$y, lwd = 1.5, lty=2)
+lines(fit$x, fit$m - fit$y, col = "blue", lty=3)
+lines(fit$x, fit$lb - fit$y, col = "blue", lty = 3)
+lines(fit$x, fit$ub - fit$y, col = "blue", lty = 3)
+legend(x = "bottomright", legend = c("low res","low res avg","hi res", "wt avg"),
+       col = c("gray","blue","red","orange"), lty = c(1,1,1,1,2), 
+       lwd = c(1,1,1,1,4), cex=0.75)
