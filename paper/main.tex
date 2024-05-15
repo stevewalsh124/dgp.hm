@@ -29,7 +29,7 @@
 \footskip=0.5in
 %\doublespacing
 
-\title{Article Title}
+\title{Deep Gaussian Processes and Hierarchical Modeling with Functional Data: A Case Study in Cosmological Power Spectra}
 \author{Stephen A. Walsh\thanks{Corresponding author: Division of Natural Sciences, 
         Math and Technology, Elms College, {\tt walshst@elms.edu}} \and 
         Annie S. Booth\thanks{Department of Statistics, North Carolina State University} \and
@@ -44,7 +44,7 @@
 \bigskip
 
 \begin{abstract} 
-This document serves as a tentative outline of our anticipated DGP-cosmology paper.
+Understanding the structure of our universe and how matter is spread out and expanding is an area of active research. As cosmological surveys grow in complexity, developing surrogate models to efficiently predict matter power spectra is an important research area in cosmology. In this work, we synthesize methods from deep Gaussian processes, Bayesian hierarchical modeling, and basis functions in a novel way to estimate and predict matter power spectra (which are functional in nature) for different cosmologies. Our method has favorable results compared to the benchmark cosmological emulator (Cosmic Emu), and our code is available in a repository.
 \end{abstract}
 
 %\vfill
@@ -52,17 +52,17 @@ This document serves as a tentative outline of our anticipated DGP-cosmology pap
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-\begin{itemize}
-    \item Introduce the cosmology application - why is it important?  What type of data do we have?  What do we want to do with it?
-    \item Review what has been done (Mira Titan, cosmic EMU, process convolutions)
-    \item Overview our contribution (two-fold, see below) and describe the layout of the manuscript
-    \item Our contribution is in the synthesis of hierarchical modeling, DGPs, PCs.
-    \item Provide the link to the github repository where all our codes are provided.
-\end{itemize}
+To further our understanding of the structure and movement of the universe, researchers utilize numerous cosmological surveys such as the Sloan Digital Sky Survey \citep{york2000sloan} and the upcoming Nancy Grace Roman Space Telescope \citep{Dore2019WFIRST} which are continuously growing in complexity. With these tools, cosmologists aim to continue learning more about cosmic acceleration \citep{caldwell2009physics}. To this end, one important ingredient to aid in this understanding of our universe is the matter power spectrum. 
 
-\section{The data}
+The matter power spectrum is a fundamental concept in cosmology and describes the distribution of matter as a function of spatial scale. It is often represented as a function of wavenumber $k$ (units Mpc$^{-1}$), which is inversely related to spatial scale. On large scales (i.e., small $k$ values), cosmic expansion dynamics and the matter power spectrum behave according to linear perturbation theory \citep{pietroni2008flowing, lesgourgues2009non}. On smaller scales, non-linear dynamics require the use of computationally intensive simulations; the Coyote Universe \citep{lawrence2010coyote} and more recently the Mira-Titan Universe \citep{moran2023mira} are two simulation suites dedicated to this effort. 
 
-Example reference: \citep{damianou2013deep}
+Leveraging these simulations allows for emulation and prediction of the matter power spectrum under varying specifications for eight different cosmological parameters (i.e., different cosmologies). Estimating and understanding the influence of these parameters on cosmic expansion are areas of active research. In addition to presenting the Mira-Titan simulation suite, \cite{moran2023mira} builds off of previous spectrum emulation \citep{lawrence2017mira} to provide the final emulator (Cosmic Emu) based on the full suite of simulations.
+
+The Cosmic Emu emulator is constructed by (process convolutions, ...). Segue to our method. 
+
+Due to the nonstationary behavior expected to be seen in power spectra (e.g., from baryonic acoustic oscillations), we expand on the previous emulation methods and propose a novel synthesis of methods to quantify uncertainty and predict matter power spectra for different cosmologies using deep Gaussian processes (DGPs). In order to handle multiple realizations of functional output (from the Mira-Titan simulation suite), we use hierarchical and basis functions modeling within our DGP framework to accurately estimate and predict power spectra for different cosmologies. When comparing to Cosmic Emu, we see favorable results for our method. The code to reproduce these results are available at \url{https://github.com/stevewalsh124/dgp.hm}.
+
+\section{Data}
 
 Here, we provide further details on the form of the data (in the introduction, we only briefly introduce it).  Include a figure of the raw data for a particular cosmology.  We describe the different modeling components and the regions of the space where they are trusted.  We also describe how each cosmology is a simulation based on 8 inputs, and the output $\mathcal{P}(k)$ is functional.
 
@@ -83,7 +83,7 @@ Here, we introduce the Bayesian GP model.  We mention the tapering and the formu
 
 \subsection{Deep Gaussian Process Model}
 
-Here, we expand on the previous section by incorporating a latent layer warping.  We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in to the methods of the previous section with very few changes.
+Here, we expand on the previous section by incorporating a latent layer warping \citep{damianou2013deep}.  We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in to the methods of the previous section with very few changes.
 
 \subsection{Simulation Study}
 
@@ -125,7 +125,7 @@ Here we show results on held-out cosmologies.  We compare to cosmicEMU and Jared
 
 \section{Discussion}
 
-Brief recap, directions for future research.
+Brief recap, directions for future research: BSS-ANOVA in lieu of DGPs, hydrodynamical sims or TCs as other applications of this methodology. A more detailed sensitivity analysis for the parameters, modeling $W$ across different cosmologies.
 
 \section{Appendix}
 
