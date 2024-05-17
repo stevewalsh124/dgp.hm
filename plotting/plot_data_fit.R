@@ -52,21 +52,22 @@ y_avg <- (1 / Lam_z) * (Lam_pt * y_pt + Lam_lo * y_lra + Lam_hi * y_hi)
 # Plot data types #
 ###################
 
-matplot(x, y_lo, col = "gray", type = "l", lty = 1, ylim = range(y_pt, y_lo, y_hi),
-        xlab = "x", ylab = "y")
-lines(x, y_pt, col = "green")
-lines(x, y_lra, col = "blue")
-lines(x, y_hi, col = "red")
-lines(x[index_list$pert.ix], rep(-1, length(index_list$pert.ix)), 
-      col = "green", lty = 3)
-lines(x[index_list$lowres.ix], rep(-1.1, length(index_list$lowres.ix)), 
-      col = "blue", lty = 3)
-lines(x[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)), 
-      col = "red", lty = 3)
-lines(x, y_avg, col = "orange", lty = 2, lwd = 4)
-legend(x = "right", legend = c("pert","low res","low res avg","hi res", "wt avg"),
-       col = c("green","gray","blue","red","orange"), lty = c(1,1,1,1,2), 
-       lwd = c(1,1,1,1,4), cex=0.75)
+matplot(log10(k), (y_lo + loess_fit$fitted)*sd_y+mean_y, col = "gray", 
+        type = "l", lty = 1, ylim = range(y_avg*sd_y+mean_y),
+        xlab=expression(log[10](k)), 
+        ylab=expression(paste("\U1D4AB","(k)")))
+lines(log10(k), y_pt, col = "green")
+lines(log10(k), y_hi, col = "red")
+lines(log10(k)[index_list$pert.ix], rep(-1, length(index_list$pert.ix)), 
+      col = "green", lty = 3, lwd=3)
+lines(log10(k)[index_list$lowres.ix], rep(-1.1, length(index_list$lowres.ix)), 
+      col = "gray", lty = 3, lwd=3)
+lines(log10(k)[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)), 
+      col = "red", lty = 3, lwd=3)
+lines(log10(k), y_avg*sd_y+mean_y, col = "orange", lty = 2, lwd = 4)
+legend(x = "right", legend = c("pert","low res","hi res", "wt avg","ind"),
+       col = c("green","gray","red","orange","black"), lty = c(1,1,1,2,3), 
+       lwd = c(1,1,1,4,3))
 
 
 ######################
@@ -75,28 +76,29 @@ legend(x = "right", legend = c("pert","low res","low res avg","hi res", "wt avg"
 
 fit <- read.csv(paste0("../fitting/results/dgp_", model_name, ".csv"))
 
-# Plot fitted values over the original data
-plot(fit$x, y_lo[,1], type = "l", col="gray",
-     ylim = range(c(fit$y, fit$lbb, fit$ubb)))
-for (i in 2:16) lines(fit$x, y_lo[, i], col = "gray")
-lines(fit$x, y_hi, col="red", lwd=1.5)
-lines(fit$x, fit$y, lwd = 1.5, lty=2)
-lines(fit$x, fit$m, col = "blue", lty=3)
-lines(fit$x, fit$lb, col = "blue", lty = 3)
-lines(fit$x, fit$ub, col = "blue", lty = 3)
-legend(x = "right", legend = c("pert","low res","low res avg","hi res", "wt avg"),
-       col = c("green","gray","blue","red","orange"), lty = c(1,1,1,1,2), 
-       lwd = c(1,1,1,1,4), cex=0.75)
+# Plot model fit alongside data
+matplot(log10(k),(y_lo + loess_fit$fitted)*sd_y+mean_y, type="l", lty=1,
+        col="gray", xlab=expression(log[10](k)), 
+        ylab=expression(paste("\U1D4AB","(k)")))
+lines(log10(k),y_pt, col="green", lwd=2, lty=3)
+lines(log10(k),y_hi, col="red", lwd=2, lty=3)
+lines(log10(k), y_avg*sd_y+mean_y, col="orange", lwd=2, lty=2)
+lines(log10(k),results$ub, col="black",lty=2,lwd=2)
+lines(log10(k),results$lb, col="black",lty=2,lwd=2)
+legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
+       col = c("green","gray","red","orange", "black"), lty = c(3,1,3,2,2,2), 
+       lwd = c(2,1,2,2,2))
 
-# Plot fitted values over the original data
-plot(fit$x, y_lo[,1] - fit$y, type = "l", col="gray",
-     ylim = c(-.03,.03))#range(c(0, fit$lbb - fit$y, fit$ubb - fit$y)))
-for (i in 2:16) lines(fit$x, y_lo[, i], col = "gray")
-lines(fit$x, y_hi - fit$y, col="red", lwd=1.5)
-lines(fit$x, fit$y - fit$y, lwd = 1.5, lty=2)
-lines(fit$x, fit$m - fit$y, col = "blue", lty=3)
-lines(fit$x, fit$lb - fit$y, col = "blue", lty = 3)
-lines(fit$x, fit$ub - fit$y, col = "blue", lty = 3)
-legend(x = "bottomright", legend = c("low res","low res avg","hi res", "wt avg"),
-       col = c("gray","blue","red","orange"), lty = c(1,1,1,1,2), 
-       lwd = c(1,1,1,1,4), cex=0.75)
+# Plot model fit alongside data (posterior mean removed)
+matplot(log10(k),(y_lo + loess_fit$fitted)*sd_y+mean_y - results$m, type="l", lty=1,
+        col="gray", ylim = c(-.02,.02), xlab=expression(log[10](k)), 
+        ylab=expression(paste("\U1D4AB","(k), mean removed")))
+abline(h=0, col="black",lty=1,lwd=1)
+lines(log10(k),y_pt - results$m, col="green", lwd=3.5, lty=1)
+lines(log10(k),y_hi - results$m, col="red", lwd=3.5, lty=1)
+lines(log10(k), y_avg*sd_y+mean_y-results$m , col="orange", lwd=2, lty=1)
+lines(log10(k),results$ub - results$m, col="black",lty=2,lwd=2)
+lines(log10(k),results$lb - results$m, col="black",lty=2,lwd=2)
+legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
+       col = c("green","gray","red","orange", "black"), lty = c(3,1,3,2,2,2), 
+       lwd = c(2,1,2,2,2))
