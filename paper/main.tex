@@ -1,6 +1,6 @@
 \documentclass[11pt]{article}
 \usepackage{hyperref}
-\usepackage{amsmath, amsfonts, amssymb, mathrsfs}
+\usepackage{amsmath, amsfonts, amssymb, mathrsfs, dsfont}
 \usepackage{dcolumn}
 \usepackage{caption}
 \usepackage{subcaption}
@@ -78,7 +78,7 @@ These spectra are represented as a function of wavenumber $k$, and hence is deno
     \label{fig:plot_data}
 \end{figure}
 
-From the multiple low- and high-resolution spectra across all cosmologies, \cite{moran2023mira} obtain estimates for the precision of these spectra across the $n$ wavenumber values ($p_1,\dots,p_n$) using a log-log regression model, and a multiplier $c$ for the increase in precision from the low- to high- resolution output. Given that the perturbation theory spectra is non-stochastic, we treat this as having a precision of $10^6$. We leverage these precision estimates within our model and calculate a weighted average for each cosmology: $\bar y = AddThisIn$, \textcolor{blue}{where we have four diagonal covariance matrices.}
+From the multiple low- and high-resolution spectra across all cosmologies, \cite{moran2023mira} obtained estimates for the precision of these spectra across the $n$ wavenumber values ($p_1,\dots,p_n$) using a log-log regression model, and a multiplier $c$ for the increase in precision from the low- to high- resolution output. Given that the perturbation theory spectra is non-stochastic, we treat this as having a precision of $10^5$. We leverage these precision estimates within our model at each data type's unbiased wavenumber values to define $\Lambda_p = \text{diag}\left((10^5)_{k < 0.04}\right)$, $\Lambda_{\ell} = \text{diag}\left((p_1,\dots,p_n)_{0.04 \leq k < 0.25}\right)$, $\Lambda_h = \text{diag}\left(c(p_1,\dots,p_n)_{0.04 \leq k \leq 5}\right)$. Here, each precision matrix is diagonal and the diagonal elements consists of the precision values or zero, depending on whether the $k$ value is approximately unbiased for that data type. With this, we calculate a weighted average for each cosmology: $\bar y = \Lambda_S^{-1}(\Lambda_p y_p + \Lambda_h y_h + \Lambda_{\ell} \bar{y}_\ell)$, where $\Lambda_S = \Lambda_p + \Lambda_\ell + \Lambda_h$ is the precision matrix for the weighted average for a particular cosmology.
 
 We will handle the data in two stages.  First, we will focus on 111 training cosmologies and obtain the best esimated spectrum for each.  Second, we will use these estimates to predict the spectra for six held-out cosmologies.
 
@@ -91,7 +91,7 @@ The main purpose of this section is to describe our first contribution: the use 
     \centering
     \includegraphics[width=6in]{plot_fit.png}
     \caption{95\% credible intervals for the power spectrum of model 1 (posterior mean subtracted). Plots of the perturbation theory, low-resolution and high-resolution runs are also shown, alongside the weighted average.}
-    \label{fig:plot_data}
+    \label{fig:plot_fit}
 \end{figure}
 
 \subsection{Gaussian Process Model}
