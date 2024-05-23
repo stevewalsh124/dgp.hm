@@ -60,7 +60,7 @@ Leveraging these simulations allows for emulation and prediction of the matter p
 
 \textcolor{blue}{The Cosmic Emu emulator is constructed by (process convolutions, ...). Segue to our method after and compare/contrast with Cosmic Emu.}
 
-Due to the nonstationary behavior expected to be seen in power spectra (e.g., from baryonic acoustic oscillations), we expand on the previous emulation methods and propose a novel synthesis of methods to quantify uncertainty and predict matter power spectra for different cosmologies using deep Gaussian processes (DGPs). In order to handle multiple realizations of functional output (from the Mira-Titan simulation suite), we use hierarchical and basis functions modeling within our DGP framework to accurately estimate and predict power spectra for different cosmologies. When comparing to Cosmic Emu, we see favorable results for our method. The code to reproduce these results are available at \url{https://github.com/stevewalsh124/dgp.hm}. \textcolor{blue}{Please note: this repository is currently private until we hear back regarding permissions for sharing the Mira-Titan data used to train and predict this model.}
+Due to the nonstationary behavior expected to be seen in power spectra (e.g., from baryonic acoustic oscillations), we expand on the previous emulation methods and propose a novel synthesis of methods to quantify uncertainty and predict matter power spectra for different cosmologies using deep Gaussian processes (DGPs). In order to handle multiple realizations of functional output (from the Mira-Titan simulation suite), we use hierarchical and basis functions modeling within our DGP framework to accurately estimate and predict power spectra for different cosmologies. When comparing to Cosmic Emu, we see favorable results for our method. The code to reproduce these results are available at \url{https://github.com/stevewalsh124/dgp.hm}. \textcolor{blue}{Please note: this repository is currently private until we hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
 
 The remainder of the paper is organized as follows: Section \ref{sec:data} provides more details regarding the Mira-Titan simulation suite. Section \ref{sec:hm_fit} describes our model and the training procedure for both toy data as well as the Mira-Titan dataset. With this trained model, Section \ref{sec:pred} explains our modeling approach for predictions at held-out cosmologies and compares with other methods. Section \ref{sec:disc} concludes with a discussion of our contributions and avenues for future research.
 
@@ -78,14 +78,70 @@ These spectra are represented as a function of wavenumber $k$, and hence is deno
     \label{fig:plot_data}
 \end{figure}
 
-From the multiple low- and high-resolution spectra across all cosmologies, \cite{moran2023mira} obtained estimates for the precision of these spectra across the $n$ wavenumber values ($p_1,\dots,p_n$) using a log-log regression model, and a multiplier $c$ for the increase in precision from the low- to high- resolution output. Given that the perturbation theory spectra is non-stochastic, we treat this as having a precision of $10^5$. We leverage these precision estimates within our model at each data type's unbiased wavenumber values to define $\Lambda_p = \text{diag}\left((10^5)_{k < 0.04}\right)$, $\Lambda_{\ell} = \text{diag}\left((p_1,\dots,p_n)_{0.04 \leq k < 0.25}\right)$, $\Lambda_h = \text{diag}\left(c(p_1,\dots,p_n)_{0.04 \leq k \leq 5}\right)$. Here, each precision matrix is diagonal and the diagonal elements consists of the precision values or zero, depending on whether the $k$ value is approximately unbiased for that data type. With this, we calculate a weighted average for each cosmology: $\bar y = \Lambda_S^{-1}(\Lambda_p y_p + \Lambda_h y_h + \Lambda_{\ell} \bar{y}_\ell)$, where $\Lambda_S = \Lambda_p + \Lambda_\ell + \Lambda_h$ is the precision matrix for the weighted average for a particular cosmology.
+From the multiple low- and high-resolution spectra across all cosmologies, \cite{moran2023mira} obtained estimates for the precision of these spectra across the $n$ wavenumber values ($p_1,\dots,p_n$) using a log-log regression model, and a multiplier $c$ for the increase in precision from the low- to high- resolution output. Given that the perturbation theory spectra is non-stochastic, we treat this as having a precision of $10^5$. We leverage these precision estimates within our model at each data type's unbiased wavenumber values to define $\Lambda_p = \text{diag}\left((10^5)_{k < 0.04}\right)$, $\Lambda_{\ell} = \text{diag}\left(16(p_1,\dots,p_n)_{0.04 \leq k < 0.25}\right)$, $\Lambda_h = \text{diag}\left(c(p_1,\dots,p_n)_{0.04 \leq k \leq 5}\right)$. Here, each precision matrix is diagonal and the diagonal elements consists of the precision values or zero, depending on whether the $k$ value is approximately unbiased for that data type. With this, we calculate a weighted average for each cosmology: $\bar y = \Lambda^{-1}(\Lambda_p y_p + \Lambda_h y_h + \Lambda_{\ell} \bar{y}_\ell)$, where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ is the precision matrix for the weighted average for a particular cosmology.
 
 We will handle the data in two stages.  First, we will focus on 111 training cosmologies and obtain the best esimated spectrum for each.  Second, we will use these estimates to predict the spectra for six held-out cosmologies.
 
 \section{Bayesian Hierarchical Modeling for Particular Cosmologies}
 \label{sec:hm_fit}
 
-The main purpose of this section is to describe our first contribution: the use of a Bayesian hierarchical model to estimate the true curve (and provide UQ) for a particular cosmology.  We focus solely on one cosmology, independent of the others.
+Here we describe our first contribution: the use of a Bayesian hierarchical model to estimate the underlying spectra (and quantify uncertainty) for a particular cosmology.  We focus solely on one cosmology, independent of the others.
+
+\subsection{Gaussian Process Model}
+
+Here, we introduce the Bayesian Gaussian Process (GP) model leveraging the aggregated data $D_n \equiv \{X_n, \bar Y, \Lambda\}$ for a particular cosmology. We assume the matter power spectrum $S$ for a given cosmology follows a GP with mean $\mu$ and covariance matrix $\Sigma_S$.
+
+From plots of the multiple low-resolution spectra, we find they vary smoothly about some mean $S$, suggesting that a dense covariance matrix $\Sigma_\varepsilon$ may outperform a diagonal covariance $\Lambda_\ell^{-1}$ for $\bar Y$. In previous work, we have tried multiple candidates for $\Sigma_\varepsilon$ \citep{walsh2023bayesian} and found that a Mat\'ern covariance $\Sigma_\ell$ trained on the low-resolution runs (pre-scaled by the precision values and subtracting a LOESS-smoothed average) performs the best. We specify this structure within $\Sigma_\varepsilon$ and refer readers to \cite{walsh2023bayesian} for a more detailed exposition. This yields $\Sigma_\varepsilon=\left(\Lambda_p^{-1} + \Sigma_\ell + \Lambda_h^{-1}\right)^{-1}$, where $\Lambda_p, \Sigma_\ell^{-1}, \text{ and } \Lambda_h$ are all $n\times n$ and are 0 wherever the corresponding data type is biased.
+
+% $$
+% \mathbf{\Sigma_\varepsilon} =
+% \begin{bmatrix}
+% \Lambda_p^{-1} & \mathbf{0} & \mathbf{0} \\
+% \mathbf{0} & \mathbf{\Sigma}_{\ell} & \mathbf{0} \\
+% \mathbf{0} & \mathbf{0} & \Lambda_h^{-1}
+% \end{bmatrix}
+% $$
+
+Therefore, we model $\bar Y|S$ as a GP with mean $S$ and block-diagonal covariance matrix $\Sigma_\varepsilon$:
+
+$$
+\begin{aligned}
+\bar Y|S &\sim \mathcal{N}_n(S,\Sigma_\varepsilon) \\
+S &\sim GP\left(\mu, \Sigma_S(x,x')\right)
+\end{aligned}
+$$
+
+Upon integrating out $S$, we obtain $\bar Y \sim GP(\mu, \Sigma_S+\Sigma_\varepsilon)$. Additionally, this model yields the posterior distribution $S|\bar Y \sim N(m, C)$, where $C=\left(\Sigma_S^{-1}+\Sigma_\varepsilon^{-1}\right)^{-1}$ and $m=C\left(\Sigma_\varepsilon^{-1}\bar Y+\Sigma_S^{-1}\mu\right)$. 
+
+This distribution provides the posterior mean and corresponding uncertainty for $S$ within a given cosmology. Without this hierarchy, uncertainty would not be properly addressed; the weighted average would simply be nearly interpolated across the relatively dense set of $k$ values.
+
+\subsection{Deep Gaussian Process Model}
+
+Considering the Mira-Titan data, some nonstationarity is expected (e.g., due to baryonic acoustic oscillations when $-2 \leq \log_{10}(k) \leq -1$). To account for this, we incorporate a latent layer warping $W$ within the hierarchical model to incorporate nonstationary dynamics of the matter power spectra. When $W$ is a GP, this creates a deep Gaussian process (DGP) model \citep{damianou2013deep}. Additional latent layers could be considered, although one is sufficient for this dataset \citep{dunlop2018deep}.
+
+$$
+\begin{aligned}
+\bar Y|S,W &\sim \mathcal{N}_n(S,\Sigma_\varepsilon) \\
+S|W &\sim GP\left(\mu, \Sigma_S(w,w')\right) \\
+W &\sim GP\left(0, \Sigma_W(x,x')\right)
+\end{aligned}
+$$
+
+We have found that whether the prior mean of $W$ is set to 0 or $X$ \citep[which would indicate stationarity apriori, ][]{schmidt2003bayesian} does not have a substantial impact on the model fit. We construct this model in the compositional form, and also use MCMC to obtain full uncertainty for each of the model parameters \citep{sauer2023active}.
+
+We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in to the methods of the previous section with very few changes.
+
+\subsection{Simulation Study}
+\label{subsec:sim}
+
+Here, we provide results from a simulation study comparing the GP and DGP models, in which case the true curve is known. \textcolor{blue}{I can include details for a sim study based on simulated data I construct, or I can use the dataset Dave mentioned getting to use here.}
+
+\subsection{Estimating Spectra with Mira-Titan Data}
+\label{subsec:mira_fit}
+
+Estimate one cosmology with 50,000 runs, and use this as a starting point for each of the others
+
+Here we can provide figures of the predicted mean and variances for a subset of the actual cosmologies. Figure \ref{fig:plot_fit} shows an example of the uncertainty for our posterior mean for the first (of 111) training cosmologies; the posterior mean is subtracted in order to visualize this uncertainty.
 
 \begin{figure}[ht]
     \centering
@@ -93,25 +149,6 @@ The main purpose of this section is to describe our first contribution: the use 
     \caption{95\% credible intervals for the power spectrum of model 1 (posterior mean subtracted). Plots of the perturbation theory, low-resolution and high-resolution runs are also shown, alongside the weighted average.}
     \label{fig:plot_fit}
 \end{figure}
-
-\subsection{Gaussian Process Model}
-
-Here, we introduce the Bayesian GP model.  We mention the tapering and the formulation of the block covariance matrix.  As well as the posterior conditioning that provides the closed-form solution for the posterior mean and variance.  We can cite Steve's dissertation.
-
-\subsection{Deep Gaussian Process Model}
-
-Here, we expand on the previous section by incorporating a latent layer warping \citep{damianou2013deep}.  We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in to the methods of the previous section with very few changes.
-
-\subsection{Simulation Study}
-\label{subsec:sim}
-
-Here, we can provide results from a sim study comparing the GP and DGP, in which case the true curve is known.
-
-\subsection{Estimating Spectra with Mira-Titan Data}
-\label{subsec:mira_fit}
-
-Estimate one cosmology with 50,000 runs, and use this as a starting point for each of the others
-Here we can provide figures of the predicted mean and variances for a subset of the actual cosmologies.
 
 Images:
 \begin{itemize}
