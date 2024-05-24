@@ -117,7 +117,7 @@ for(i in 1:6){
 # compare RMSEs for each k value, by method
 plot(log10(k),colMeans(sqrt(mses)), type="l", col="magenta", lwd=2,
      ylim = range(0,colMeans(sqrt(mses)),colMeans(sqrt(mses_emu))),
-     main = "average RMSE by k value")
+     ylab = "Average RMSE")
 lines(log10(k),colMeans(sqrt(mses_emu)), col="orange", lwd=2)
 lines(log10(k),colMeans(sqrt(mses_conv_t)), col="pink")
 lines(log10(k),colMeans(sqrt(mses_dgp_t)), col="blue")
@@ -126,8 +126,7 @@ legend("topright",legend = c("cosmicEMU","DGP-GPPC","conv_t","dgp_t"),
 
 # boxplot of RMSEs by method
 boxplot(c(sqrt(mses)),c(sqrt(mses_emu)),c(sqrt(mses_conv_t)),c(sqrt(mses_dgp_t)), 
-        names=c("DGP-GPPC","EMU","conv_t","dgp_t"), ylab="RMSE",
-        main = "all RMSEs across k values and cosmologies", 
+        names=c("DGP-GPPC","EMU","conv_t","dgp_t"), xlab="RMSE", horizontal = T,
         col = c("magenta","orange","pink","blue"))
 
 # compare average MSE for both prediction methods

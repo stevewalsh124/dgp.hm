@@ -27,7 +27,7 @@
 \addtolength{\oddsidemargin}{-.5in}
 \addtolength{\evensidemargin}{-.5in}
 \footskip=0.5in
-%\doublespacing
+\doublespacing
 
 \title{Deep Gaussian Processes and Hierarchical Modeling with Functional Data: A Case Study in Cosmological Power Spectra}
 \author{Stephen A. Walsh\thanks{Corresponding author: Division of Natural Sciences, 
@@ -56,11 +56,9 @@ To further our understanding of the structure and movement of the universe, rese
 
 The matter power spectrum is a fundamental concept in cosmology and describes the distribution of matter as a function of spatial scale. It is often represented as a function of wavenumber $k$ (units Mpc$^{-1}$), which is inversely related to spatial scale. On large scales (i.e., small $k$ values), cosmic expansion dynamics and the matter power spectrum behave according to linear perturbation theory \citep{pietroni2008flowing, lesgourgues2009non}. On smaller scales, non-linear dynamics require the use of computationally intensive simulations; the Coyote Universe \citep{lawrence2010coyote} and more recently the Mira-Titan Universe \citep{moran2023mira} are two simulation suites dedicated to this effort. 
 
-Leveraging these simulations allows for emulation and prediction of the matter power spectrum under varying specifications for eight different cosmological parameters (i.e., different cosmologies). Estimating and understanding the influence of these parameters on cosmic expansion are areas of active research. In addition to presenting the Mira-Titan simulation suite, \cite{moran2023mira} builds off of previous spectrum emulation \citep{lawrence2017mira} to provide the final emulator (Cosmic Emu) based on the full suite of simulations.
+Leveraging these simulations allows for emulation and prediction of the matter power spectrum under varying specifications for eight different cosmological parameters (i.e., different cosmologies). Estimating and understanding the influence of these parameters on cosmic expansion are areas of active research. In addition to presenting the Mira-Titan simulation suite, \cite{moran2023mira} builds off of previous spectrum emulation \citep{lawrence2017mira} to provide the final emulator (Cosmic Emu) based on the full suite of simulations. 
 
-\textcolor{blue}{The Cosmic Emu emulator is constructed by (process convolutions, ...). Segue to our method after and compare/contrast with Cosmic Emu.}
-
-Due to the nonstationary behavior expected to be seen in power spectra (e.g., from baryonic acoustic oscillations), we expand on the previous emulation methods and propose a novel synthesis of methods to quantify uncertainty and predict matter power spectra for different cosmologies using deep Gaussian processes (DGPs). In order to handle multiple realizations of functional output (from the Mira-Titan simulation suite), we use hierarchical and basis functions modeling within our DGP framework to accurately estimate and predict power spectra for different cosmologies. When comparing to Cosmic Emu, we see favorable results for our method. The code to reproduce these results are available at \url{https://github.com/stevewalsh124/dgp.hm}. \textcolor{blue}{Please note: this repository is currently private until we hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
+In this work, we expand on the previous emulation methods and propose a novel synthesis of methods to quantify uncertainty and predict matter power spectra for different cosmologies using deep Gaussian processes (DGPs). In order to handle multiple realizations of functional output (from the Mira-Titan simulation suite), we use hierarchical and basis functions modeling within our DGP framework to accurately estimate and predict power spectra for different cosmologies. When comparing to Cosmic Emu, we see favorable results for our method. The code to reproduce these results are available at \url{https://github.com/stevewalsh124/dgp.hm}. \textcolor{blue}{Please note: this repository is currently private until we hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
 
 The remainder of the paper is organized as follows: Section \ref{sec:data} provides more details regarding the Mira-Titan simulation suite. Section \ref{sec:hm_fit} describes our model and the training procedure for both toy data as well as the Mira-Titan dataset. With this trained model, Section \ref{sec:pred} explains our modeling approach for predictions at held-out cosmologies and compares with other methods. Section \ref{sec:disc} concludes with a discussion of our contributions and avenues for future research.
 
@@ -174,13 +172,23 @@ Here we describe the PCA-GP model.  We discuss how we use the predicted curves t
 \subsection{Predicting Spectra from Mira-Titan Data}
 \label{subsec:mira_pred}
 
-Here we show results on held-out cosmologies.  We compare to cosmicEMU and Jared's convolution approach. We can also discuss estimation of main effects, interactions amongst the 8 parameters, and variance decomposition.
+Here we show results on held-out cosmologies.  The Cosmic Emu emulator is constructed by (process convolutions, ...). Segue to our method after and compare/contrast with Cosmic Emu. 
 
-\begin{itemize}
-    \item compare the 4 with boxplot: our DGP training, DGP testing, vs proc conv training (aka Jared's files), proc conv testing (aka Cosmic EMU)
-    \item compare the 4's RMSEs as a function of $k$
-    \item Main effects
-\end{itemize}
+In addition to predicting for held-out cosmologies, we can also predict over a large uniform or full factorial design to obtain estimated main effects for each parameter in $\theta$, interactions amongst the 8 parameters, and variance decomposition. Should this be included?
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=6in]{rmse_by_k.png}
+    \caption{Average RMSE of each method across all $k$ values.}
+    \label{fig:plot_rmse_k}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=6in]{rmse_box.png}
+    \caption{Boxplot of all RMSEs of each method across all six test models. From top to bottom: box plots for our training method, process convolution training method, Cosmic EMU predictions, and our DGP-PC predictions.}
+    \label{fig:plot_rmse_box}
+\end{figure}
 
 \section{Discussion}
 \label{sec:disc}
