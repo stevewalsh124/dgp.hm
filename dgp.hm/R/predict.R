@@ -1,7 +1,7 @@
 
 # Function contents -----------------------------------------------------------
 # External:
-#   est_true (applies to both gpSW and dgp2SW classes)
+#   est_true (applies to both gphm and dgp2hm classes)
 
 # est_true --------------------------------------------------------------------
 #' @export 
@@ -10,10 +10,10 @@ est_true <- function(fit, tolpower = -10) {
   # this function finds the posterior mean of the true spectrum
   # given the observed weighted average and precision information
   n <- nrow(fit$x)
-  if (!(class(fit) %in% c("gpSW", "dgp2SW")))
-    stop("only applicable to gpSW or dgp2SW classes")
+  if (!(class(fit) %in% c("gphm", "dgp2hm")))
+    stop("only applicable to gphm or dgp2hm classes")
   
-  deep <- (class(fit) == "dgp2SW")
+  deep <- (class(fit) == "dgp2hm")
   
   # get squared distance matrix
   if (!deep) d2 <- deepgp::sq_dist(fit$x)

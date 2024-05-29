@@ -1,8 +1,8 @@
 
 # Function Contents -----------------------------------------------------------
 # External:
-#   trim.gpSW
-#   trim.dgp2SW 
+#   trim.gphm
+#   trim.dgp2hm 
 
 #' @rdname trim
 #' @export
@@ -13,7 +13,7 @@ trim <- function(object, burn, thin)
 #' @rdname trim
 #' @export
 
-trim.gpSW <- function(object, burn, thin = 1) {
+trim.gphm <- function(object, burn, thin = 1) {
   
   tic <- proc.time()[[3]]
   
@@ -38,7 +38,7 @@ trim.gpSW <- function(object, burn, thin = 1) {
 #' @rdname trim
 #' @export
 
-trim.dgp2SW <- function(object, burn, thin = 1) {
+trim.dgp2hm <- function(object, burn, thin = 1) {
   
   tic <- proc.time()[[3]]
   

@@ -3,7 +3,7 @@
 #' @rdname plot
 #' @export
 
-plot.gpSW <- function(x) {
+plot.gphm <- function(x) {
   
   oldpar <- par(no.readonly = TRUE)
   on.exit(par(oldpar))
@@ -23,7 +23,7 @@ plot.gpSW <- function(x) {
 #' @rdname plot
 #' @export
 
-plot.dgp2SW <- function(x) {
+plot.dgp2hm <- function(x) {
   
   # save and restore par settings 
   oldpar <- par(no.readonly = TRUE)

@@ -1,14 +1,14 @@
 
 # Function contents -----------------------------------------------------------
 # External:
-#   fit_one_layer_SW
-#   fit_two_layer_SW
+#   fit_one_layer_hm
+#   fit_two_layer_hm
 # Internal:
-#   gibbs_one_layer_SW
-#   gibbs_two_layer_SW
-#   sample_w_SW
-#   sample_theta_SW
-#   logl_SW
+#   gibbs_one_layer_hm
+#   gibbs_two_layer_hm
+#   sample_w_hm
+#   sample_theta_hm
+#   logl_hm
 #
 # Updates from deepgp ---------------------------------------------------------
 #   Sigma_hat is added to Sigma(X) in outer likelihood
@@ -16,10 +16,10 @@
 #   No longer a prior_mean of x option
 #   Matern kernel only
 
-# fit_one_layer_SW ------------------------------------------------------------
+# fit_one_layer_hm ------------------------------------------------------------
 #' @export
 
-fit_one_layer_SW <- function(x, y, nmcmc = 10000, verb = TRUE, theta_0 = 0.1, 
+fit_one_layer_hm <- function(x, y, nmcmc = 10000, verb = TRUE, theta_0 = 0.1, 
                              settings = NULL, v = 2.5, Sigma_hat = NULL) {
   tic <- proc.time()[[3]]
   if (nmcmc <= 1) stop("nmcmc must be greater than 1")
@@ -37,19 +37,19 @@ fit_one_layer_SW <- function(x, y, nmcmc = 10000, verb = TRUE, theta_0 = 0.1,
   out <- list(x = x, y = y, nmcmc = nmcmc, settings = settings, v = v,
               Sigma_hat = Sigma_hat)
 
-  samples <- gibbs_one_layer_SW(x, y, nmcmc, verb, initial, settings, v, 
+  samples <- gibbs_one_layer_hm(x, y, nmcmc, verb, initial, settings, v, 
                                 Sigma_hat)
   out <- c(out, samples)
   toc <- proc.time()[[3]]
   out$time <- unname(toc - tic)
-  class(out) <- "gpSW"
+  class(out) <- "gphm"
   return(out)
 }
 
-# fit_two_layer_SW ------------------------------------------------------------
+# fit_two_layer_hm ------------------------------------------------------------
 #' @export
 
-fit_two_layer_SW <- function (x, y, D = ifelse(is.matrix(x), ncol(x), 1), 
+fit_two_layer_hm <- function (x, y, D = ifelse(is.matrix(x), ncol(x), 1), 
                               nmcmc = 10000, verb = TRUE, w_0 = NULL, 
                               theta_y_0 = 0.1, theta_w_0 = 0.1, settings = NULL, 
                               v = 2.5, Sigma_hat = NULL) {
@@ -68,19 +68,19 @@ fit_two_layer_SW <- function (x, y, D = ifelse(is.matrix(x), ncol(x), 1),
   out <- list(x = x, y = y, nmcmc = nmcmc, settings = settings, v = v,
               Sigma_hat = Sigma_hat)
   
-  samples <- gibbs_two_layer_SW(x, y, nmcmc, D, verb, initial, 
+  samples <- gibbs_two_layer_hm(x, y, nmcmc, D, verb, initial, 
                                 settings, v, Sigma_hat)
 
   out <- c(out, samples)
   toc <- proc.time()[[3]]
   out$time <- toc - tic
-  class(out) <- "dgp2SW"
+  class(out) <- "dgp2hm"
   return(out)
 }
 
-# gibbs_one_layer_SW ----------------------------------------------------------
+# gibbs_one_layer_hm ----------------------------------------------------------
 
-gibbs_one_layer_SW <- function(x, y, nmcmc, verb, initial, settings, v, 
+gibbs_one_layer_hm <- function(x, y, nmcmc, verb, initial, settings, v, 
                                Sigma_hat) {
   dx <- deepgp::sq_dist(x)
   theta <- vector(length = nmcmc)
@@ -96,7 +96,7 @@ gibbs_one_layer_SW <- function(x, y, nmcmc, verb, initial, settings, v,
     if (verb & (j %% 500 == 0)) cat(j, "\n")
     
     # Sample lengthscale (theta), also get MLE estimate of tau2
-    samp <- sample_theta_SW(y, dx, theta[j - 1], alpha = settings$alpha$theta, 
+    samp <- sample_theta_hm(y, dx, theta[j - 1], alpha = settings$alpha$theta, 
                             beta = settings$beta$theta, l = settings$l, 
                             u = settings$u, outer = TRUE, ll_prev = ll, v = v, 
                             calc_tau2 = TRUE, Sigma_hat = Sigma_hat)
@@ -108,9 +108,9 @@ gibbs_one_layer_SW <- function(x, y, nmcmc, verb, initial, settings, v,
   return(list(theta = theta, tau2 = tau2, ll = ll_store))
 }
 
-# gibbs_two_layer_SW ----------------------------------------------------------
+# gibbs_two_layer_hm ----------------------------------------------------------
 
-gibbs_two_layer_SW <- function(x, y, nmcmc, D, verb, initial, settings, v, 
+gibbs_two_layer_hm <- function(x, y, nmcmc, D, verb, initial, settings, v, 
                                Sigma_hat) {
   dx <- deepgp::sq_dist(x)
   dw <- deepgp::sq_dist(initial$w)
@@ -131,7 +131,7 @@ gibbs_two_layer_SW <- function(x, y, nmcmc, D, verb, initial, settings, v,
     if (verb & (j %% 500 == 0)) cat(j, "\n")
     
     # Sample outer lengthscale (theta_y)
-    samp <- sample_theta_SW(y, dw, theta_y[j - 1], 
+    samp <- sample_theta_hm(y, dw, theta_y[j - 1], 
                             alpha = settings$alpha$theta_y, 
                             beta = settings$beta$theta_y, l = settings$l, 
                             u = settings$u, outer = TRUE, ll_prev = ll_outer, 
@@ -142,7 +142,7 @@ gibbs_two_layer_SW <- function(x, y, nmcmc, D, verb, initial, settings, v,
 
     # Sample inner lengthscale (theta_w) - separately for each dimension
     for (i in 1:D) {
-      samp <- sample_theta_SW(w[[j - 1]][, i], dx, theta_w[j - 1, i], 
+      samp <- sample_theta_hm(w[[j - 1]][, i], dx, theta_w[j - 1, i], 
                               alpha = settings$alpha$theta_w, 
                               beta = settings$beta$theta_w, l = settings$l, 
                               u = settings$u, outer = FALSE, v = v,
@@ -151,7 +151,7 @@ gibbs_two_layer_SW <- function(x, y, nmcmc, D, verb, initial, settings, v,
     }
     
     # Sample hidden Gaussian layer (w)
-    samp <- sample_w_SW(y, w[[j - 1]], dw, dx, theta_y[j], theta_w[j, ], 
+    samp <- sample_w_hm(y, w[[j - 1]], dw, dx, theta_y[j], theta_w[j, ], 
                         ll_prev = ll_outer, v = v, Sigma_hat = Sigma_hat)
     w[[j]] <- samp$w
     ll_outer <- samp$ll
@@ -162,14 +162,14 @@ gibbs_two_layer_SW <- function(x, y, nmcmc, D, verb, initial, settings, v,
               ll = ll_store))
 }
 
-# sample_w_SW -----------------------------------------------------------------
+# sample_w_hm -----------------------------------------------------------------
 
-sample_w_SW <- function(out_vec, w_t, w_t_dmat, in_dmat, theta_y, theta_w, 
+sample_w_hm <- function(out_vec, w_t, w_t_dmat, in_dmat, theta_y, theta_w, 
                          ll_prev = NULL, v, Sigma_hat) {
 
   D <- ncol(w_t)
   if (is.null(ll_prev)) 
-    ll_prev <- logl_SW(out_vec, w_t_dmat, theta_y, outer = TRUE, 
+    ll_prev <- logl_hm(out_vec, w_t_dmat, theta_y, outer = TRUE, 
                        v = v, Sigma_hat = Sigma_hat)$logl
   for (i in 1:D) {
     
@@ -188,7 +188,7 @@ sample_w_SW <- function(out_vec, w_t, w_t_dmat, in_dmat, theta_y, theta_w,
       count <- count + 1
       w_t[, i] <- w_prev * cos(a) + w_prior * sin(a)
       dw <- deepgp::sq_dist(w_t)
-      new_logl <- logl_SW(out_vec, dw, theta_y, outer = TRUE, 
+      new_logl <- logl_hm(out_vec, dw, theta_y, outer = TRUE, 
                           v = v, Sigma_hat = Sigma_hat)$logl
       if (new_logl > ll_threshold) {
         ll_prev <- new_logl
@@ -204,29 +204,29 @@ sample_w_SW <- function(out_vec, w_t, w_t_dmat, in_dmat, theta_y, theta_w,
   return(list(w = w_t, ll = ll_prev, dw = dw))
 }
 
-# sample_theta_SW -------------------------------------------------------------
+# sample_theta_hm -------------------------------------------------------------
 
-sample_theta_SW <- function(out_vec, in_dmat, theta_t, alpha, beta, l, u, 
+sample_theta_hm <- function(out_vec, in_dmat, theta_t, alpha, beta, l, u, 
                             outer, ll_prev = NULL, v, calc_tau2 = FALSE, 
                             Sigma_hat) {
   
   theta_star <- runif(1, min = l * theta_t/u, max = u * theta_t/l)
   ru <- runif(1, min = 0, max = 1)
   if (is.null(ll_prev)) 
-    ll_prev <- logl_SW(out_vec, in_dmat, theta_t, outer, v, 
+    ll_prev <- logl_hm(out_vec, in_dmat, theta_t, outer, v, 
                        Sigma_hat = Sigma_hat)$logl
   lpost_threshold <- ll_prev + dgamma(theta_t, alpha, beta, log = TRUE) + 
                         log(ru) - log(theta_t) + log(theta_star)
-  ll_new <- logl_SW(out_vec, in_dmat, theta_star, outer, v, 
+  ll_new <- logl_hm(out_vec, in_dmat, theta_star, outer, v, 
                     calc_tau2 = calc_tau2, Sigma_hat = Sigma_hat)
   if (ll_new$logl + dgamma(theta_star, alpha, beta, log = TRUE) > lpost_threshold) {
     return(list(theta = theta_star, ll = ll_new$logl, tau2 = ll_new$tau2))
   } else return(list(theta = theta_t, ll = ll_prev, tau2 = NULL))
 }
 
-# logl_SW ---------------------------------------------------------------------
+# logl_hm ---------------------------------------------------------------------
 
-logl_SW <- function(out_vec, in_dmat, theta, outer = FALSE, v, 
+logl_hm <- function(out_vec, in_dmat, theta, outer = FALSE, v, 
                     calc_tau2 = FALSE, Sigma_hat) {
   
   n <- length(out_vec)
