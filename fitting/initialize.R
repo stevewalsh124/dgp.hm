@@ -109,7 +109,7 @@ Sigma_hat <- solve(block1 + block2 + block3)
 
 # Run MCMC --------------------------------------------------------------------
 
-fit <- fit_two_layer_SW(x, y_avg, nmcmc = 50000, Sigma_hat = Sigma_hat)
+fit <- fit_two_layer_hm(x, y_avg, nmcmc = 50000, Sigma_hat = Sigma_hat)
 
 # plot(fit) # optionally investigate trace plots
 fit <- trim(fit, 49000, 10)
