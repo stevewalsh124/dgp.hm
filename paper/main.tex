@@ -89,7 +89,18 @@ Here we describe our first contribution: the use of a Bayesian hierarchical mode
 
 Here, we introduce the Bayesian Gaussian Process (GP) model leveraging the aggregated data $D_n \equiv \{X_n, \bar Y, \Lambda\}$ for a particular cosmology. We assume the matter power spectrum $S$ for a given cosmology follows a GP with mean $\mu$ and covariance matrix $\Sigma_S$.
 
-From plots of the multiple low-resolution spectra, we find they vary smoothly about some mean $S$, suggesting that a dense covariance matrix $\Sigma_\varepsilon$ may outperform a diagonal covariance $\Lambda_\ell^{-1}$ for $\bar Y$. In previous work, we have tried multiple candidates for $\Sigma_\varepsilon$ \citep{walsh2023bayesian} and found that a Mat\'ern covariance $\Sigma_\ell$ trained on the low-resolution runs (pre-scaled by the precision values and subtracting a LOESS-smoothed average) performs the best. We specify this structure within $\Sigma_\varepsilon$ and refer readers to \cite{walsh2023bayesian} for a more detailed exposition. This yields $\Sigma_\varepsilon=\left(\Lambda_p^{-1} + \Sigma_\ell + \Lambda_h^{-1}\right)^{-1}$, where $\Lambda_p, \Sigma_\ell^{-1}, \text{ and } \Lambda_h$ are all $n\times n$ and are 0 wherever the corresponding data type is biased.
+From plots of the multiple low-resolution spectra, we find they vary smoothly about some mean $S$, suggesting that a dense covariance matrix $\Sigma_\varepsilon$ may outperform a diagonal covariance $\Lambda_\ell^{-1}$ for $\bar Y$. In previous work, we have modeled multiple candidates for $\Sigma_\varepsilon$ \citep{walsh2023bayesian} and found that a Mat\'ern covariance $\Sigma_\ell$ trained on the low-resolution runs (pre-scaled by the precision values and subtracting a LOESS-smoothed average) performs the best. We specify this structure within $\Sigma_\varepsilon$ and refer readers to \cite{walsh2023bayesian} for a more detailed exposition. This yields $\Sigma_\varepsilon=\left(\Lambda_p^{-1} + \Sigma_\ell + \Lambda_h^{-1}\right)^{-1}$, where $\Lambda_p, \Sigma_\ell^{-1}, \text{ and } \Lambda_h$ are all $n\times n$ and are 0 wherever the corresponding data type is biased.
+
+We transform $X$ values to fall within $[0,1]$ and $Y$ so that the mean and variance are 0 and 1, respectively. This allows for a strightforward specification of priors, where the hyperparameters for each Mat\'ern covariance $\Sigma_S$ and $\Sigma_\ell$ each take a vague inverse-Gamma prior. Specifically:
+
+\begin{align}
+\Sigma_\ell^{i,j} = \tau_\ell^2  \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_\ell}} + \frac{5d^2}{3\theta_\ell}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_\ell}}\right),\\
+\Sigma_S^{i,j} = \tau_S^2  \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_S}} + \frac{5d^2}{3\theta_S}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_S}}\right),
+\end{align}
+
+where $d=||x_i-x_j||^2$. From here, we estimate $\tau_\ell, \theta_\ell$ with maximum likelihood, and conditional on $\Sigma_\varepsilon$, we specify priors for $\tau_S, \theta_S$ following \cite{sauer2023active}:
+
+priors here
 
 % $$
 % \mathbf{\Sigma_\varepsilon} =
@@ -163,7 +174,7 @@ This section details our second contribution - the use of the Bayesian DGP model
 \subsection{PCA-GP Model}
 \label{subsec:pca}
 
-Here we describe the PCA-GP model.  We discuss how we use the predicted curves that we got previously as training data.
+Here we describe the PCA-GP model.  We discuss how we use the predicted curves that we got previously as training data. \cite{higdon2008computer, higdon2010estcosmo}
 
 \begin{itemize}
     \item show breakdown of estimated mean trend, basis functions/PCs, and weights of a particular PC/BF.
