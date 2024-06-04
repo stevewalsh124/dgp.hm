@@ -5,9 +5,9 @@
 
 library(dgp.hm)
 
-r <- 5
-n_sims <- 50
-j <- 1
+r <- 5       # number of function realizations
+n_sims <- 50 # number of sim studies to replicate
+j <- 1       # index to keep track of function/setting pairs
 
 results <- list()
 
