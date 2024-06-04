@@ -12,7 +12,8 @@ model <- 1 # set to 1 for "function 1", 2 for "function 2"
 setting <- 1 #set to 1 for "Setting A", 2 for "B", 3 for "C"
 if(!(model %in% 1:2)) stop("model should be 1 or 2")
 if(!(setting %in% 1:3)) stop("setting should be 1, 2, or 3")
-r <- 50 # number of replicates
+r <- 5       # number of function realizations
+n_sims <- 50 # number of sim studies to replicate
 
 args <- commandArgs(TRUE)
 if(length(args) > 0)
@@ -93,7 +94,7 @@ legend(x = "topright", legend = c("data","truth", "wt avg", "95% UQ"),
 
 # repeat for r replicates (don't plot these)
 mses <- c()
-for (j in 1:r) {
+for (j in 1:n_sims) {
   print(j)
   m1 <- runif(1, 0.5, 1.5)
   u1 <- runif(1, 1.5, 2.5)
@@ -121,4 +122,5 @@ grid(nx = NULL, ny = NULL,
      col = "#ebebeb", lwd = 2, lty=1)
 boxplot(mses, add = TRUE)
 
-write.csv(mses, file = paste0("results/sims_",model,"_",setting,"_",r,".csv"))
+write.csv(mses, file = paste0("results/sims_",model,"_",setting,"_"
+                              ,r,"_",n_sims,".csv"))

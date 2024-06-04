@@ -5,14 +5,16 @@
 
 library(dgp.hm)
 
-r <- 50
+r <- 5
+n_sims <- 50
 j <- 1
 
 results <- list()
 
 for(model in 1:2){
   for(setting in 1:3){
-    result <- read.csv(paste0("results/sims_",model,"_",setting,"_",r,".csv"))$x
+    result <- read.csv(paste0("results/sims_",model,"_",setting,"_"
+                              ,r,"_",n_sims,".csv"))$x
     results[[j]] <- result
     j <- j + 1
   }
