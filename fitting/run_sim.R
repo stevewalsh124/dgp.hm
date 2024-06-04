@@ -5,11 +5,6 @@
 
 library(dgp.hm)
 
-args <- commandArgs(TRUE)
-if(length(args) > 0)
-  for(i in 1:length(args))
-    eval(parse(text=args[[i]]))
-
 # Simulated toy example from DPC paper
 x <- seq(0, 4, by=0.1)
 n <- length(x)
@@ -18,6 +13,11 @@ setting <- 1 #set to 1 for "Setting A", 2 for "B", 3 for "C"
 if(!(model %in% 1:2)) stop("model should be 1 or 2")
 if(!(setting %in% 1:3)) stop("setting should be 1, 2, or 3")
 r <- 5 # number of replicates
+
+args <- commandArgs(TRUE)
+if(length(args) > 0)
+  for(i in 1:length(args))
+    eval(parse(text=args[[i]]))
 
 # parameters for f1 and f2
 m1 <- runif(1, 0.5, 1.5)
