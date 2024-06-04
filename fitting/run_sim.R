@@ -12,7 +12,7 @@ model <- 1 # set to 1 for "function 1", 2 for "function 2"
 setting <- 1 #set to 1 for "Setting A", 2 for "B", 3 for "C"
 if(!(model %in% 1:2)) stop("model should be 1 or 2")
 if(!(setting %in% 1:3)) stop("setting should be 1, 2, or 3")
-r <- 5 # number of replicates
+r <- 50 # number of replicates
 
 args <- commandArgs(TRUE)
 if(length(args) > 0)
@@ -41,8 +41,10 @@ if(model == 1){
     sdvec <- ifelse(x<=0.5, 5e-4, sdvec)
     sdvec <- ifelse(x>0.5 & x<2, 0.75*sdvec, sdvec)
     sdvec <- ifelse(x>=2, 0.5*sdvec, sdvec)
-  }}
+  }
+}
 
+# make sure the sd plot looks right (compared to appropriate values)
 plot(sdvec)
 
 # functions f1 and f2 to generate sims
@@ -114,7 +116,7 @@ for (j in 1:r) {
 mean(mses)
 
 # Boxplot
-boxplot(mses, ylim=c(0,.018), main="mses")
+boxplot(mses, ylim=c(0,ifelse(model==1,.018,.005)), main="mses")
 grid(nx = NULL, ny = NULL,
      col = "#ebebeb", lwd = 2, lty=1)
 boxplot(mses, add = TRUE)
