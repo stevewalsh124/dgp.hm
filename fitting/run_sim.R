@@ -59,7 +59,6 @@ lines(x, fit$lb, col="blue")
 legend(x = "topright", legend = c("data","truth", "wt avg", "95% UQ"),
        col = c("gray","black","red","blue"), lty = c(1,1,2,1))
 
-
 # Fit DGP model to f2
 fit <- dgp.hm::fit_two_layer_hm(x, y_avg2, Sigma_hat = Sigma2, nmcmc = 10000)
 plot(fit)
@@ -70,10 +69,59 @@ fit <- est_true(fit)
 # plot estimated function alongside data and avg
 xx <- seq(0,4,length=100)
 matplot(x, t(y2s), type="l", col="gray")
-lines(xx, f2(xx, m2=m2,u2=u2,sd = 0))
+lines(x, f2(x, m2=m2,u2=u2,sd = 0))
 lines(x, y_avg2, col="red", lty=2)
 lines(x, fit$m, col="blue")
 lines(x, fit$ub, col="blue")
 lines(x, fit$lb, col="blue")
 legend(x = "topright", legend = c("data","truth", "wt avg", "95% UQ"),
        col = c("gray","black","red","blue"), lty = c(1,1,2,1))
+
+# repeat for r replicates (don't plot these)
+mses1 <- c()
+for (j in 1:r) {
+  print(j)
+  m1 <- runif(1, 0.5, 1.5)
+  u1 <- runif(1, 1.5, 2.5)
+  y1s <- matrix(nrow = r, ncol = n)
+  for (i in 1:r) y1s[i,] <- f1(x, m1=m1, u1=u1)
+  y_avg1 <- colMeans(y1s)
+  var_y1 <- mean(apply(y1s, 2, var))
+  Sigma1 = diag(var_y1, n)
+  fit <- dgp.hm::fit_two_layer_hm(x, y_avg1, Sigma_hat = Sigma1, nmcmc = 7500)
+  fit <- trim(fit, 2500, 5)
+  fit <- est_true(fit)
+  mses1[j] <- mean((fit$m - f1(x, m1=m1,u1=u1,sd = 0))^2)
+}
+
+mean(mses1)
+
+# Boxplot
+boxplot(mses1, ylim=c(0,.018), main="mses1")
+grid(nx = NULL, ny = NULL,
+     col = "#ebebeb", lwd = 2, lty=1)
+boxplot(mses1, add = TRUE)
+
+mses2 <- c()
+for (j in 1:r) {
+  print(j)
+  m2 <- runif(1, 0.6, 1.4)
+  u2 <- runif(1, 0.6, 1.4)
+  y2s <- matrix(nrow = r, ncol = n)
+  for (i in 1:r) y2s[i,] <- f2(x, m2=m2, u2=u2)
+  y_avg2 <- colMeans(y2s)
+  var_y2 <- mean(apply(y2s, 2, var))
+  Sigma2 = diag(var_y2, n)
+  fit <- dgp.hm::fit_two_layer_hm(x, y_avg2, Sigma_hat = Sigma2, nmcmc = 7500)
+  fit <- trim(fit, 2500, 5)
+  fit <- est_true(fit)
+  mses2[j] <- mean((fit$m - f2(x, m2=m2,u2=u2,sd = 0))^2)
+}
+
+mean(mses2)
+
+# Boxplot
+boxplot(mses2, ylim=c(0,.005), main="mses2")
+grid(nx = NULL, ny = NULL,
+     col = "#ebebeb", lwd = 2, lty=1)
+boxplot(mses2, add = TRUE)
