@@ -54,7 +54,7 @@ f1 <- function(x, m1, u1, sd=0){
 }
 
 f2 <- function(x, m2, u2, sd=0){
-  return(exp(-m2*(x-3)^2) + exp(-u2*(x-1)^2) - 0.05*sin(x-1.9) + rnorm(length(x), sd=sd))
+  return(exp(-m2*(x-3)^2) + exp(-u2*(x-1)^2) - 0.05*sin(8*(x-1.9)) + rnorm(length(x), sd=sd))
 }
 
 # Get n function evaluations for f1 and f2 
