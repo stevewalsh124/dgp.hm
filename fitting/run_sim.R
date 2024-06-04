@@ -5,6 +5,11 @@
 
 library(dgp.hm)
 
+args <- commandArgs(TRUE)
+if(length(args) > 0)
+  for(i in 1:length(args))
+    eval(parse(text=args[[i]]))
+
 # Simulated toy example from DPC paper
 x <- seq(0, 4, by=0.1)
 n <- length(x)
