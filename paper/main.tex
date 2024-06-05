@@ -143,7 +143,14 @@ We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in 
 \subsection{Simulation Study}
 \label{subsec:sim}
 
-Here, we provide results from a simulation study comparing the GP and DGP models, in which case the true curve is known. \textcolor{blue}{I can include details for a sim study based on simulated data I construct, or I can use the dataset Dave mentioned getting to use here.}
+Here, we provide results from a simulation study comparing the GP and DGP models, in which case the true curve is known. Following \cite{moran2024dpc}, we consider two functions (1 and 2) each with three variance specifications (settings ``A", ``B", ``C"). Our mean squared error (MSE) results are seen in Figure \ref{fig:collect_sims}; our DGP-HM model outperforms these current benchmark methods. \textcolor{blue}{We can also include a setting ``D", where the underlying error covariance has spatial dependence (e.g., noise with a Mat'ern covariance). Additionally, we can look at linear theory simulations.}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=6in]{collect_sims.png}
+    \caption{Average MSE of our method across all $k$ values. \textcolor{blue}{Add competitors.}}
+    \label{fig:collect_sims}
+\end{figure}
 
 \subsection{Estimating Spectra with Mira-Titan Data}
 \label{subsec:mira_fit}
