@@ -12,7 +12,7 @@ j <- 1       # index to keep track of function/setting pairs
 results <- list()
 
 for(model in 1:2){
-  for(setting in 1:3){
+  for(setting in 1:4){
     result <- read.csv(paste0("results/sims_",model,"_",setting,"_"
                               ,r,"_",n_sims,".csv"))$x
     results[[j]] <- result
@@ -20,19 +20,19 @@ for(model in 1:2){
   }
 }
 
-boxplot(results, names = c("1,A","1,B","1,C","2,A","2,B","2,C"), 
+boxplot(results, names = c("1,A","1,B","1,C","1,D","2,A","2,B","2,C","2,D"), 
         ylab="Average MSE", main = "DGP-HM MSE across models/settings")
 
 # Boxplot for f1
-boxplot(results[1:3], ylim=c(0,.018), main="mses: function 1",
-        names = c("1,A","1,B","1,C"), ylab="MSE")
+boxplot(results[1:4], ylim=c(0,.018), main="mses: function 1",
+        names = c("1,A","1,B","1,C","1,D"), ylab="MSE")
 grid(nx = NULL, ny = NULL,
      col = "#ebebeb", lwd = 2, lty=1)
-boxplot(results[1:3], add = TRUE, names=F)
+boxplot(results[1:4], add = TRUE, names=F)
 
 # Boxplot for f2
-boxplot(results[4:6], ylim=c(0,.005), main="mses: function 2",
-        names = c("2,A","2,B","2,C"), ylab="MSE")
+boxplot(results[5:8], ylim=c(0,.005), main="mses: function 2",
+        names = c("2,A","2,B","2,C","2,D"), ylab="MSE")
 grid(nx = NULL, ny = NULL,
      col = "#ebebeb", lwd = 2, lty=1)
-boxplot(results[4:6], add = TRUE, names = F)
+boxplot(results[5:8], add = TRUE, names = F)
