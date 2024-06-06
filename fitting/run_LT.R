@@ -1,4 +1,4 @@
-# Power Spectra Simulations
+# Power Spectra Simulations and linear theory (LT)
 
 library(dgp.hm)
 
