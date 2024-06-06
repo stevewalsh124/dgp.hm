@@ -2,26 +2,27 @@
 
 library(dgp.hm)
 
+# D+ values to scale sims in order to match the linear theory
+Dp <- c(0.007985, 0.006853, 0.007923, 0.007024, 0.007214, 
+        0.008146, 0.006776, 0.007998, 0.007517, 0.006175) 
+        # 0.010293, 0.008178, 0.011243, 0.007489, 0.009507, 
+        # 0.013198, 0.007817, 0.008683, 0.006918, 0.008124, 
+        # 0.006601, 0.006948, 0.009904, 0.006510, 0.007727, 
+        # 0.010022, 0.007219, 0.007437, 0.010621)
+
 # From the "linear" folder
 sim <- read.table("../CosmicEmu_etc/32 Models Mira Titan/linear/RUN1/oneh_matterpower.dat")
 plot(log10(sim$V1), scrP(sim$V2,sim$V1), type="l",
-     xlab=expression(log[10](k)), ylab="script P(k)", ylim=c(-4.7,1.1),
-     main = "all 'linear' runs")
-for (run in 2:32) {
+     xlab=expression(log[10](k)), ylab="script P(k)", ylim=c(-4.7,1.3),
+     main = "LT and simulated spectra")
+for (run in 2:10) {
   sim <- read.table(paste0("../CosmicEmu_etc/32 Models Mira Titan/linear/RUN",
                            run,"/oneh_matterpower.dat"))
   lines(log10(sim$V1), scrP(sim$V2,sim$V1), col=run)
 }
 
 # From one of the "pow*" folders
-sim2 <- read.table("../CosmicEmu_etc/32 Models Mira Titan/pow.ic/M011/L1300/PM000/analysis/Pow/m011.pk.ini")
-head(sim2)
-pairs(sim2)
-plot(log10(sim2$V1), log10(sim2$V2), main = "orig, no cutoff")
-plot(log10(sim2$V1), scrP(sim2$V2, sim2$V1), main = "emu, no cutoff")
-plot(log10(sim2$V1)[sim2$V1<=1], scrP(sim2$V2, sim2$V1)[sim2$V1<=1], 
-     main = "emu, cutoff at k=1", type="l", xlim=c(-2.25,0),ylim=c(-4.3,-2.6))
-for (run in 12:42) {
+for (run in 11:20) {
   if(run == 27 | run == 28) next
   if(run < 20)  folder <- ""
   if(run >= 20) folder <- "_2"
@@ -30,6 +31,6 @@ for (run in 12:42) {
   sim2 <- read.table(paste0("../CosmicEmu_etc/32 Models Mira Titan/pow",folder,
                             ".ic/M0", run, 
                             "/L1300/PM000/analysis/Pow/m0", run, ".pk.ini"))
-  lines(log10(sim2$V1)[sim2$V1<=1], scrP(sim2$V2, sim2$V1)[sim2$V1<=1], 
-       main = "emu, cutoff at k=1", col=run)
+  lines(log10(sim2$V1)[sim2$V1<=1], 
+        scrP(sim2$V2/(Dp[run-11])^2, sim2$V1)[sim2$V1<=1], col="red", lwd=2)
 }
