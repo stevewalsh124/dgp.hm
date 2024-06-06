@@ -13,7 +13,7 @@ Dp <- c(0.007985, 0.006853, 0.007923, 0.007024, 0.007214,
 # From the "linear" folder
 sim <- read.table("../CosmicEmu_etc/32 Models Mira Titan/linear/RUN1/oneh_matterpower.dat")
 plot(log10(sim$V1), scrP(sim$V2,sim$V1), type="l",
-     xlab=expression(log[10](k)), ylab="script P(k)", ylim=c(-4.7,1.3),
+     xlab=expression(log[10](k)), ylab="script P(k)", ylim=c(0,1.3), xlim = c(-2.1,0),
      main = "LT and simulated spectra")
 for (run in 2:10) {
   sim <- read.table(paste0("../CosmicEmu_etc/32 Models Mira Titan/linear/RUN",
@@ -32,5 +32,8 @@ for (run in 11:20) {
                             ".ic/M0", run, 
                             "/L1300/PM000/analysis/Pow/m0", run, ".pk.ini"))
   lines(log10(sim2$V1)[sim2$V1<=1], 
-        scrP(sim2$V2/(Dp[run-11])^2, sim2$V1)[sim2$V1<=1], col="red", lwd=2)
+        scrP(sim2$V2/(Dp[run-10])^2, sim2$V1)[sim2$V1<=1], col=run-10, lwd=3, lty=2)
 }
+
+legend(x = "bottom", legend = c("linear theory", "sims"),
+      lty = c(1,2), lwd=c(1,3))
