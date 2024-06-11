@@ -28,7 +28,7 @@ library(mvtnorm)
 
 seed <- 1
 func <- 1
-setting <- 1
+setting <- 3
 r <- 5
 args <- commandArgs(TRUE)
 if(length(args) > 0)
@@ -44,7 +44,7 @@ vis <- FALSE # should plots be generated
 
 # Generate data ---------------------------------------------------------------
 
-x <- seq(0, 4, by=0.1)
+x <-seq(0, 4, by=0.1)
 n <- length(x)
 Sigma_true <- get_Sigma_true(x, n, func, setting)
 if(vis) image(Sigma_true) # make sure sd plot looks right
@@ -60,6 +60,13 @@ if(vis) matplot(x, t(Y), ylab="f(x)", type="l")
 y_avg <- colMeans(Y)
 if(func == 1) y_true <- f1(x, m1=m1, u1=u1)
 if(func == 2) y_true <- f2(x, m2=m2, u2=u2)
+
+# x_all <- NULL
+# y_all <- NULL
+# for(i in 1:r) {
+#   x_all <- c(x_all, x)
+#  y_all <- c(y_all, Y[i, ])
+# }
 
 # dgp.hm model ----------------------------------------------------------------
 
@@ -93,18 +100,30 @@ dgp_mse <- mean((fit$m - y_true)^2)
 # deepgp model ----------------------------------------------------------------
 # Not quite sure what to do here - use the average?  Or all the data?
 
-fit2 <- deepgp::fit_two_layer(x, y_avg, nmcmc = 20000, 
+fit2 <- deepgp::fit_two_layer(x, y_avg, nmcmc = 10000, 
                               true_g = mean(diag(Sigma_true)))
 if(vis) plot(fit2)
-fit2 <- deepgp::trim(fit2, 15000, 5)
+fit2 <- deepgp::trim(fit2, 5000, 5)
 fit2 <- predict(fit2, x)
 if(vis) plot(fit2)
 deepgp_mse <- mean((fit2$mean - y_true)^2)
 
 # hetGP model -----------------------------------------------------------------
+# Not sure how to pass the true variance to this model....
 
-# TODO
-hetgp_mse <- NA
+fit3 <- mleHetGP(matrix(x_all, ncol = 1), y_all, covtype = "Matern5_2")
+pred <- predict(matrix(x, ncol = 1), object = fit3)
+if (vis) {
+  matplot(x, t(Y), type="l", col="gray")
+  lines(x, y_true)
+  lines(x, y_avg, col="red", lty=2)
+  lines(x, pred$mean, col="blue")
+  lines(x, pred$mean - 2*sqrt(pred$sd2+pred$nugs), col="blue")
+  lines(x, pred$mean + 2*sqrt(pred$sd2+pred$nugs), col="blue")
+  legend(x = "topright", legend = c("data","truth", "wt avg", "95% UQ"),
+         col = c("gray","black","red","blue"), lty = c(1,1,2,1))
+}
+hetgp_mse <- mean((pred$mean - y_true)^2)
 
 # Store results ---------------------------------------------------------------
 
