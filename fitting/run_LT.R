@@ -2,38 +2,58 @@
 
 library(dgp.hm)
 
-# D+ values to scale sims in order to match the linear theory
-Dp <- c(0.007985, 0.006853, 0.007923, 0.007024, 0.007214, 
-        0.008146, 0.006776, 0.007998, 0.007517, 0.006175) 
-        # 0.010293, 0.008178, 0.011243, 0.007489, 0.009507, 
-        # 0.013198, 0.007817, 0.008683, 0.006918, 0.008124, 
-        # 0.006601, 0.006948, 0.009904, 0.006510, 0.007727, 
-        # 0.010022, 0.007219, 0.007437, 0.010621)
+# All the Runs and Models are in units Mpc/h and h/Mpc.
+# To be able to plot everything in one plot, we have to convert to Mpc or 1/Mpc.
+# To convert k (column 1), we need to multiply it by hubble (to get k in units of 1/Mpc) 
+# while the power spectrum (column 2) needs to be divided by h^3 (to get it in Mpc^3).
+
+# contains model/run index, D+ values, and hubble values
+data <- read.csv("../CosmicEmu_etc/32 Models Mira Titan/models_d+_h.csv")
+Dp <- data$D.
+h <- data$Hubble
 
 # From the "linear" folder
-sim <- read.table("../CosmicEmu_etc/32 Models Mira Titan/linear/RUN1/oneh_matterpower.dat")
-plot(log10(sim$V1), scrP(sim$V2,sim$V1), type="l",
-     xlab=expression(log[10](k)), ylab="script P(k)", ylim=c(0,1.3), xlim = c(-2.1,0),
+run <- 1
+model <- run + 10
+# read in first linear
+sim <- read.table(paste0("../CosmicEmu_etc/32 Models Mira Titan/linear/RUN",
+                         run,"/oneh_matterpower.dat"))
+k_s <- sim$V1*h[run]
+pk_s <- sim$V2/ (h[run])^3
+# read in first model run
+mod <- read.table(paste0("../CosmicEmu_etc/32 Models Mira Titan/pow.ic/M0", model, 
+                         "/L1300/PM000/analysis/Pow/m0", model, ".pk.ini"))
+k_m <- mod$V1 * h[model-10]
+pk_m <- mod$V2 / (h[model-10])^3 / (Dp[model-10])^2
+plot(log10(k_s), scrP(pk_s, k_s), type="l",
+     xlab=expression(log[10](k)), ylab="script P(k)", ylim=c(-0.2,1.4), xlim = c(-2.3,0),
      main = "LT and simulated spectra")
-for (run in 2:10) {
+lines(log10(k_m)[k_m <= 1], scrP(pk_m, k_m)[k_m <= 1], lty=3)
+
+for (run in 2:32) {
+  model <- run + 10
+  if(model == 27 | model == 28) next
+  if(model < 20)  folder <- ""
+  if(model >= 20) folder <- "_2"
+  if(model >= 30) folder <- "_3"
+  if(model >= 40) folder <- "_4"
+  mod <- read.table(paste0("../CosmicEmu_etc/32 Models Mira Titan/pow",folder,
+                           ".ic/M0", model, 
+                           "/L1300/PM000/analysis/Pow/m0", model, ".pk.ini"))
+  k_m <- mod$V1 * h[model-10]
+  pk_m <- mod$V2 / (h[model-10])^3 / (Dp[model-10])^2
+  lines(log10(k_m)[k_m<=1], 
+        scrP(pk_m,k_m)[k_m<=1], col=run, lwd=1, lty=3)
+  
   sim <- read.table(paste0("../CosmicEmu_etc/32 Models Mira Titan/linear/RUN",
                            run,"/oneh_matterpower.dat"))
-  lines(log10(sim$V1), scrP(sim$V2,sim$V1), col=run)
-}
-
-# From one of the "pow*" folders
-for (run in 11:20) {
-  if(run == 27 | run == 28) next
-  if(run < 20)  folder <- ""
-  if(run >= 20) folder <- "_2"
-  if(run >= 30) folder <- "_3"
-  if(run >= 40) folder <- "_4"
-  sim2 <- read.table(paste0("../CosmicEmu_etc/32 Models Mira Titan/pow",folder,
-                            ".ic/M0", run, 
-                            "/L1300/PM000/analysis/Pow/m0", run, ".pk.ini"))
-  lines(log10(sim2$V1)[sim2$V1<=1], 
-        scrP(sim2$V2/(Dp[run-10])^2, sim2$V1)[sim2$V1<=1], col=run-10, lwd=3, lty=2)
+  k_s <- sim$V1*h[run]
+  pk_s <- sim$V2/ (h[run])^3
+  lines(log10(k_s), 
+        scrP(pk_s,k_s), col=run, lwd=1)
 }
 
 legend(x = "bottom", legend = c("linear theory", "sims"),
-      lty = c(1,2), lwd=c(1,3))
+       lty = c(1,3), lwd=c(1,1))
+
+
