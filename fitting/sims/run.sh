@@ -1,9 +1,9 @@
 #!/bin/bash
 
-model=1
-deep=1
+func=1
+setting=1
 
-for (( model=12; model<=20; model++ ))
+for (( seed=1; seed<=10; seed++ ))
 do
-  R CMD BATCH "--args model=$model deep=$deep" run_fit.R &
+  R CMD BATCH "--args func=$func setting=$setting seed=$seed" run_sim.R &
 done
