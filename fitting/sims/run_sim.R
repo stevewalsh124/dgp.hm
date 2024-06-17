@@ -74,9 +74,10 @@ if(setting %in% 1:3) {
   var_y <- mean(apply(Y, 2, var))
   Sigma_hat = diag(var_y, n)
 } else {
-  params_hat <- opt_matern(D, t(Y), sdd = rep(1,n))
-  Sigma_hat <- deepgp:::Matern(D, params_hat$tau2_hat, params_hat$theta_hat,
-                               g=1e-8, v=2.5)
+  dx <- sq_dist(x)
+  params_hat <- opt_matern(dx, t(Y), sdd = rep(1,n))
+  Sigma_hat <- deepgp:::Matern(dx, params_hat$tau2_hat, params_hat$theta_hat,
+                               g = 1e-8, v = 2.5)
 }
 
 fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat, nmcmc = 20000)
