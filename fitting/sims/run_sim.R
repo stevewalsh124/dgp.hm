@@ -39,7 +39,7 @@ set.seed(seed)
 source("functions.R") # generates random model parameters upon sourcing
 
 r <- 5 # number of replicates observed
-vis <- TRUE # should plots be generated
+vis <- FALSE # should plots be generated
 
 # Generate data ---------------------------------------------------------------
 
@@ -97,7 +97,6 @@ if (vis) {
 dgp_mse <- mean((fit$m - y_true)^2)
 
 # deepgp model ----------------------------------------------------------------
-
 
 fit2 <- deepgp::fit_two_layer(x_all, y_all, nmcmc = 10000)
 if(vis) plot(fit2)
