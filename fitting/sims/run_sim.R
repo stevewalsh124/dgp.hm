@@ -13,7 +13,8 @@
 #   "results" folder or appended to existing file
 #   
 # Included Models:
-#   dgp.hm: the Bayesian hierarchical DGP model 
+#   dgp: the Bayesian hierarchical DGP model 
+#   dgp_true: the dgp model, but with the true covariance matrix
 #   deepgp: original DGP from "deepgp" package
 #   hetgp: heteroskedastic GP from "hetGP" package 
 
@@ -26,7 +27,7 @@ library(hetGP)
 library(mvtnorm)
 
 seed <- 1
-func <- 2
+func <- 1
 setting <- 2
 args <- commandArgs(TRUE)
 if(length(args) > 0)
@@ -68,11 +69,11 @@ for(i in 1:r) {
 }
 if (vis) plot(x_all, y_all)
 
-# dgp.hm model ----------------------------------------------------------------
+# dgp model -------------------------------------------------------------------
 
 if(setting %in% 1:3) {
   var_y <- mean(apply(Y, 2, var))
-  Sigma_hat = diag(var_y, n)
+  Sigma_hat <- diag(var_y, n)
 } else {
   dx <- sq_dist(x)
   params_hat <- opt_matern(dx, t(Y), sdd = rep(1,n))
@@ -80,7 +81,26 @@ if(setting %in% 1:3) {
                                g = 1e-8, v = 2.5)
 }
 
-fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat, nmcmc = 20000)
+#fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat, nmcmc = 20000)
+#if(vis) plot(fit)
+#fit <- dgp.hm::trim(fit, 15000, 5)
+#fit <- dgp.hm::est_true(fit)
+
+if (vis) {
+  matplot(x, t(Y), type="l", col="gray")
+  lines(x, y_true)
+  lines(x, y_avg, col="red", lty=2)
+  lines(x, fit$m, col="blue")
+  lines(x, fit$ub, col="blue")
+  lines(x, fit$lb, col="blue")
+  legend(x = "topright", legend = c("data","truth", "wt avg", "95% UQ"),
+         col = c("gray","black","red","blue"), lty = c(1,1,2,1))
+}
+#dgp_mse <- mean((fit$m - y_true)^2)
+
+# dgp_true model --------------------------------------------------------------
+
+fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_true, nmcmc = 20000)
 if(vis) plot(fit)
 fit <- dgp.hm::trim(fit, 15000, 5)
 fit <- dgp.hm::est_true(fit)
@@ -95,21 +115,21 @@ if (vis) {
   legend(x = "topright", legend = c("data","truth", "wt avg", "95% UQ"),
          col = c("gray","black","red","blue"), lty = c(1,1,2,1))
 }
-dgp_mse <- mean((fit$m - y_true)^2)
+dgp_true_mse <- mean((fit$m - y_true)^2)
 
 # deepgp model ----------------------------------------------------------------
 
-fit2 <- deepgp::fit_two_layer(x_all, y_all, nmcmc = 10000)
-if(vis) plot(fit2)
-fit2 <- deepgp::trim(fit2, 5000, 5)
-fit2 <- predict(fit2, x)
-if(vis) plot(fit2)
-deepgp_mse <- mean((fit2$mean - y_true)^2)
+#fit2 <- deepgp::fit_two_layer(x_all, y_all, nmcmc = 10000)
+#if(vis) plot(fit2)
+#fit2 <- deepgp::trim(fit2, 5000, 5)
+#fit2 <- predict(fit2, x)
+#if(vis) plot(fit2)
+#deepgp_mse <- mean((fit2$mean - y_true)^2)
 
 # hetGP model -----------------------------------------------------------------
 
-fit3 <- mleHetGP(matrix(x_all, ncol = 1), y_all, covtype = "Matern5_2")
-pred <- predict(matrix(x, ncol = 1), object = fit3)
+#fit3 <- mleHetGP(matrix(x_all, ncol = 1), y_all, covtype = "Matern5_2")
+#pred <- predict(matrix(x, ncol = 1), object = fit3)
 if (vis) {
   matplot(x, t(Y), type="l", col="gray")
   lines(x, y_true)
@@ -120,17 +140,19 @@ if (vis) {
   legend(x = "topright", legend = c("data","truth", "wt avg", "95% UQ"),
          col = c("gray","black","red","blue"), lty = c(1,1,2,1))
 }
-hetgp_mse <- mean((pred$mean - y_true)^2)
+#hetgp_mse <- mean((pred$mean - y_true)^2)
 
 # Store results ---------------------------------------------------------------
 
 filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
-if (file.exists(filename)) {
-  results <- read.csv(filename)
-  results <- rbind(results, c(seed, dgp_mse, deepgp_mse, hetgp_mse))
-} else {
-  results <- data.frame(seed = seed, dgp = dgp_mse, deepgp = deepgp_mse,
-                        hetgp = hetgp_mse)
-}
+#if (file.exists(filename)) {
+#  results <- read.csv(filename)
+#  results <- rbind(results, c(seed, dgp_mse, deepgp_mse, hetgp_mse))
+#} else {
+#  results <- data.frame(seed = seed, dgp = dgp_mse, deepgp = deepgp_mse,
+#                        hetgp = hetgp_mse)
+#}
+results <- read.csv(filename)
+results$dgp_true[results$seed == seed] <- dgp_true_mse
 write.csv(results, filename, row.names = FALSE)
 
