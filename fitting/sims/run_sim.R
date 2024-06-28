@@ -21,6 +21,15 @@
 # Note: only dgp.hm is actually designed for multiple response observations
 ###############################################################################
 
+# TODO: bump up the reps from 5 to 20, focus on setting 4,
+# might need to make the Sigma_true a bit more complicated
+# TODO: store compute times
+# TODO: add score measure (log score) - use "cov" function?
+# R package: scoringRules
+# function: logs and logs.numeric
+# Credible interval widths and coverage were used in DPC paper
+# Note to Annie: adjust default priors like I did for the deepgp package
+
 library(dgp.hm) # must install locally
 library(deepgp)
 library(hetGP)
