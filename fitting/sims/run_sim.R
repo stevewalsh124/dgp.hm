@@ -49,7 +49,7 @@ set.seed(seed)
 source("functions.R") # generates random model parameters upon sourcing
 
 r <- 5 # number of replicates observed
-vis <- TRUE # should plots be generated
+vis <- FALSE # should plots be generated
 
 # Generate data ---------------------------------------------------------------
 
@@ -171,7 +171,7 @@ time3 <- toc - tic
 # Store results ---------------------------------------------------------------
 
 filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
-if (file.exists(filename) & ncol(read.csv(filename)) == 9) {
+if (file.exists(filename)) {
  results <- read.csv(filename)
  results <- rbind(results, c(seed, dgp_mse, dgp_true_mse,
                              deepgp_mse, hetgp_mse,
