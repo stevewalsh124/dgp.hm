@@ -1,5 +1,4 @@
-
-###############################################################################
+#######################################################################
 # This script obtains principal components and their corresponding weights 
 # Then predict cosmologies' spectra for LINEAR THEORY test cases
 #
@@ -7,7 +6,7 @@
 #
 ###############################################################################
 
-pdf("predict_LT.pdf")
+pdf("predict_LT_9PCs.pdf")
 
 tic <- proc.time()[3]
 
@@ -60,7 +59,7 @@ for(test_run in c(5,10,15,20,25,30)){ #1:16,19:32
   #################################
   
   # n_pc: number of principal components to model
-  n_pc = 10
+  n_pc = 9
   if(n_pc < 1 | n_pc > 111) stop("number of PCs has to be between 1 and 111")
   
   # choose the power for powered-exponential covariance function 
@@ -146,6 +145,13 @@ for(test_run in c(5,10,15,20,25,30)){ #1:16,19:32
   legend(x = "bottom", legend = c("training", "prediction", "held-out/truth"),
          col=c("gray","black","red"), lty = c(1,1,2), lwd=c(1,1,1))
   
+  par(mfrow=c(1,3))
+  betas <- c()
+  for (i in 1:n_pc) betas <- c(betas, as[[i]]$beta)
+  hist(betas, main = paste0("hist of betas for run ",test_run))
+  hist(10^betas, main = paste0("10^betas for run ",test_run))
+  hist(1/(10^betas), main = paste0("1/(10^betas) for run ",test_run))
+  par(mfrow=c(1,1))
 }
 
 dev.off()

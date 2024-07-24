@@ -10,10 +10,8 @@
 # Optimize Matern -------------------------------------------------------------
 #' @export
 
-opt_matern <- function(dx, y, sdd, init = c(0.1, 0.1), lower = c(-10, -10),
-                       upper = c(25, 25)) { 
-  out <- optim(init, nl_matern, method = "L-BFGS-B", lower = lower,
-               upper = upper, dx = dx, y = y, sdd = sdd)
+opt_matern <- function(dx, y, sdd, init = c(0.1, 0.1)) { 
+  out <- optim(init, nl_matern, dx = dx, y = y, sdd = sdd)
   return(list(theta_hat = exp(out$par[2] - out$par[1]), 
               tau2_hat = exp(out$par[2])))
 }
