@@ -14,7 +14,7 @@
 #   
 # Included Models:
 #   dgp: the Bayesian hierarchical DGP model 
-#   dgp_true: the dgp model, but with the true covariance matrix
+#   dgp_r: the dgp model, but use Sigma_hat/sqrt(r)
 #   deepgp: original DGP from "deepgp" package
 #   hetgp: heteroskedastic GP from "hetGP" package 
 
@@ -90,12 +90,13 @@ if(setting %in% 1:3) {
   Sigma_hat <- diag(var_y, n)
 } else {
   dx <- sq_dist(x)
-  params_hat <- opt_matern(dx, t(Yzm), sdd = rep(1,n), init = c(0.1,0.1))
+  params_hat <- opt_matern(dx, t(Yzm), sdd = rep(1,n), 
+                           init = c(((max(x)-min(x))/10), mean(apply(Yzm, 2, var))))
   Sigma_hat <- deepgp:::Matern(dx, params_hat$tau2_hat, params_hat$theta_hat,
                                g = 1e-8, v = 2.5)
 }
 
-fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat/sqrt(r), 
+fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat, 
                                 nmcmc = 10000)
 fit <- dgp.hm::trim(fit, 5000, 5)
 if(vis) plot(fit)
@@ -115,27 +116,27 @@ dgp_mse <- mean((fit$m - y_true)^2)
 toc <- proc.time()[3]
 time1 <- toc - tic
 
-# dgp_true model --------------------------------------------------------------
+# dgp_r model --------------------------------------------------------------
 
 tic <- proc.time()[3]
-fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_true, nmcmc = 10000)
-if(vis) plot(fit)
-fit <- dgp.hm::trim(fit, 5000, 5)
-fit <- dgp.hm::est_true(fit)
+fit1a <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat/sqrt(r), nmcmc = 10000)
+if(vis) plot(fit1a)
+fit1a <- dgp.hm::trim(fit1a, 5000, 5)
+fit1a <- dgp.hm::est_true(fit1a)
 
 if (vis) {
   matplot(x, t(Y), type="l", col="gray")
   lines(x, y_true)
   lines(x, y_avg, col="red", lty=2)
-  lines(x, fit$m, col="blue")
-  lines(x, fit$ub, col="blue")
-  lines(x, fit$lb, col="blue")
+  lines(x, fit1a$m, col="blue")
+  lines(x, fit1a$ub, col="blue")
+  lines(x, fit1a$lb, col="blue")
   legend(x = "topright", legend = c("data","truth", "wt avg", "95% UQ"),
          col = c("gray","black","red","blue"), lty = c(1,1,2,1))
 }
-dgp_true_mse <- mean((fit$m - y_true)^2)
+dgp_r_mse <- mean((fit1a$m - y_true)^2)
 toc <- proc.time()[3]
-time_true <- toc - tic
+time_r <- toc - tic
 
 # deepgp model ----------------------------------------------------------------
 
@@ -172,17 +173,15 @@ time3 <- toc - tic
 
 filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
 if (file.exists(filename)) {
- results <- read.csv(filename)
- results <- rbind(results, c(seed, dgp_mse, dgp_true_mse,
-                             deepgp_mse, hetgp_mse,
-                             time1, time_true, time2, time3))
+  results <- read.csv(filename)
+  results <- rbind(results, c(seed, dgp_mse, dgp_r_mse,
+                              deepgp_mse, hetgp_mse,
+                              time1, time_r, time2, time3))
 } else {
- results <- data.frame(seed = seed, dgp = dgp_mse, dgp_true = dgp_true_mse,
-                       deepgp = deepgp_mse, hetgp = hetgp_mse,
-                       time1 = time1, time_true = time_true,
-                       time2 = time2, time3 = time3)
+  results <- data.frame(seed = seed, dgp = dgp_mse, dgp_r = dgp_r_mse,
+                        deepgp = deepgp_mse, hetgp = hetgp_mse,
+                        time1 = time1, time_r = time_r,
+                        time2 = time2, time3 = time3)
 }
-# results <- read.csv(filename)
-# results$dgp_true[results$seed == seed] <- dgp_true_mse
 write.csv(results, filename, row.names = FALSE)
 
