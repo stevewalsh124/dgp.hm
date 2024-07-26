@@ -9,8 +9,8 @@
 #   setting: 1, 2, 3, or 4 (indicates noise settings A-D from DPC paper)
 #
 # Output:
-#   data frame of MSE values for each model is either written to ".csv" in the
-#   "results" folder or appended to existing file
+#   data frame of MSE and CRPS values for each model is either written to 
+#   ".csv" in the "results" folder or appended to existing file
 #   
 # Included Models:
 #   dgp: the Bayesian hierarchical DGP model 
@@ -23,7 +23,6 @@
 
 # TODO: bump up the reps from 5 to 20, focus on setting 4,
 # might need to make the Sigma_true a bit more complicated
-# TODO: store compute times
 # TODO: add score measure (log score) - use "cov" function?
 # R package: scoringRules
 # function: logs and logs.numeric
@@ -34,10 +33,11 @@ library(dgp.hm) # must install locally
 library(deepgp)
 library(hetGP)
 library(mvtnorm)
+library(scoringRules)
 
 seed <- 1
 func <- 1
-setting <- 4
+setting <- 1
 args <- commandArgs(TRUE)
 if(length(args) > 0)
   for(i in 1:length(args))
@@ -53,21 +53,21 @@ vis <- FALSE # should plots be generated
 
 # Generate data ---------------------------------------------------------------
 
-x <- seq(0, 4, by=0.1)
+x <- seq(0, 4, by = 0.1)
 n <- length(x)
 Sigma_true <- get_Sigma_true(x, n, func, setting)
 if(vis) image(Sigma_true) # make sure sd plot looks right
 
 Y <- matrix(nrow = r, ncol = n)
 if(func == 1) {
-  for (i in 1:r) Y[i,] <- f1(x, m1=m1, u1=u1, Sigma = Sigma_true)
+  for (i in 1:r) Y[i,] <- f1(x, m1 = m1, u1 = u1, Sigma = Sigma_true)
 } else {
-  for (i in 1:r) Y[i,] <- f2(x, m2=m2, u2=u2, Sigma = Sigma_true)
+  for (i in 1:r) Y[i,] <- f2(x, m2 = m2, u2 = u2, Sigma = Sigma_true)
 }
-if(vis) matplot(x, t(Y), ylab="f(x)", type="l")
+if(vis) matplot(x, t(Y), ylab = "f(x)", type = "l")
 
-if(func == 1) y_true <- f1(x, m1=m1, u1=u1, Sigma = diag(1e-300,n,n))
-if(func == 2) y_true <- f2(x, m2=m2, u2=u2, Sigma = diag(1e-300,n,n))
+if(func == 1) y_true <- f1(x, m1 = m1, u1 = u1, Sigma = diag(1e-300,n,n))
+if(func == 2) y_true <- f2(x, m2 = m2, u2 = u2, Sigma = diag(1e-300,n,n))
 
 # get zero-mean version of Y
 y_avg <- colMeans(Y)
@@ -80,7 +80,7 @@ for(i in 1:r) {
   x_all <- c(x_all, x)
   y_all <- c(y_all, Y[i, ])
 }
-if (vis) plot(x_all, y_all)
+if(vis) plot(x_all, y_all)
 
 # dgp.hm model ----------------------------------------------------------------
 
@@ -113,8 +113,9 @@ if (vis) {
          col = c("gray","black","red","blue"), lty = c(1,1,2,1))
 }
 dgp_mse <- mean((fit$m - y_true)^2)
+# dgp_logs <- logs(y_true, fit$m, fit$) # HOW DO WE USE THIS???
 toc <- proc.time()[3]
-time1 <- toc - tic
+dgp_time <- toc - tic
 
 # dgp_r model --------------------------------------------------------------
 
