@@ -6,7 +6,7 @@
 # est_true --------------------------------------------------------------------
 #' @export 
 
-est_true <- function(fit, tolpower = -10) {
+est_true <- function(fit, tolpower = -10, return_all = FALSE) {
   # this function finds the posterior mean of the true spectrum
   # given the observed weighted average and precision information
   n <- nrow(fit$x)
@@ -67,7 +67,10 @@ est_true <- function(fit, tolpower = -10) {
   fit$lb <- apply(Ss, 1, quantile, p = 0.025)
   fit$ubb <- apply(Ss, 1, quantile, p = 0.995)
   fit$lbb <- apply(Ss, 1, quantile, p = 0.005)
-  # fit$Ms <- Ms; fit$Ss <- Ss; fit$Cs <- Cs
+  if (return_all) {
+    fit$Ms <- Ms
+    fit$Ss <- Ss
+  }
   
   return(fit)
   

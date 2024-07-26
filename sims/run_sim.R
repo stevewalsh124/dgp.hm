@@ -22,11 +22,8 @@
 ###############################################################################
 
 # TODO: bump up the reps from 5 to 20, focus on setting 4,
+# ANNIE TODO: code up coverage and logs for each method, rerun for r = 5 and r = 20
 # might need to make the Sigma_true a bit more complicated
-# TODO: add score measure (log score) - use "cov" function?
-# R package: scoringRules
-# function: logs and logs.numeric
-# Credible interval widths and coverage were used in DPC paper
 # Note to Annie: adjust default priors like I did for the deepgp package
 
 library(dgp.hm) # must install locally
@@ -100,7 +97,7 @@ fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat,
                                 nmcmc = 10000)
 fit <- dgp.hm::trim(fit, 5000, 5)
 if(vis) plot(fit)
-fit <- dgp.hm::est_true(fit)
+fit <- dgp.hm::est_true(fit, return_all = TRUE)
 
 if (vis) {
   matplot(x, t(Y), type="l", col="gray")
@@ -113,7 +110,10 @@ if (vis) {
          col = c("gray","black","red","blue"), lty = c(1,1,2,1))
 }
 dgp_mse <- mean((fit$m - y_true)^2)
-# dgp_logs <- logs(y_true, fit$m, fit$) # HOW DO WE USE THIS???
+# 1. check coverage??? 95% of the samples, do they contain the truth
+# 2. log score, assuming normal distribution, estimate sd of the samples
+dgp_logs <- sum(logs.numeric(drop(y_true), family = "normal", mean = fit$m, 
+                             sd = apply(fit$Ss, 1, sd)))
 toc <- proc.time()[3]
 dgp_time <- toc - tic
 
@@ -161,12 +161,14 @@ if (vis) {
   lines(x, y_true)
   lines(x, y_avg, col="red", lty=2)
   lines(x, pred$mean, col="blue")
-  lines(x, pred$mean - 2*sqrt(pred$sd2+pred$nugs), col="blue")
-  lines(x, pred$mean + 2*sqrt(pred$sd2+pred$nugs), col="blue")
+  lines(x, pred$mean - 2*sqrt(pred$sd2), col="blue") # nugs???
+  lines(x, pred$mean + 2*sqrt(pred$sd2), col="blue") # nugs???
   legend(x = "topright", legend = c("data","truth", "wt avg", "95% UQ"),
          col = c("gray","black","red","blue"), lty = c(1,1,2,1))
 }
 hetgp_mse <- mean((pred$mean - y_true)^2)
+hetgp_logs <- sum(logs.numeric(drop(y_true), family = "normal", mean = pred$mean, 
+                             sd = sqrt(pred$sd2)))
 toc <- proc.time()[3]
 time3 <- toc - tic
 

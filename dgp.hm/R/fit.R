@@ -26,7 +26,7 @@ fit_one_layer_hm <- function(x, y, nmcmc = 10000, verb = TRUE, theta_0 = 0.1,
   
   # Check inputs
   if (is.numeric(x)) x <- as.matrix(x)
-  test <- deepgp:::check_inputs(x, y, 0) # do not need to check nugget
+  test <- deepgp:::check_inputs(x, y, 0) # do not need to check nugget # TODO: noisy = TRUE????
   settings <- deepgp:::check_settings(settings, layers = 1)
   initial <- list(theta = theta_0, tau2 = 1)
   if (!(v %in% c(0.5, 1.5, 2.5))) 
