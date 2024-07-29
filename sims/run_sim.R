@@ -123,7 +123,7 @@ tic <- proc.time()[3]
 fit1a <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat/sqrt(r), nmcmc = 10000)
 if(vis) plot(fit1a)
 fit1a <- dgp.hm::trim(fit1a, 5000, 5)
-fit1a <- dgp.hm::est_true(fit1a)
+fit1a <- dgp.hm::est_true(fit1a, return_all = TRUE)
 
 if (vis) {
   matplot(x, t(Y), type="l", col="gray")
@@ -136,8 +136,10 @@ if (vis) {
          col = c("gray","black","red","blue"), lty = c(1,1,2,1))
 }
 dgp_r_mse <- mean((fit1a$m - y_true)^2)
+dgp_r_logs <- sum(logs.numeric(drop(y_true), family = "normal", mean = fit1a$m, 
+                             sd = apply(fit1a$Ss, 1, sd)))
 toc <- proc.time()[3]
-time_r <- toc - tic
+dgp_r_time <- toc - tic
 
 # deepgp model ----------------------------------------------------------------
 
@@ -148,8 +150,10 @@ fit2 <- deepgp::trim(fit2, 5000, 5)
 fit2 <- predict(fit2, x)
 if(vis) plot(fit2)
 deepgp_mse <- mean((fit2$mean - y_true)^2)
+deepgp_logs <- sum(logs.numeric(drop(y_true), family = "normal", mean = fit2$mean, 
+                               sd = sqrt(fit2$s2/n)))
 toc <- proc.time()[3]
-time2 <- toc - tic
+deepgp_time <- toc - tic
 
 # hetGP model -----------------------------------------------------------------
 
@@ -170,21 +174,23 @@ hetgp_mse <- mean((pred$mean - y_true)^2)
 hetgp_logs <- sum(logs.numeric(drop(y_true), family = "normal", mean = pred$mean, 
                              sd = sqrt(pred$sd2)))
 toc <- proc.time()[3]
-time3 <- toc - tic
+hetgp_time <- toc - tic
 
 # Store results ---------------------------------------------------------------
 
 filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
 if (file.exists(filename)) {
   results <- read.csv(filename)
-  results <- rbind(results, c(seed, dgp_mse, dgp_r_mse,
-                              deepgp_mse, hetgp_mse,
-                              time1, time_r, time2, time3))
+  results <- rbind(results, c(seed, dgp_mse, dgp_r_mse, deepgp_mse, hetgp_mse,
+                              dgp_logs, dgp_r_logs, deepgp_logs, hetgp_logs,
+                              dgp_time, dgp_r_time, deepgp_time, hetgp_time))
 } else {
-  results <- data.frame(seed = seed, dgp = dgp_mse, dgp_r = dgp_r_mse,
-                        deepgp = deepgp_mse, hetgp = hetgp_mse,
-                        time1 = time1, time_r = time_r,
-                        time2 = time2, time3 = time3)
+  results <- data.frame(seed = seed, dgp_mse = dgp_mse, dgp_r_mse = dgp_r_mse,
+                        deepgp_mse = deepgp_mse, hetgp_mse = hetgp_mse,
+                        dgp_logs = dgp_logs, dgp_r_logs = dgp_r_logs,
+                        deepgp_logs = deepgp_logs, hetgp_logs = hetgp_logs,
+                        dgp_time = dgp_time, dgp_r_time = dgp_r_time,
+                        deepgp_time = deepgp_time, hetgp_time = hetgp_time)
 }
 write.csv(results, filename, row.names = FALSE)
 
