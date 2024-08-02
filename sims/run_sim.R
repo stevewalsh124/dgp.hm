@@ -86,15 +86,39 @@ if(setting %in% 1:3) {
   var_y <- mean(apply(Y, 2, var))
   Sigma_hat <- diag(var_y, n)
 } else {
+  # Get initial tau2 estimate
+  tau2hat_0 <- mean(apply(Yzm, 2, var))
+  
+  estimate_theta <- function(x, max = TRUE) {
+    # count the number of peaks (local maxima)
+    if (max == FALSE) x <- x * (-1)
+    res <- rep(FALSE, length(x))
+    if (x[1] > x[2]) res[1] <- TRUE
+    if (x[length(x)-1] < x[length(x)]) res[length(res)] <- TRUE
+    for (i in (2:(length(x)-1))) {
+      if ((x[i-1] < x[i]) & (x[i+1] < x[i])) res[i] <- TRUE
+    }
+    n_peaks <- sum(res)
+    # from n_peaks, estimate theta
+    theta_hat <- exp(3.649 - 2.695*log(n_peaks))
+    if(log(n_peaks) < 1) theta_hat <- exp(1.22)
+    if(log(n_peaks) > 5) theta_hat <- exp(-10)
+    return(theta_hat)
+  }
+  
+  # Get initial theta estimate
+  thetahat_0 <- mean(apply(t(Yzm), 2, estimate_theta))
+  
   dx <- sq_dist(x)
+  # Optimize parameter estimates on transformed scale
   params_hat <- opt_matern(dx, t(Yzm), sdd = rep(1,n), 
-                           init = c(((max(x)-min(x))/10), mean(apply(Yzm, 2, var))))
+                           init = c(log(tau2hat_0/thetahat_0), 
+                                    log(tau2hat_0)))
   Sigma_hat <- deepgp:::Matern(dx, params_hat$tau2_hat, params_hat$theta_hat,
                                g = 1e-8, v = 2.5)
 }
 
-fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat, 
-                                nmcmc = 10000)
+fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat, nmcmc = 10000)
 fit <- dgp.hm::trim(fit, 5000, 5)
 if(vis) plot(fit)
 fit <- dgp.hm::est_true(fit, return_all = TRUE)
@@ -120,7 +144,8 @@ dgp_time <- toc - tic
 # dgp_r model --------------------------------------------------------------
 
 tic <- proc.time()[3]
-fit1a <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat/sqrt(r), nmcmc = 10000)
+fit1a <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat/sqrt(r), 
+                                  nmcmc = 10000)
 if(vis) plot(fit1a)
 fit1a <- dgp.hm::trim(fit1a, 5000, 5)
 fit1a <- dgp.hm::est_true(fit1a, return_all = TRUE)
@@ -137,7 +162,7 @@ if (vis) {
 }
 dgp_r_mse <- mean((fit1a$m - y_true)^2)
 dgp_r_logs <- sum(logs.numeric(drop(y_true), family = "normal", mean = fit1a$m, 
-                             sd = apply(fit1a$Ss, 1, sd)))
+                               sd = apply(fit1a$Ss, 1, sd)))
 toc <- proc.time()[3]
 dgp_r_time <- toc - tic
 
@@ -150,8 +175,8 @@ fit2 <- deepgp::trim(fit2, 5000, 5)
 fit2 <- predict(fit2, x)
 if(vis) plot(fit2)
 deepgp_mse <- mean((fit2$mean - y_true)^2)
-deepgp_logs <- sum(logs.numeric(drop(y_true), family = "normal", mean = fit2$mean, 
-                               sd = sqrt(fit2$s2/n)))
+deepgp_logs <- sum(logs.numeric(drop(y_true), family = "normal", 
+                                mean = fit2$mean, sd = sqrt(fit2$s2/n)))
 toc <- proc.time()[3]
 deepgp_time <- toc - tic
 
@@ -171,8 +196,8 @@ if (vis) {
          col = c("gray","black","red","blue"), lty = c(1,1,2,1))
 }
 hetgp_mse <- mean((pred$mean - y_true)^2)
-hetgp_logs <- sum(logs.numeric(drop(y_true), family = "normal", mean = pred$mean, 
-                             sd = sqrt(pred$sd2)))
+hetgp_logs <- sum(logs.numeric(drop(y_true), family = "normal", 
+                               mean = pred$mean, sd = sqrt(pred$sd2)))
 toc <- proc.time()[3]
 hetgp_time <- toc - tic
 
@@ -193,4 +218,3 @@ if (file.exists(filename)) {
                         deepgp_time = deepgp_time, hetgp_time = hetgp_time)
 }
 write.csv(results, filename, row.names = FALSE)
-

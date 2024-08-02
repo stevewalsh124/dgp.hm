@@ -10,16 +10,25 @@
 # Optimize Matern -------------------------------------------------------------
 #' @export
 
-opt_matern <- function(dx, y, sdd, init = c(0.1, 0.1), nmulti = 10) { 
-  for (i in 1:nmulti) {
-    if (i == 1) initvalue <- init else initvalue <- runif(2) #TODO: change bounds here
-    out <- optim(initvalue, nl_matern, dx = dx, y = y, sdd = sdd)
-    # TODO: store loglik and $par values
+opt_matern <- function (dx, y, sdd, init = c(0.1, 0.1), n_multi = 100) 
+{
+  out <- optim(init, nl_matern, dx = dx, y = y, sdd = sdd)
+  best_par <- out$par
+  best_ll <- out$value
+  inits <- matrix(NA,n_multi,2)
+  inits[,1] <- runif(n_multi, min=init[1]-10, max=init[1]+10)
+  inits[,2] <- runif(n_multi, min=init[2]-10, max=init[2]+10)
+  
+  for (i in 1:n_multi) {
+    out <- optim(inits[i,], nl_matern, dx = dx, y = y, sdd = sdd)
+    if(out$value < best_ll){
+      best_par <- out$par
+      best_ll <- out$value
+    }
+    
   }
-  # TODO: out of all of these, return the par value that corresponded to the
-  # best log likelihood
-  return(list(theta_hat = exp(out$par[2] - out$par[1]), 
-              tau2_hat = exp(out$par[2])))
+  return(list(theta_hat = exp(best_par[2] - best_par[1]), 
+              tau2_hat = exp(best_par[2])))
 }
 
 # Negative log likelihood Matern ----------------------------------------------
