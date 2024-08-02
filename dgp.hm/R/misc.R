@@ -16,8 +16,8 @@ opt_matern <- function (dx, y, sdd, init = c(0.1, 0.1), n_multi = 100)
   best_par <- out$par
   best_ll <- out$value
   inits <- matrix(NA,n_multi,2)
-  inits[,1] <- runif(n_multi, min=init[1]/10, max=init[1]*10)
-  inits[,2] <- runif(n_multi, min=init[2]/10, max=init[2]*10)
+  inits[,1] <- runif(n_multi, min=init[1]-10, max=init[1]+10)
+  inits[,2] <- runif(n_multi, min=init[2]-10, max=init[2]+10)
   
   for (i in 1:n_multi) {
     out <- optim(inits[i,], nl_matern, dx = dx, y = y, sdd = sdd)
