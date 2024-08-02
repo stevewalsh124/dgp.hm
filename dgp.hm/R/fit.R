@@ -26,8 +26,8 @@ fit_one_layer_hm <- function(x, y, nmcmc = 10000, verb = TRUE, theta_0 = 0.1,
   
   # Check inputs
   if (is.numeric(x)) x <- as.matrix(x)
-  test <- deepgp:::check_inputs(x, y, 0) # do not need to check nugget # TODO: noisy = TRUE????
-  settings <- deepgp:::check_settings(settings, layers = 1)
+  test <- deepgp:::check_inputs(x, y, 0) # do not need to check nugget
+  settings <- deepgp:::check_settings(settings, layers = 1, noisy = TRUE) # TRUE/FALSE??
   initial <- list(theta = theta_0, tau2 = 1)
   if (!(v %in% c(0.5, 1.5, 2.5))) 
     stop("v must be one of 0.5, 1.5, or 2.5")
@@ -57,7 +57,7 @@ fit_two_layer_hm <- function (x, y, D = ifelse(is.matrix(x), ncol(x), 1),
   tic <- proc.time()[[3]]
   if (is.numeric(x)) x <- as.matrix(x)
   test <- deepgp:::check_inputs(x, y, 0) # do not need to check nugget
-  settings <- deepgp:::check_settings(settings, layers = 2, D)
+  settings <- deepgp:::check_settings(settings, layers = 2, noisy = TRUE) # TRUE/FALSE??
   initial <- list(w = w_0, theta_y = theta_y_0, theta_w = theta_w_0, tau2 = 1)
   initial <- deepgp:::check_initialization(initial, layers = 2, x = x, D = D)
   if (!(v %in% c(0.5, 1.5, 2.5))) 
