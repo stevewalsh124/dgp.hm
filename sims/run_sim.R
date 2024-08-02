@@ -40,7 +40,7 @@ if(length(args) > 0)
   for(i in 1:length(args))
     eval(parse(text=args[[i]]))
 if(!(func %in% 1:2)) stop("func should be 1 or 2")
-if(!(setting %in% 1:4)) stop("setting should be 1, 2, 3, or 4")
+if(!(setting %in% 1:5)) stop("setting should be 1, 2, 3, 4, or 5")
 
 set.seed(seed)
 source("functions.R") # generates random model parameters upon sourcing
@@ -52,6 +52,7 @@ vis <- FALSE # should plots be generated
 
 x <- seq(0, 4, by = 0.1)
 n <- length(x)
+if(setting==5) sddtrue <- 1/exp(seq(0,2,length=length(x)))
 Sigma_true <- get_Sigma_true(x, n, func, setting)
 if(vis) image(Sigma_true) # make sure sd plot looks right
 
@@ -85,7 +86,7 @@ tic <- proc.time()[3]
 if(setting %in% 1:3) {
   var_y <- mean(apply(Y, 2, var))
   Sigma_hat <- diag(var_y, n)
-} else {
+} else if(setting==4) {
   # Get initial tau2 estimate
   tau2hat_0 <- mean(apply(Yzm, 2, var))
   
@@ -116,6 +117,38 @@ if(setting %in% 1:3) {
                                     log(tau2hat_0)))
   Sigma_hat <- deepgp:::Matern(dx, params_hat$tau2_hat, params_hat$theta_hat,
                                g = 1e-8, v = 2.5)
+} else if(setting==5) {
+  # Get initial tau2 estimate
+  tau2hat_0 <- mean(apply(Yzm, 2, var))
+  
+  estimate_theta <- function(x, max = TRUE) {
+    # count the number of peaks (local maxima)
+    if (max == FALSE) x <- x * (-1)
+    res <- rep(FALSE, length(x))
+    if (x[1] > x[2]) res[1] <- TRUE
+    if (x[length(x)-1] < x[length(x)]) res[length(res)] <- TRUE
+    for (i in (2:(length(x)-1))) {
+      if ((x[i-1] < x[i]) & (x[i+1] < x[i])) res[i] <- TRUE
+    }
+    n_peaks <- sum(res)
+    # from n_peaks, estimate theta
+    theta_hat <- exp(3.649 - 2.695*log(n_peaks))
+    if(log(n_peaks) < 1) theta_hat <- exp(1.22)
+    if(log(n_peaks) > 5) theta_hat <- exp(-10)
+    return(theta_hat)
+  }
+  
+  # Get initial theta estimate
+  thetahat_0 <- mean(apply(t(Yzm), 2, estimate_theta))
+  
+  dx <- sq_dist(x)
+  # Optimize parameter estimates on transformed scale
+  params_hat <- opt_matern(dx, t(Yzm), sdd = sddtrue, 
+                           init = c(log(tau2hat_0/thetahat_0), 
+                                    log(tau2hat_0)))
+  Sigma_hat <- diag(sddtrue) %*% 
+    deepgp:::Matern(dx, params_hat$tau2_hat, 
+                    params_hat$theta_hat, g = 1e-8, v = 2.5) %*% diag(sddtrue)
 }
 
 fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat, nmcmc = 10000)
