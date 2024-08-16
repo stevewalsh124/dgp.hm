@@ -21,11 +21,6 @@
 # Note: only dgp.hm is actually designed for multiple response observations
 ###############################################################################
 
-# TODO: bump up the reps from 5 to 20, focus on setting 4,
-# ANNIE TODO: code up coverage and logs for each method, rerun for r = 5 and r = 20
-# might need to make the Sigma_true a bit more complicated
-# Note to Annie: adjust default priors like I did for the deepgp package
-
 library(dgp.hm) # must install locally
 library(deepgp)
 library(hetGP)
@@ -177,7 +172,7 @@ dgp_time <- toc - tic
 # dgp_r model --------------------------------------------------------------
 
 tic <- proc.time()[3]
-fit1a <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat/sqrt(r), 
+fit1a <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat/r, 
                                   nmcmc = 10000)
 if(vis) plot(fit1a)
 fit1a <- dgp.hm::trim(fit1a, 5000, 5)
