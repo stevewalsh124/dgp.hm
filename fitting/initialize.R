@@ -93,7 +93,8 @@ loess_fit <- loess(y_avg ~ x, span = 0.15)
 y_lo <- y_lo - loess_fit$fitted
 
 # Optimize kernel hyperparameters for Matern kernel of low res 
-params <- opt_matern(dx[lo_ind, lo_ind], y_lo[lo_ind, ], sd_lo_sz[lo_ind])
+params <- opt_matern(dx[lo_ind, lo_ind], y_lo[lo_ind, ], sd_lo_sz[lo_ind],
+                     n_multi = 10)
 Matern_hat <- deepgp:::Matern(dx[lo_ind, lo_ind], params$tau2_hat, 
                               params$theta_hat, 1e-8, 2.5)
 

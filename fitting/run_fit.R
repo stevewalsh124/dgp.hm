@@ -134,16 +134,16 @@ if (deep) {
   # load in initialized estimates for warping and hyperparameters for fit
   w_0 <- read.csv("results/w0.csv")[[1]]
   params0 <- read.csv("results/params0.csv")
-  fit <- fit_two_layer_hm(x, y_avg, nmcmc = 5000, w_0 = w_0, 
+  fit <- fit_two_layer_hm(x, y_avg, nmcmc = 10000, w_0 = w_0, 
                           theta_y_0 = params0$theta_y0,
                           theta_w_0 = params0$theta_w0,
                           Sigma_hat = Sigma_hat)
 } else {
-  fit <- fit_one_layer_hm(x, y_avg, nmcmc = 5000, Sigma_hat = Sigma_hat)
+  fit <- fit_one_layer_hm(x, y_avg, nmcmc = 10000, Sigma_hat = Sigma_hat)
 }
 
 # plot(fit) # optionally investigate trace plots
-fit <- trim(fit, 2500, 5)
+fit <- trim(fit, 5000, 5)
 fit <- est_true(fit)
 
 # Unscale results before storing
