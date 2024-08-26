@@ -145,13 +145,19 @@ We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in 
 \subsection{Simulation Study}
 \label{subsec:sim}
 
-Here, we provide results from a simulation study comparing the GP and DGP models, in which case the true curve is known. Following \cite{moran2024dpc}, we consider two functions (1 and 2) each with three variance specifications (settings ``A", ``B", ``C"). Our mean squared error (MSE) results are seen in Figure \ref{fig:collect_sims}; our DGP-HM model outperforms these current benchmark methods. \textcolor{blue}{We can also include a setting ``D", where the underlying error covariance has spatial dependence (e.g., noise with a Mat'ern covariance). Additionally, we can look at linear theory simulations.}
+Here, we provide results from a simulation study comparing the GP and DGP models, in which case the true curve is known. Following \cite{moran2024dpc}, we consider two functions (1 and 2) each with three variance specifications (settings ``A", ``B", ``C"). Our mean squared error (MSE) results are seen in Figure \ref{fig:sims_MSE}; our DGP-HM model outperforms these current benchmark methods. \textcolor{blue}{We can also include a setting ``D", where the underlying error covariance has spatial dependence (e.g., noise with a Mat'ern covariance). Additionally, we can look at linear theory simulations.}
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=6in]{collect_sims.png}
-    \caption{Average MSE of our method across all $k$ values. \textcolor{blue}{Add competitors.}}
-    \label{fig:collect_sims}
+    \includegraphics[width=6in]{sims_logS.png}
+    \caption{Boxplot of log scores across two different functions and covariance settings (lower is better). For each case, twenty random batches were simulated.}
+    \label{fig:sims_logS}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=6in]{sims_MSE.png}
+    \caption{Boxplot of MSEs across two different functions and covariance settings (lower is better). For each case, twenty random batches were simulated.}    \label{fig:sims_MSE}
 \end{figure}
 
 \subsection{CAMB Data}
@@ -208,12 +214,12 @@ In addition to predicting for held-out cosmologies, we can also predict over a l
     \label{fig:plot_rmse_k}
 \end{figure}
 
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=6in]{rmse_box.png}
-    \caption{Boxplot of all RMSEs of each method across all six test models. From top to bottom: box plots for our training method, process convolution training method, Cosmic EMU predictions, and our DGP-PC predictions.}
-    \label{fig:plot_rmse_box}
-\end{figure}
+% \begin{figure}[ht]
+%     \centering
+%     \includegraphics[width=6in]{rmse_box.png}
+%     \caption{Boxplot of all RMSEs of each method across all six test models. From top to bottom: box plots for our training method, process convolution training method, Cosmic EMU predictions, and our DGP-PC predictions.}
+%     \label{fig:plot_rmse_box}
+% \end{figure}
 
 \section{Discussion}
 \label{sec:disc}

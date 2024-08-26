@@ -60,7 +60,6 @@ fit <- read.csv(paste0("../fitting/results/dgp_", model_name, ".csv"))
 ###################
 
 # color-blind friendly color palette
-
 cbcols <- palette.colors(palette = "Okabe-Ito")
 #1 black, 2 orange, 3 skyblue , 4 bluishgreen, 5 yellow 
 #6 blue, 7 vermillion,  8 reddishpurple, 9 gray 
