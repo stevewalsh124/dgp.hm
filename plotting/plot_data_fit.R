@@ -116,15 +116,15 @@ legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
        lwd = c(2,1,2,2,2))
 
 # Plot model fit alongside data (posterior mean removed)
-matplot(log10(k), y_lo - fit$m, type="l", lty=1,
+matplot(log10(k), y_lo - fit$m, type="l", lty=3,
         col=cbcols[9], ylim = c(-.02,.02), xlab=expression(log[10](k)), 
         ylab=expression(paste("\U1D4AB","(k), mean removed")))
 abline(h=0, col=cbcols[1],lty=1,lwd=1)
-lines(log10(k), y_pt - fit$m, col=cbcols[4], lwd=3.5, lty=1)
-lines(log10(k), y_hi - fit$m, col=cbcols[8], lwd=3.5, lty=1)
+lines(log10(k), y_pt - fit$m, col=cbcols[4], lwd=3, lty=4)
+lines(log10(k), y_hi - fit$m, col=cbcols[8], lwd=3, lty=2)
 lines(log10(k), y_avg - fit$m , col=cbcols[2], lwd=2, lty=1)
 lines(log10(k), fit$ub - fit$m, col=cbcols[1],lty=2,lwd=2)
 lines(log10(k), fit$lb - fit$m, col=cbcols[1],lty=2,lwd=2)
 legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
-       col = cbcols[c(4,9,8,2,1)], lty = c(3,1,3,2,2,2), 
+       col = cbcols[c(4,9,8,2,1)], lty = c(4,3,2,1,2), 
        lwd = c(2,1,2,2,2))

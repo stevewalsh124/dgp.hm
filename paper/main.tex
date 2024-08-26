@@ -34,7 +34,9 @@
         Math and Technology, Elms College, {\tt walshst@elms.edu}} \and 
         Annie S. Booth\thanks{Department of Statistics, North Carolina State University} \and
         David Higdon\thanks{Department of Statistics, Virginia Tech} \and
-        Marco A.R. Ferreira\footnotemark[3]}
+        Marco A.R. Ferreira\footnotemark[3] \and
+        Kelly Moran\thanks{Los Alamos National Laboratory} \and
+        Katrin Heitmann\thanks{Argonne National Laboratory}}
 \date{\today}
 
 
@@ -72,7 +74,7 @@ These spectra are represented as a function of wavenumber $k$, and hence is deno
 \begin{figure}[ht]
     \centering
     \includegraphics[width=6in]{plot_data.png}
-    \caption{The perturbation theory, low resolution runs, and high resolution run for the first training cosmology. The weighted average is also shown as a dashed line. Dotted lines at the bottom indicate where each data type is deemed approximately unbiased.}
+    \caption{Left: The perturbation theory, low resolution runs, and high resolution run for the first training cosmology. The weighted average is also shown as a dashed line. Dotted lines at the bottom indicate where each data type is deemed approximately unbiased. Right: The same image, but only where the low resolution runs are approximately unbiased.}
     \label{fig:plot_data}
 \end{figure}
 
@@ -152,6 +154,11 @@ Here, we provide results from a simulation study comparing the GP and DGP models
     \label{fig:collect_sims}
 \end{figure}
 
+\subsection{CAMB Data}
+\label{subsec:camb}
+
+Here, we look over the CAMB data to see how our method performs.
+
 \subsection{Estimating Spectra with Mira-Titan Data}
 \label{subsec:mira_fit}
 
@@ -197,7 +204,7 @@ In addition to predicting for held-out cosmologies, we can also predict over a l
 \begin{figure}[ht]
     \centering
     \includegraphics[width=6in]{rmse_by_k.png}
-    \caption{Average RMSE of each method across all $k$ values.}
+    \caption{Left: Average RMSE of each prediction method across all $k$ values. Right: Average RMSE for each method when using the held-out computer model runs to train the model. In each case, the truth is assumed to be the weighted average of the computer model runs.}
     \label{fig:plot_rmse_k}
 \end{figure}
 
@@ -217,6 +224,13 @@ Brief recap, directions for future research: BSS-ANOVA in lieu of DGPs, hydrodyn
 \label{sec:apdx}
 
 The different appendices from dissertation as necessary. Can also put details of dataset in supplementary material.
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=6in]{pred_1to6.png}
+    \caption{Results of all six predictions for both methods on the held-out cosmologies (weighted average subtracted). CosmicEMU is dashed, DGP.HM is dotted, and solid gray lines show results of held-out computer model runs.}
+    \label{fig:plot_pred_1to6}
+\end{figure}
 
 \bibliographystyle{jasa}
 \bibliography{references}
