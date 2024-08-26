@@ -59,52 +59,72 @@ fit <- read.csv(paste0("../fitting/results/dgp_", model_name, ".csv"))
 # Plot data types #
 ###################
 
-matplot(log10(k), y_lo, col = "gray", 
+# color-blind friendly color palette
+
+cbcols <- palette.colors(palette = "Okabe-Ito")
+#1 black, 2 orange, 3 skyblue , 4 bluishgreen, 5 yellow 
+#6 blue, 7 vermillion,  8 reddishpurple, 9 gray 
+
+par(mfrow=c(1,2))
+matplot(log10(k), y_lo, col = cbcols[9], 
         type = "l", lty = 1, ylim = range(y_avg),
         xlab=expression(log[10](k)), 
         ylab=expression(paste("\U1D4AB","(k)")))
-lines(log10(k), y_pt, col = "green")
-lines(log10(k), y_hi, col = "red")
+lines(log10(k), y_pt, col = cbcols[4])
+lines(log10(k), y_hi, col = cbcols[8])
 lines(log10(k)[index_list$pert.ix], rep(-1, length(index_list$pert.ix)), 
-      col = "green", lty = 3, lwd=3)
+      col = cbcols[4], lty = 3, lwd=3)
 lines(log10(k)[index_list$lowres.ix], rep(-1.1, length(index_list$lowres.ix)), 
-      col = "gray", lty = 3, lwd=3)
+      col = cbcols[9], lty = 3, lwd=3)
 lines(log10(k)[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)), 
-      col = "red", lty = 3, lwd=3)
-lines(log10(k), y_avg, col = "orange", lty = 2, lwd = 4)
+      col = cbcols[8], lty = 3, lwd=3)
+lines(log10(k), y_avg, col = cbcols[2], lty = 2, lwd = 4)
 legend(x = "right", legend = c("pert","low res","hi res", "wt avg","ind"),
-       col = c("green","gray","red","orange","black"), lty = c(1,1,1,2,3), 
+       col = cbcols[c(4,9,8,2,1)], lty = c(1,1,1,2,3), 
        lwd = c(1,1,1,4,3))
+
+# Same plot, but only for the low-resolution indices
+matplot(log10(k)[index_list$lowres.ix], y_lo[index_list$lowres.ix,], col = cbcols[9], 
+        type = "l", lty = 1, ylim = range(y_avg[index_list$lowres.ix]),
+        xlab=expression(log[10](k)), 
+        ylab=expression(paste("\U1D4AB","(k)")))
+lines(log10(k)[index_list$lowres.ix], y_hi[index_list$lowres.ix], col = cbcols[8])
+lines(log10(k)[index_list$lowres.ix], y_avg[index_list$lowres.ix], 
+      col = cbcols[2], lty = 2, lwd = 4)
+legend(x = "bottomright", legend = c("low res","hi res", "wt avg"),
+       col = cbcols[c(9,8,2)], lty = c(1,1,2), 
+       lwd = c(1,1,4))
 
 
 ######################
 # Plot fitted values #
 ######################
 
+par(mfrow=c(1,1))
 # Plot model fit alongside data
 matplot(log10(k), y_lo, type="l", lty=1,
-        col="gray", xlab=expression(log[10](k)), 
+        col=cbcols[9], xlab=expression(log[10](k)), 
         ylab=expression(paste("\U1D4AB","(k)")),
         ylim=range(fit$ub, fit$lb))
-lines(log10(k),y_pt, col="green", lwd=2, lty=3)
-lines(log10(k),y_hi, col="red", lwd=2, lty=3)
-lines(log10(k), y_avg, col="orange", lwd=2, lty=2)
-lines(log10(k),fit$ub, col="black",lty=2,lwd=2)
-lines(log10(k),fit$lb, col="black",lty=2,lwd=2)
+lines(log10(k),y_pt, col=cbcols[4], lwd=2, lty=3)
+lines(log10(k),y_hi, col=cbcols[8], lwd=2, lty=3)
+lines(log10(k), y_avg, col=cbcols[2], lwd=2, lty=2)
+lines(log10(k),fit$ub, col=cbcols[1],lty=2,lwd=2)
+lines(log10(k),fit$lb, col=cbcols[1],lty=2,lwd=2)
 legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
-       col = c("green","gray","red","orange", "black"), lty = c(3,1,3,2,2,2), 
+       col = cbcols[c(4,9,8,2,1)], lty = c(3,1,3,2,2,2), 
        lwd = c(2,1,2,2,2))
 
 # Plot model fit alongside data (posterior mean removed)
 matplot(log10(k), y_lo - fit$m, type="l", lty=1,
-        col="gray", ylim = c(-.02,.02), xlab=expression(log[10](k)), 
+        col=cbcols[9], ylim = c(-.02,.02), xlab=expression(log[10](k)), 
         ylab=expression(paste("\U1D4AB","(k), mean removed")))
-abline(h=0, col="black",lty=1,lwd=1)
-lines(log10(k), y_pt - fit$m, col="green", lwd=3.5, lty=1)
-lines(log10(k), y_hi - fit$m, col="red", lwd=3.5, lty=1)
-lines(log10(k), y_avg - fit$m , col="orange", lwd=2, lty=1)
-lines(log10(k), fit$ub - fit$m, col="black",lty=2,lwd=2)
-lines(log10(k), fit$lb - fit$m, col="black",lty=2,lwd=2)
+abline(h=0, col=cbcols[1],lty=1,lwd=1)
+lines(log10(k), y_pt - fit$m, col=cbcols[4], lwd=3.5, lty=1)
+lines(log10(k), y_hi - fit$m, col=cbcols[8], lwd=3.5, lty=1)
+lines(log10(k), y_avg - fit$m , col=cbcols[2], lwd=2, lty=1)
+lines(log10(k), fit$ub - fit$m, col=cbcols[1],lty=2,lwd=2)
+lines(log10(k), fit$lb - fit$m, col=cbcols[1],lty=2,lwd=2)
 legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
-       col = c("green","gray","red","orange", "black"), lty = c(3,1,3,2,2,2), 
+       col = cbcols[c(4,9,8,2,1)], lty = c(3,1,3,2,2,2), 
        lwd = c(2,1,2,2,2))
