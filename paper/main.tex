@@ -140,12 +140,18 @@ $$
 
 We have found that whether the prior mean of $W$ is set to 0 or $X$ \citep[which would indicate stationarity apriori, ][]{schmidt2003bayesian} does not have a substantial impact on the model fit. We construct this model in the compositional form, and also use MCMC to obtain full uncertainty for each of the model parameters \citep{sauer2023active}.
 
-We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in to the methods of the previous section with very few changes.
+\textcolor{blue}{Annie: want to add something here? We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in to the methods of the previous section with very few changes.}
+
+Through the synthesis of the DGP model alongside the additional level of hierarchical modeling (HM) to incorporate multiple functional model runs, we call this method DGP.HM.
 
 \subsection{Simulation Study}
 \label{subsec:sim}
 
-Here, we provide results from a simulation study comparing the GP and DGP models, in which case the true curve is known. Following \cite{moran2024dpc}, we consider two functions (1 and 2) each with three variance specifications (settings ``A", ``B", ``C"). Our mean squared error (MSE) results are seen in Figure \ref{fig:sims_MSE}; our DGP-HM model outperforms these current benchmark methods. \textcolor{blue}{We can also include a setting ``D", where the underlying error covariance has spatial dependence (e.g., noise with a Mat'ern covariance). Additionally, we can look at linear theory simulations.}
+We compare our DGP.HM model to competing models with a simulation study, in which case the true curve is known. Following \cite{moran2024dpc}, we consider two functions (1 and 2) each with two variance specifications (settings ``A", ``B", \textcolor{blue}{, we can consider additional homoskedastic cases in the appendix if necessary}). \textcolor{blue}{Put in the details of the two functions, and the two variance specs.} The competing methods we consider are an out-of-the-box DGP fit using the \texttt{deepgp} package \citep{sauer2023active}, a heteroskedastic GP fit using the \textt{hetGP} package \citep{binois2018practical, binois2021hetgp}, as well as a deep process convolution (DPC) approach, which is utilized within Cosmic Emu \citep{moran2023mira}. 
+
+For each simulated function and variance specification, we generate either 5 or 20 functional observations and estimate the underlying true function based on the observations. The metrics we use to evaluate performance are mean squared error (MSE) and the log score, a proper scoring rule which takes both prediction and intervals into consideration \citep{gneiting2007strictly}.
+
+MSE and log score results are shown in Figures \ref{fig:sims_MSE} and \ref{fig:sims_logS} respectively; our DGP.HM model performs favorably against these current benchmark methods.
 
 \begin{figure}[ht]
     \centering
@@ -177,6 +183,13 @@ Here we can provide figures of the predicted mean and variances for a subset of 
     \includegraphics[width=6in]{plot_fit.png}
     \caption{95\% credible intervals for the power spectrum of model 1 (posterior mean subtracted). Plots of the perturbation theory, low-resolution and high-resolution runs are also shown, alongside the weighted average.}
     \label{fig:plot_fit}
+\end{figure}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=6in]{plot_warp_M001.png}
+    \caption{Left: MCMC samples of $W$ for model M001 after burnin and thinning. Right: Corresponding 95\% credible intervals for $W$.}
+    \label{fig:plot_warp}
 \end{figure}
 
 Images:
