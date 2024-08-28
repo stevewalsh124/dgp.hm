@@ -28,7 +28,8 @@ for (func in 1:2) {
     if(func==1&setting==4) results <- results[-which.max(results[,3]),]
     MSE5_range <- range(MSE5_range, results)
     results <- read.csv(filename)[, c(7,9,8)]
-    logS5_range <- range(logS5_range, results)
+    # Note: removes three outliers from setting==5, r==5
+    logS5_range <- range(logS5_range, results[results <= 150])
   }
 }
 
