@@ -60,7 +60,7 @@ The matter power spectrum is a fundamental concept in cosmology and describes th
 
 Leveraging these simulations allows for emulation and prediction of the matter power spectrum under varying specifications for eight different cosmological parameters (i.e., different cosmologies). Estimating and understanding the influence of these parameters on cosmic expansion are areas of active research. In addition to presenting the Mira-Titan simulation suite, \cite{moran2023mira} builds off of previous spectrum emulation \citep{lawrence2017mira} to provide the final emulator (Cosmic Emu) based on the full suite of simulations. 
 
-In this work, we expand on the previous emulation methods and propose a novel synthesis of methods to quantify uncertainty and predict matter power spectra for different cosmologies using deep Gaussian processes (DGPs). In order to handle multiple realizations of functional output (from the Mira-Titan simulation suite), we use hierarchical and basis functions modeling within our DGP framework to accurately estimate and predict power spectra for different cosmologies. When comparing to Cosmic Emu, we see favorable results for our method. The code to reproduce these results are available at \url{https://github.com/stevewalsh124/dgp.hm}. \textcolor{blue}{Please note: this repository is currently private until we hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
+In this work, we expand on the previous emulation methods and propose a novel synthesis of methods to quantify uncertainty and predict matter power spectra for different cosmologies using deep Gaussian processes (DGPs). In order to handle multiple realizations of functional output (from the Mira-Titan simulation suite), we use hierarchical and basis functions modeling within our DGP framework to accurately estimate and predict power spectra for different cosmologies. When comparing to Cosmic Emu, we see favorable results for our method. The code to reproduce these results are available at \url{https://github.com/stevewalsh124/dgp.hm}. \textcolor{red}{Please note: this repository is currently private until we hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
 
 The remainder of the paper is organized as follows: Section \ref{sec:data} provides more details regarding the Mira-Titan simulation suite. Section \ref{sec:hm_fit} describes our model and the training procedure for both toy data as well as the Mira-Titan dataset. With this trained model, Section \ref{sec:pred} explains our modeling approach for predictions at held-out cosmologies and compares with other methods. Section \ref{sec:disc} concludes with a discussion of our contributions and avenues for future research.
 
@@ -102,7 +102,7 @@ We transform $X$ values to fall within $[0,1]$ and $Y$ so that the mean and vari
 
 where $d=||x_i-x_j||^2$. From here, we estimate $\tau_\ell, \theta_\ell$ with maximum likelihood, and conditional on $\Sigma_\varepsilon$, we specify priors for $\tau_S, \theta_S$ following \cite{sauer2023active}:
 
-\textcolor{blue}{Annie, please put the newest prior specs here.}
+\textcolor{cyan}{Annie, please put the newest prior specs here.}
 
 % $$
 % \mathbf{\Sigma_\varepsilon} =
@@ -115,12 +115,10 @@ where $d=||x_i-x_j||^2$. From here, we estimate $\tau_\ell, \theta_\ell$ with ma
 
 Therefore, we model $\bar Y|S$ as a GP with mean $S$ and block-diagonal covariance matrix $\Sigma_\varepsilon$:
 
-$$
-\begin{aligned}
+\begin{align}
 \bar Y|S &\sim \mathcal{N}_n(S,\Sigma_\varepsilon) \\
 S &\sim GP\left(\mu, \Sigma_S(x,x')\right)
-\end{aligned}
-$$
+\end{align}
 
 Upon integrating out $S$, we obtain $\bar Y \sim GP(\mu, \Sigma_S+\Sigma_\varepsilon)$. Additionally, this model yields the posterior distribution $S|\bar Y \sim N(m, C)$, where $C=\left(\Sigma_S^{-1}+\Sigma_\varepsilon^{-1}\right)^{-1}$ and $m=C\left(\Sigma_\varepsilon^{-1}\bar Y+\Sigma_S^{-1}\mu\right)$. 
 
@@ -130,30 +128,39 @@ This distribution provides the posterior mean and corresponding uncertainty for 
 
 Considering the Mira-Titan data, some nonstationarity is expected (e.g., due to baryonic acoustic oscillations when $-2 \leq \log_{10}(k) \leq -1$). To account for this, we incorporate a latent layer warping $W$ within the hierarchical model to incorporate nonstationary dynamics of the matter power spectra. When $W$ is a GP, this creates a deep Gaussian process (DGP) model \citep{damianou2013deep}. Additional latent layers could be considered, although one is sufficient for this dataset \citep{dunlop2018deep}.
 
-$$
-\begin{aligned}
+
+\begin{align}
 \bar Y|S,W &\sim \mathcal{N}_n(S,\Sigma_\varepsilon) \\
 S|W &\sim GP\left(\mu, \Sigma_S(w,w')\right) \\
 W &\sim GP\left(0, \Sigma_W(x,x')\right)
-\end{aligned}
-$$
+\end{align}
 
 We have found that whether the prior mean of $W$ is set to 0 or $X$ \citep[which would indicate stationarity apriori, ][]{schmidt2003bayesian} does not have a substantial impact on the model fit. We construct this model in the compositional form, and also use MCMC to obtain full uncertainty for each of the model parameters \citep{sauer2023active}.
 
-\textcolor{blue}{Annie: want to add something here? We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in to the methods of the previous section with very few changes.}
+\textcolor{cyan}{Annie: want to add something here? We discuss the elliptical slice sampling of $W$, but otherwise it is plugged in to the methods of the previous section with very few changes.}
 
 Through the synthesis of the DGP model alongside the additional level of hierarchical modeling (HM) to incorporate multiple functional model runs, we call this method DGP.HM.
 
 \subsection{Simulation Study}
 \label{subsec:sim}
 
-We compare our DGP.HM model to competing models with a simulation study, in which case the true curve is known. Following \cite{moran2024dpc}, we consider two functions (1 and 2) each with two variance specifications (settings ``A", ``B", \textcolor{blue}{, we can consider additional homoskedastic cases in the appendix if necessary}). \textcolor{blue}{Put in the details of the two functions, and the two variance specs.} The competing methods we consider are an out-of-the-box DGP fit using the \texttt{deepgp} package \citep{sauer2023active}, a heteroskedastic GP fit using the \texttt{hetGP} package \citep{binois2018practical, binois2021hetgp}, as well as a deep process convolution (DPC) approach, which is utilized within Cosmic Emu \citep{moran2023mira}. 
+We compare our DGP.HM model to competing models with a simulation study, in which case the true curve is known. Following \cite{moran2024dpc}, we consider two functions ($f_1$ and $f_2$) each with two variance specifications (settings ``4" and ``5", \textcolor{magenta}{we can consider additional homoskedastic cases in the appendix if necessary}). 
 
-For each simulated function and variance specification, we generate either 5 or 20 functional observations and estimate the underlying true function based on the observations. The metrics we use to evaluate performance are mean squared error (MSE) and the log score, a proper scoring rule which takes both prediction and intervals into consideration \citep{gneiting2007strictly}.
+Here, $f_1$ and $f_2$ are defined as follows:
 
-MSE and log score results are shown in Figures \ref{fig:sims_MSE} and \ref{fig:sims_logS} respectively; our DGP.HM model performs favorably against these current benchmark methods.
+\begin{align}
+  f_1(x) &= m_1 \exp(-u_1x/2) * \cos(wx) - m_1x/5, \quad w=\sqrt{25-[u_1/2]^2} \\
+  f_2(x) &= \exp(-m_2[x-3]^2)+\exp(-u_2[x-1]^2)-0.05\sin(8[x-1.9]), \\ 
+  \quad x &\in [0,4].
+\end{align}
 
-\begin{figure}[ht]
+For additional variation, the values of $m_1, m_2, u_1,$ and $u_2$ are random variables where $m_1 \sim Uniform(0.5,1.5), u_1 \sim Uniform(1.5,2.5),$ and $m_2,u_2 \sim Uniform(0.6,1.4)$. For each simulated function and variance specification, we generate 20 values of $m_1, m_2, f_1, f_2$, and conditional on these values, we sample either 5 or 20 functional observations and estimate the underlying true function based on the observations.
+
+The competing methods we consider are an out-of-the-box DGP fit using the \texttt{deepgp} package \citep{sauer2023active}, a heteroskedastic GP fit using the \texttt{hetGP} package \citep{binois2018practical, binois2021hetgp}, as well as a deep process convolution (DPC) approach, which is utilized within Cosmic Emu \citep{moran2023mira}. 
+
+The metrics we use to evaluate performance are mean squared error (MSE) and the log score, a proper scoring rule which takes both prediction and intervals into consideration \citep{gneiting2007strictly}. For both metrics, a lower value indicates better performance. MSE and log score results are shown in Figures \ref{fig:sims_MSE} and \ref{fig:sims_logS} respectively; our DGP.HM model performs favorably against these current benchmark methods.
+
+\begin{figure}[t]
     \centering
     \includegraphics[width=6in]{sims_logS.png}
     \caption{Boxplot of log scores across two different functions and covariance settings (lower is better). For each case, twenty random batches were simulated.}
@@ -169,7 +176,15 @@ MSE and log score results are shown in Figures \ref{fig:sims_MSE} and \ref{fig:s
 \subsection{CAMB Data}
 \label{subsec:camb}
 
-Here, we look over the CAMB data to see how our method performs.
+In addition to simulated data, we investigate model fits the for different cosmological datasets (based on linear theory and/or runs from the Code for Anisotropies in the Microwave Background, CAMB). \textcolor{magenta}{We have looked at two sets of model runs, "LT" runs where there is an underlying ``true" value alongside 15 computer model runs, or the "CAMB" runs, where we only have a single output. The performance from the CAMB runs was better (with a 6-dimensional design space), and also did not require obtaining a posterior mean from multiple model runs. When looking at the CAMB runs on the $\Delta$ space, we see it generally is withing $\pm 5\%$ error.}
+
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=6in]{plot_pca_CAMB.png}
+    \caption{Proportion of $\Delta_{emu}$ vs. $\Delta_{holdout}$ for model runs 11-42 (excluding 27-28).}   
+    \label{fig:pca_camb}
+\end{figure}
+
 
 \subsection{Estimating Spectra with Mira-Titan Data}
 \label{subsec:mira_fit}
