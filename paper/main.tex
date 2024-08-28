@@ -147,7 +147,7 @@ Through the synthesis of the DGP model alongside the additional level of hierarc
 \subsection{Simulation Study}
 \label{subsec:sim}
 
-We compare our DGP.HM model to competing models with a simulation study, in which case the true curve is known. Following \cite{moran2024dpc}, we consider two functions (1 and 2) each with two variance specifications (settings ``A", ``B", \textcolor{blue}{, we can consider additional homoskedastic cases in the appendix if necessary}). \textcolor{blue}{Put in the details of the two functions, and the two variance specs.} The competing methods we consider are an out-of-the-box DGP fit using the \texttt{deepgp} package \citep{sauer2023active}, a heteroskedastic GP fit using the \textt{hetGP} package \citep{binois2018practical, binois2021hetgp}, as well as a deep process convolution (DPC) approach, which is utilized within Cosmic Emu \citep{moran2023mira}. 
+We compare our DGP.HM model to competing models with a simulation study, in which case the true curve is known. Following \cite{moran2024dpc}, we consider two functions (1 and 2) each with two variance specifications (settings ``A", ``B", \textcolor{blue}{, we can consider additional homoskedastic cases in the appendix if necessary}). \textcolor{blue}{Put in the details of the two functions, and the two variance specs.} The competing methods we consider are an out-of-the-box DGP fit using the \texttt{deepgp} package \citep{sauer2023active}, a heteroskedastic GP fit using the \texttt{hetGP} package \citep{binois2018practical, binois2021hetgp}, as well as a deep process convolution (DPC) approach, which is utilized within Cosmic Emu \citep{moran2023mira}. 
 
 For each simulated function and variance specification, we generate either 5 or 20 functional observations and estimate the underlying true function based on the observations. The metrics we use to evaluate performance are mean squared error (MSE) and the log score, a proper scoring rule which takes both prediction and intervals into consideration \citep{gneiting2007strictly}.
 
@@ -185,12 +185,12 @@ Here we can provide figures of the predicted mean and variances for a subset of 
     \label{fig:plot_fit}
 \end{figure}
 
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=6in]{plot_warp_M001.png}
-    \caption{Left: MCMC samples of $W$ for model M001 after burnin and thinning. Right: Corresponding 95\% credible intervals for $W$.}
-    \label{fig:plot_warp}
-\end{figure}
+%\begin{figure}[ht]
+%    \centering
+%    \includegraphics[width=6in]{plot_warp_M001.png}
+%    \caption{Left: MCMC samples of $W$ for model M001 after burnin and thinning. Right: Corresponding 95\% credible intervals for $W$.}
+%    \label{fig:plot_warp}
+%\end{figure}
 
 Images:
 \begin{itemize}
