@@ -102,7 +102,7 @@ We transform $X$ values to fall within $[0,1]$ and $Y$ so that the mean and vari
 
 where $d=||x_i-x_j||^2$. From here, we estimate $\tau_\ell, \theta_\ell$ with maximum likelihood, and conditional on $\Sigma_\varepsilon$, we specify priors for $\tau_S, \theta_S$ following \cite{sauer2023active}:
 
-\textcolor{cyan}{Annie, please put the newest prior specs here.}
+\textcolor{cyan}{Annie, please include the most up-to-date prior specs here.}
 
 % $$
 % \mathbf{\Sigma_\varepsilon} =
@@ -121,7 +121,6 @@ S &\sim GP\left(\mu, \Sigma_S(x,x')\right)
 \end{align}
 
 Upon integrating out $S$, we obtain $\bar Y \sim GP(\mu, \Sigma_S+\Sigma_\varepsilon)$. Additionally, this model yields the posterior distribution $S|\bar Y \sim N(m, C)$, where $C=\left(\Sigma_S^{-1}+\Sigma_\varepsilon^{-1}\right)^{-1}$ and $m=C\left(\Sigma_\varepsilon^{-1}\bar Y+\Sigma_S^{-1}\mu\right)$. 
-
 This distribution provides the posterior mean and corresponding uncertainty for $S$ within a given cosmology. Without this hierarchy, uncertainty would not be properly addressed; the weighted average would simply be nearly interpolated across the relatively dense set of $k$ values.
 
 \subsection{Deep Gaussian Process Model}
@@ -147,16 +146,19 @@ Through the synthesis of the DGP model alongside the additional level of hierarc
 We compare our DGP.HM model to competing models with a simulation study, in which case the true curve is known. Following \cite{moran2024dpc}, we consider two functions ($f_1$ and $f_2$) each with two variance specifications (settings ``4" and ``5", \textcolor{magenta}{we can consider additional homoskedastic cases in the appendix if necessary}). 
 
 Here, $f_1$ and $f_2$ are defined as follows:
-
 \begin{align}
   f_1(x) &= m_1 \exp(-u_1x/2) * \cos(wx) - m_1x/5, \quad w=\sqrt{25-[u_1/2]^2} \\
   f_2(x) &= \exp(-m_2[x-3]^2)+\exp(-u_2[x-1]^2)-0.05\sin(8[x-1.9]), \\ 
   \quad x &\in [0,4].
 \end{align}
 
-For additional variation, the values of $m_1, m_2, u_1,$ and $u_2$ are random variables where $m_1 \sim \text{Uniform}(0.5,1.5)$, $u_1 \sim \text{Uniform}(1.5,2.5)$, and $m_2,u_2 \sim \text{Uniform}(0.6,1.4)$. For each simulated function and variance specification, we generate 20 values of $m_1, m_2, f_1, f_2$, and conditional on these values, we sample either 5 or 20 functional observations and estimate the underlying true function based on the observations.
+For additional variation, the values of $m_1, m_2, u_1,$ and $u_2$ are random where $m_1 \sim \text{Uniform}(0.5,1.5)$, $u_1 \sim \text{Uniform}(1.5,2.5)$, and $m_2,u_2 \sim \text{Uniform}(0.6,1.4)$. 
+      
+For the two variance settings, we consider matrices $\Sigma_4$ and $\Sigma_5$ to have a Mat\'ern covariance function with a nugget of $10^{-8}$ and smoothness of 2.5. For setting ``4", we have $\tau^2=0.0225$ and $\theta=0.01$. For setting ``5", we we have $\tau^2=0.01$ and $\theta=0.05$, and additionally scale this covariance matrix by a vector of values $s$ so that $\Sigma_5 = s M s^T$, where $M$ is a Mat\'ern covariance matrix.
 
-\begin{figure}[h]
+For each simulated function and variance specification, we generate 20 values of $m_1, m_2, f_1, f_2$, and conditional on these values, we sample either 5 or 20 functional observations and estimate the underlying true function based on the observations.
+
+\begin{figure}[t]
     \centering
     \includegraphics[width=6in]{sims_logS.png}
     \caption{Boxplot of log scores across two different functions and covariance settings (lower is better). For each case, the boxplot is constructed from 20 random batches were simulated. Each column represents a function/variance specification pair, and each row shows results for batch sizes of either 5 (top) or 20 (bottom).}
@@ -190,7 +192,7 @@ In addition to simulated data, we investigate model fits the for different cosmo
 \subsection{Estimating Spectra with Mira-Titan Data}
 \label{subsec:mira_fit}
 
-Estimate one cosmology with 50,000 runs, and use this as a starting point for each of the others
+To being, we initialize our hyperparameter estimates across all cosmologies by modeling the first (M001) with 50,000 MCMC runs, and use these as initial values for all cosmologies. Specifically, we save the last MCMC iteration of $W$, $\theta_W$ and $\theta_S$ as $W_0$, $\theta_W0$ and $\theta_S0$ respectively and use each as starting values for all 111 training cosmology fits, where these are now fit with 10,000 MCMC runs (5,000 removed as burn-in and every 5th sample is kept, resulting in 1,000 posterior samples).
 
 Here we can provide figures of the predicted mean and variances for a subset of the actual cosmologies. Figure \ref{fig:plot_fit} shows an example of the uncertainty for our posterior mean for the first (of 111) training cosmologies; the posterior mean is subtracted in order to visualize this uncertainty.
 
@@ -201,19 +203,12 @@ Here we can provide figures of the predicted mean and variances for a subset of 
     \label{fig:plot_fit}
 \end{figure}
 
-%\begin{figure}[ht]
-%    \centering
-%    \includegraphics[width=6in]{plot_warp_M001.png}
-%    \caption{Left: MCMC samples of $W$ for model M001 after burnin and thinning. Right: Corresponding 95\% credible intervals for $W$.}
-%    \label{fig:plot_warp}
-%\end{figure}
-
-Images:
-\begin{itemize}
-    \item Illustration of DGP fit (post mean and UQ, could show cosmicEMU as well?)
-    \item estimated warping (or, how all 111 warpings compare)
-\end{itemize}
-
+\begin{figure}[ht]
+   \centering
+   \includegraphics[width=6in]{plot_warp_M001.png}
+   \caption{Left: MCMC samples of $W$ for model M001 after burnin and thinning. Right: Corresponding 95\% credible intervals for $W$, where departure from the identity line represents nonstationary behavior.}
+   \label{fig:plot_warp}
+\end{figure}
 
 \section{Prediction for Unobserved Cosmologies}
 \label{sec:pred}
@@ -258,7 +253,7 @@ Brief recap, directions for future research: BSS-ANOVA in lieu of DGPs, hydrodyn
 \section{Appendix}
 \label{sec:apdx}
 
-The different appendices from dissertation as necessary. Can also put details of dataset in supplementary material.
+The different appendices from dissertation as necessary. Can also put details of dataset in supplementary material. \textcolor{magenta}{Fix references as necessary, e.g. Moran et al. 2024).}
 
 \begin{figure}[ht]
     \centering
