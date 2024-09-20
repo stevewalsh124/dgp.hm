@@ -211,12 +211,40 @@ From these samples, we can estimate and quantify the uncertainty within each cos
 \section{Prediction for Unobserved Cosmologies}
 \label{sec:pred}
 
-Upon obtaining the posterior means from each of the 111 training cosmologies, this section details our second contribution - the use of the Bayesian DGP.HM model to predict the curve for held-out cosmologies.
+Upon obtaining the posterior means from each of the 111 training cosmologies, this section details our second contribution - the use of the Bayesian DGP.HM model to predict the curve for held-out cosmologies. This is achieved with modeling the weights of different basis functions as GPs.
 
-\subsection{PCA-GP Model}
+\subsection{GP-PC Model}
 \label{subsec:pca}
 
-Here we describe the PCA-GP model. We discuss how we use the predicted curves that we got previously as training data. \cite{higdon2008computer, higdon2010estcosmo}
+Here, we begin with $\boldsymbol\eta$, a $n \times m$ matrix composed of $m=111$ posterior means, each of length $n$. To facilitate more efficient estimation, we use singular value decomposition \citep[SVD; e.g.,][]{banerjee2014linear}, where $\boldsymbol\eta = UDV^T$; $U$ and $V$ are orthogonal matrices of size $n \times n$ and  $m\times m$, respectively. $D$ is a diagonal matrix containing the singular values. For this application, $\boldsymbol\eta$ has rank $r=\text{min}\{m,n\}=111$, which determines the number of non-zero elements in $D$. So, we can find an alternative decomposition where $\Sigma$ is a diagonal matrix with the non-zero singular values of $\boldsymbol\eta$, and $U_1$ and $V_1$ are matrices with orthonormal columns of size $n_\eta \times r$ and $m \times r$, respectively. 
+
+From here, following modeling strategies from \cite{higdon2008computer, higdon2010estcosmo}, we equivalently decompose $\boldsymbol\eta$ into a principal component (PC) basis matrix $B^* = \frac{1}{\sqrt{m}}U_1\Sigma$ along with its corresponding weights $W^* = \sqrt{m}V_1$. Without loss of generality, we can perform this decomposition after an overall mean trend is removed. If we use $p_\eta < r$ PCs, this will reduce $B$ and $W$ to be the first $p_\eta$ columns of $B^*$ and $W^*$ respectively and result in an approximation where 
+
+\begin{equation}
+    \boldsymbol\eta= UDV^T = U_1\Sigma V_1^T \approx BW^T.
+\end{equation}
+
+Figure \ref{fig:mean_PCs_oneW}, illustrates this decomposition with the estimated mean trend, the principal components contained  in $B$, and one example of how the weight for the first PC will vary dependent on the first parameter $\kappa$.
+
+In the following subsections, we consider different modeling strategies for $W$, which will influence predictions and sensitivity analyses based on $\boldsymbol\eta$.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{mean_PCs_oneW.png}
+    \caption{\textcolor{red}{UPDATE this from GSMF to spectra!! The estimated mean trend of the GSMF (left), The principal components contained in $B$ (middle), and an illustration of how the weights for the first PC will change as $\kappa$ varies (right)}.}
+    \label{fig:mean_PCs_oneW}
+\end{figure}
+
+
+Following \cite{heitmann2009coyote} and \cite{higdon2010estcosmo}, we use GPs to model the principal components' weights; we shall denote this method GP-PC. We assume a powered exponential kernel for the Gaussian process and employ \texttt{GPfit} to perform a multi-start gradient based search for GP's hyperparameters \citep{macdonald2015gpfit}. That is, the $i$th vector of PC weights $w_i(\theta)$, $i \in \{1,\ldots,p_\eta\}$, will be modeled as a zero mean GP: $w_i(\theta) \sim GP(0, \sigma^2R)$, with
+
+\begin{equation*}
+    R_{ij} = \prod_{k=1}^{p_\theta}\exp\left\{-10^{\beta_k}|x_{ik}-x_{jk}|^\alpha\right\}
+\end{equation*}
+
+We fix $\alpha=1.95$ and estimate each $\beta_k$ with $k \in \{1,...,p_\theta\}$. \textcolor{red}{Replace all $p_\theta, p_\eta, \kappa$; reread and update this section.}
+
+Here we describe the GP-PC model. We discuss how we use the predicted curves that we got previously as training data. \cite{higdon2008computer, higdon2010estcosmo}
 
 \begin{itemize}
     \item show breakdown of estimated mean trend, basis functions/PCs, and weights of a particular PC/BF.
