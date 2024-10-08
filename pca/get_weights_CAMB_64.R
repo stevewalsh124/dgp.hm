@@ -22,8 +22,12 @@ library(dgp.hm)
 # load the training design (ignore 7th column, indicating des=1 or des=2)
 X = read.csv("../CosmicEmu_etc/pow64/cambDesigns_32x6x2.csv")
 
+# standardize designs to be in the unit hypercube [0,1]^6
+# ignore the last column of X, which denotes des=1 or des=2
+for (i in 1:(ncol(X)-1)) X[,i] = (X[,i] - min(X[,i]))/(max(X[,i])-min(X[,i]))
+
 # train on design 1, test on design 2
-i_train = which(X$des == 2)
+i_train = which(X$des == 1)
 nruns = length(i_train)
 des_train = X[i_train, -7]
 

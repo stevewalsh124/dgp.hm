@@ -17,9 +17,10 @@ plot.ratio <- T
 PDF <- F
 if(PDF) pdf(paste0("CAMB_pred_des1",if(plot.ratio){"ratio"},".pdf"))
 
-i_test = which(X$des != 2)
-des_test <- read.csv("../CosmicEmu_etc/pow64/cambDesigns_32x6x2.csv")[i_test,-7]
-ntest <- nrow(des_test)
+i_test = which(X$des != 1)
+Xp <- read.csv("../CosmicEmu_etc/pow64/cambDesigns_32x6x2.csv")[i_test,-7]
+for (i in 1:(ncol(X)-1)) Xp[,i] = (Xp[,i] - min(Xp[,i]))/(max(Xp[,i])-min(Xp[,i]))
+ntest <- nrow(Xp)
 
 # All the Runs and Models are in units Mpc/h and h/Mpc.
 # To be able to plot everything in one plot, we have to convert to Mpc or 1/Mpc.
@@ -74,7 +75,7 @@ for(holdout in 1:ntest){
     if(holdout==1){
       plot(log10(k_ci), Delta_emu/Delta_holdout, type="l", lty=1, 
               xlab=expression(log[10](k)), ylab="Delta_emu/Delta_holdout",
-              main = paste0("Interpolated CAMB runs, train on des=2"), 
+              main = paste0("Interpolated CAMB runs, train on des=1"), 
               col=holdout, ylim=c(0.945,1.055))
       abline(h=1, col="black", lwd=2, lty=2)
     } else{
@@ -95,8 +96,8 @@ for(holdout in 1:ntest){
 }
 
 # Omega_b is 4th column
-des_test <- read.table("../CosmicEmu_etc/32 Model Runs CAMB/camb_new.design")
-omega_b <- des_test[,4]
+Xp <- read.table("../CosmicEmu_etc/32 Model Runs CAMB/camb_new.design")
+omega_b <- Xp[,4]
 plot(omega_b, MSEs, main = "omega_b vs MSE (script P)")
 plot(omega_b, MSEs_Delta, main = "omega_b vs MSE (Delta)")
 if(PDF) dev.off()

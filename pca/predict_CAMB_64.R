@@ -15,19 +15,23 @@ load(paste0("trained_GP_for_pca_CAMB","des1",".rda"))
 tic <- proc.time()[3]
 
 # Read in test design
-i_test = which(X$des != 2)
-des_test <- read.csv("../CosmicEmu_etc/pow64/cambDesigns_32x6x2.csv")[i_test,-7]
-ntest <- nrow(des_test)
+i_test = which(X$des != 1)
+Xp <- read.csv("../CosmicEmu_etc/pow64/cambDesigns_32x6x2.csv")[i_test,-7]
 
-# make the predictions for the given des_test design
+# standardize designs to be in the unit hypercube [0,1]^6
+# ignore the last column of X, which denotes des=1 or des=2
+for (i in 1:(ncol(X)-1)) Xp[,i] = (Xp[,i] - min(Xp[,i]))/(max(Xp[,i])-min(Xp[,i]))
+ntest <- nrow(Xp)
+
+# make the predictions for the given Xp design
 aps <- list()
 for (i in 1:n_pc) {
   print(paste("GP pred",i))
-  aps[[i]] = predict(as[[i]],des_test)
+  aps[[i]] = predict(as[[i]],Xp)
 }
 
 # create matrix of overall mean to add back on to predictions
-mean_pred = matrix(mean_mat[,1],nrow=n_k,ncol=nrow(des_test))
+mean_pred = matrix(mean_mat[,1],nrow=n_k,ncol=nrow(Xp))
 
 # scale each PC by its predicted weight
 eta_preds <- list()
