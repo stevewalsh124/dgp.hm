@@ -29,7 +29,8 @@
 \footskip=0.5in
 \doublespacing
 
-\title{Deep Gaussian Processes and Hierarchical Modeling with Functional Data: A Case Study in Cosmological Power Spectra}
+\title{Bayesian Deep Gaussian Processes for Correlated Functional Data: 
+        A Case Study in Cosmological Power Spectra}
 \author{Stephen A. Walsh\thanks{Corresponding author: Division of Natural Sciences, 
         Math and Technology, Elms College, {\tt walshst@elms.edu}} \and 
         Annie S. Booth\thanks{Department of Statistics, North Carolina State University} \and
@@ -46,7 +47,20 @@
 \bigskip
 
 \begin{abstract} 
-Understanding the structure of our universe and how matter is spread out and expanding is an area of active research. As cosmological surveys grow in complexity, developing surrogate models to efficiently predict matter power spectra is an important research area in cosmology. In this work, we synthesize methods from deep Gaussian processes, Bayesian hierarchical modeling, and basis functions in a novel way to estimate and predict matter power spectra (which are functional in nature) for different cosmologies. Our method has favorable results compared to the benchmark cosmological emulator (Cosmic Emu), and our code is available in a repository.
+Understanding the structure of our universe and the distribution of matter is an 
+area of active research.  As cosmological surveys grow in complexity, developing 
+surrogate models or emulators to efficiently predict matter power spectra is 
+important.  We are particularly motivated by the Mira Titan Universe simulation
+suite which, for a specified cosmology parameterization, provides multiple response
+curves of various fidelities, including correlated functional realizations.
+In this work, we propose a Bayesian deep Gaussian process (DGP) hierarchical 
+model to synthesize all the information to estimate the underlying matter power
+spectra, while providing effective uncertainty quantification.  This model
+extends previous works on Bayesian DGPs from scaler responses to functional ones.
+We deploy basis function representations of the estimated spectra to train another
+surrogate for the prediction of unobserved cosmologies.  Our method performs well
+compared to the benchmark cosmological emulator (Cosmic Emu).  We provide
+reproducible code in a public git repository.
 \end{abstract}
 
 %\vfill
@@ -230,7 +244,7 @@ In the following subsections, we consider different modeling strategies for $W$,
 
 \begin{figure}
     \centering
-    \includegraphics[width=\textwidth]{mean_PCs_oneW.png}
+    %\includegraphics[width=\textwidth]{mean_PCs_oneW.png}
     \caption{The estimated mean trend of the 111 posterior means (left), the principal components contained in $B$ (middle), and an illustration of how the weights for the first PC will change as the first cosmological parameter varies (right) \textcolor{red}{This last plot is wonky because it was made with only the 6 test cosmologies, not a large uniform or FF design, Steve can update this}.}
     \label{fig:mean_PCs_oneW}
 \end{figure}
