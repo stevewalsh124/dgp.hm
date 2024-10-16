@@ -29,7 +29,7 @@
 \footskip=0.5in
 \doublespacing
 
-\title{Bayesian Deep Gaussian Processes for Correlated Functional Data: 
+\title{Bayesian Deep Gaussian Processes for Correlated Functional Data: \\
         A Case Study in Cosmological Power Spectra}
 \author{Stephen A. Walsh\thanks{Corresponding author: Division of Natural Sciences, 
         Math and Technology, Elms College, {\tt walshst@elms.edu}} \and 
@@ -75,9 +75,37 @@ principal components analysis, ???
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-To further our understanding of the structure and movement of the universe, researchers utilize numerous cosmological surveys such as the Sloan Digital Sky Survey \citep{york2000sloan} and the upcoming Nancy Grace Roman Space Telescope \citep{Dore2019WFIRST} which are continuously growing in complexity. With these tools, cosmologists aim to continue learning more about cosmic acceleration \citep{caldwell2009physics}. To this end, one important ingredient to aid in this understanding of our universe is the matter power spectrum. 
+%To further our understanding of the structure and movement of the universe, 
+%researchers utilize numerous cosmological surveys such as the Sloan Digital Sky 
+%Survey \citep{york2000sloan} and the upcoming Nancy Grace Roman Space Telescope 
+%\citep{Dore2019WFIRST} which are continuously growing in complexity. With these 
+%tools, cosmologists aim to continue learning more about cosmic acceleration 
+%\citep{caldwell2009physics}. To this end, one important ingredient to aid in this 
+%understanding of our universe is the matter power spectrum. 
+% @STEVE - I don't think these "surveys" are particularly relevant
 
-The matter power spectrum is a fundamental concept in cosmology and describes the distribution of matter as a function of spatial scale. It is often represented as a function of wavenumber $k$ (units Mpc$^{-1}$), which is inversely related to spatial scale. On large scales (i.e., small $k$ values), cosmic expansion dynamics and the matter power spectrum behave according to linear perturbation theory \citep{pietroni2008flowing, lesgourgues2009non}. On smaller scales, non-linear dynamics require the use of computationally intensive simulations; the Coyote Universe \citep{lawrence2010coyote} and more recently the Mira-Titan Universe \citep{moran2023mira} are two simulation suites dedicated to this effort. 
+Computer simulation experiments are invaluable tools in the study of cosmology.
+Experiments which simulate the growth and expansion of the universe are growing
+in prevalance and complexity \citep[e.g.,][]{lawrence2010coyote,moran2023mira}
+\textcolor{red}{(more cites here?)}.  
+We are particularly motivated by a simulation
+of the matter power spectrum, which describes the distribution of matter as a 
+function of spatial scale. 
+%It is often represented as a function of wavenumber $k$ (units Mpc$^{-1}$), which is 
+%inversely related to spatial scale. 
+On large scales, power spectrum behave according to linear perturbation 
+theory \citep{pietroni2008flowing, lesgourgues2009non}.  On smaller scales, nonlinear 
+dynamics require the use of computationally intensive simulations, yielding
+correlated functional data.
+%the Coyote Universe \citep{lawrence2010coyote} and the Mira-Titan Universe \citep{moran2023mira} 
+%are two simulation suites dedicated to this effort.  
+From the highest level, our aim is to leverage such simulation data to 
+first estimate and then predict underlying power matter spectra for various 
+cosmological parameterizations.
+
+
+%The expense of these simulations necessitates statistical ``emulators'' or
+%``surrogate models'' \citep{santner2003design,gramacy2020surrogates}.
 
 Leveraging these simulations allows for emulation and prediction of the matter power spectrum under varying specifications for eight different cosmological parameters (i.e., different cosmologies). Estimating and understanding the influence of these parameters on cosmic expansion are areas of active research. In addition to presenting the Mira-Titan simulation suite, \cite{moran2023mira} builds off of previous spectrum emulation \citep{lawrence2017mira} to provide the final emulator (Cosmic Emu) based on the full suite of 117 batches of simulations. 
 
