@@ -27,7 +27,7 @@
 \addtolength{\oddsidemargin}{-.5in}
 \addtolength{\evensidemargin}{-.5in}
 \footskip=0.5in
-\doublespacing
+%\doublespacing
 
 \title{Bayesian Deep Gaussian Processes for Correlated Functional Data: \\
         A Case Study in Cosmological Power Spectra}
@@ -50,25 +50,25 @@
 Understanding the structure of our universe and the distribution of matter is an 
 area of active research.  As cosmological surveys grow in complexity, the development 
 of emulators to efficiently and effectively predict matter power spectra is essential.  
-We are particularly motivated by the Mira Titan Universe simulation
+We are particularly motivated by the Mira-Titan Universe simulation
 suite which, for a specified cosmological parameterization (termed a ``cosmology''), 
 provides multiple response curves of various fidelities, including correlated 
-functional realizations.  Our objective is two-fold.  First, we seek to 
-estimate the underlying true matter power spectra, with appropriate uncertainty 
+functional realizations.  Our objective is two-fold.  First, we estimate 
+the underlying true matter power spectra, with appropriate uncertainty 
 quantification (UQ), from all of the provided curves.  To this end, we propose a 
 novel Bayesian deep Gaussian process (DGP) hierarchical model which synthesize 
 all the information and estimates the underlying matter power spectra, while providing 
-effective UQ.  Our model extends previous work on Bayesian DGPs from scaler responses 
-to functional ones.  Second, we aim to leverage simulation results of various 
+effective UQ.  Our model extends previous work on Bayesian DGPs from scalar responses 
+to functional ones.  Second, we leverage our predicted power spectra from various 
 cosmologies in order to accurately predict the entire matter power spectra for an 
-unobserved cosmology.  For this we leverage basis function representations 
-of the estimated spectra to train a separate Gaussian process emulator.  
+unobserved cosmology.  For this task, we leverage basis function representations 
+of the functional spectra to train a separate Gaussian process emulator.  
 Our method performs well in synthetic exercises and against the benchmark cosmological 
 emulator (Cosmic Emu).  We provide reproducible code in a public git repository.
 \end{abstract}
 
 \noindent \textbf{Keywords:} surrogate, computer experiment, uncertainty quantification,
-principal components analysis, ???
+principal components analysis, Mira-Titan, Cosmic Emu (???)
 
 %\vfill
 
@@ -82,10 +82,9 @@ principal components analysis, ???
 %tools, cosmologists aim to continue learning more about cosmic acceleration 
 %\citep{caldwell2009physics}. To this end, one important ingredient to aid in this 
 %understanding of our universe is the matter power spectrum. 
-% @STEVE - I don't think these "surveys" are particularly relevant
 
 Computer simulation experiments are invaluable tools in the study of cosmology.
-Experiments which simulate the growth and expansion of the universe are growing
+Experiments which simulate the expansion of the universe are growing
 in prevalance and complexity \citep[e.g.,][]{lawrence2010coyote,moran2023mira}
 \textcolor{red}{(more cites here?)}.  
 We are particularly motivated by a simulation
@@ -104,14 +103,86 @@ first estimate and then predict underlying power matter spectra for various
 cosmological parameterizations.
 
 
-%The expense of these simulations necessitates statistical ``emulators'' or
-%``surrogate models'' \citep{santner2003design,gramacy2020surrogates}.
+We are particularly motivated by the Mira-Titan simulation suite \citep{moran2023mira}
+which defines ``cosmologies'' according to eight cosmological parameters (more on this
+in Section TBD).  For a particular cosmology, the simulation of the power matter spectra 
+is rather complex.  Although we presume there exists some true matter spectra as a function
+of wavenumber, we are not able to directly observe it.  Rather, the simulation outputs 
+a convoluted patchwork of potential spectra, which vary in fidelity and which are trusted
+only over particular wavenumber ranges.  Our first objective is to synthesize expert knowledge
+and all of this simulation information into an effective estimate of the true underlying
+matter spectrum.
+\textcolor{red}{(@Steve - it might be worth moving something like Figure 1
+here to help in this narration.  It is important that we impress upon the reader why
+it is difficult to estimate the truth.  We can still refer back to the figure in 
+Section 2 and narrate it further.)}  
 
-Leveraging these simulations allows for emulation and prediction of the matter power spectrum under varying specifications for eight different cosmological parameters (i.e., different cosmologies). Estimating and understanding the influence of these parameters on cosmic expansion are areas of active research. In addition to presenting the Mira-Titan simulation suite, \cite{moran2023mira} builds off of previous spectrum emulation \citep{lawrence2017mira} to provide the final emulator (Cosmic Emu) based on the full suite of 117 batches of simulations. 
+There are several challenges to estimating the underlying spectra.  Our model
+must: handle multiple correlated functional observations, offer enough 
+flexibility to accommodate the nonstationarity present in power matter spectra 
+(which vary in smoothenss across wavenumbers), provide effective uncertainty
+quantification (UQ), and allow for the incorporation of expert knowledge 
+regarding the wavenumbers over which various outputs are trusted.  To this end, 
+we propose a Bayesian hierarchical model which treats each of functional simulation 
+output as a realization of a deep Gaussian process \citep[DGP;][]{damianou2013deep} 
+centered on the true underlying spectra.  The hierarchical structure naturally
+accommodates the correlated observations.  The depth of the GP offers nonstationary
+flexibility.  The Bayesian framework facilitates UQ and the incorporation of prior
+knowledge.  While Bayesian DGPs have been previously deployed for computer experiments 
+with scalar responses \citep[e.g.,][]{sauer2023active,sauer2023vecchia,ming2023deep}, 
+they have yet to be extended to correlated functional outputs. 
+We will demonstrate profiency on synthetic examples and a low fidelity
+cosmological simulation, before deploying our model on the motivating 
+Mira-Titan simulation.
 
-In this work, we expand on the previous emulation approaches and propose a novel synthesis of methods to quantify uncertainty and predict matter power spectra for different cosmologies using deep Gaussian processes (DGPs). In order to handle multiple realizations of functional output (from the Mira-Titan simulation suite), we use hierarchical modeling and basis functions within our DGP framework to accurately estimate and predict power spectra for different cosmologies. When comparing to Cosmic Emu, we see favorable results for our method. The code to reproduce these results are available at \url{https://github.com/stevewalsh124/dgp.hm}. \textcolor{red}{Please note: this repository is currently private until we hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
+Our second objective is to leverage simulation data from a limited set of
+cosmologies in order to predict power matter spectra for unobserved cosmologies.
+Due to the expense and propriatary nature of the Mira-Titan simulation suite
+\textcolor{red}{(do we know how long it takes to run?  Is it really propriatary?)},
+it is infeasible to evaluate the simulation for every possible eight-dimensional
+cosmological configuration which may be of interest.  Instead, we desire
+a statistical ``emulator'' or ``surrogate model'' 
+\citep{santner2003design,gramacy2020surrogates} which will provide quick and effective
+predictions of power matter spectra for any cosmological parameterization.
+\citet{moran2023mira} provide a state-of-the-art emulator for the Mira-Titan
+simulation suite, which was trained on 117 simulations, and is termed 
+the ``Cosmic Emu''.\footnote{\url{https://github.com/lanl/CosmicEmu}}
+We leverage the same training data, in conjunction with our Bayesian hierarchical
+DGP model and basis function representations, to train a Gaussian process surrogate 
+on the principal component weights in order to predict spectra for unobserved
+cosmologies.  \textcolor{red}{(need more cites, like to Daves work)}
+Our method compares favorably to Cosmic Emu on held-out cosmologies.
 
-The remainder of the paper is organized as follows: Section \ref{sec:data} provides more details regarding the Mira-Titan simulation suite. Section \ref{sec:hm_fit} describes our model and the training procedure for both toy data as well as the Mira-Titan dataset. With this trained model, Section \ref{sec:pred} explains our modeling approach for predictions at held-out cosmologies and compares with other methods. Section \ref{sec:disc} concludes with a discussion of our contributions and avenues for future research.
+\textcolor{red}{(Should we introduce the CAMB data here?  I think so, if we
+want to refer to it in the next paragraph.)}
+
+The remainder of the paper is organized as follows.  Section \ref{sec:data} 
+introduces our motivating application, the Mira-Titan simulation suite.  
+Section \ref{sec:hm_fit} describes our hierarchical Bayesian DGP model and 
+validates its performance on synthetic exercises and the CAMB simulation.  
+Leveraging this trained model, Section \ref{sec:pred} details 
+our procedure for predicting at unobserved cosmologies, benchmarking against
+state-of-the-art competitors on the CAMB and Mira-Titan simulations. 
+Section \ref{sec:disc} concludes with a discussion of our contributions and avenues for future research.  We provide reproducible code and an R package for our Bayesian DGP model
+at \url{https://github.com/stevewalsh124/dgp.hm}. 
+\textcolor{red}{Please note: this repository is currently private until we 
+hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
+
+%Leveraging these simulations allows for emulation and prediction of the matter power 
+%spectrum under varying specifications for eight different cosmological parameters 
+%(i.e., different cosmologies). Estimating and understanding the influence of these 
+%parameters on cosmic expansion are areas of active research. In addition to 
+%presenting the Mira-Titan simulation suite, \cite{moran2023mira} builds off 
+%of previous spectrum emulation \citep{lawrence2017mira} to provide the final 
+%emulator (Cosmic Emu) based on the full suite of 117 batches of simulations. 
+
+%In this work, we expand on the previous emulation approaches and propose a 
+%novel synthesis of methods to quantify uncertainty and predict matter power 
+%spectra for different cosmologies using deep Gaussian processes (DGPs). In order 
+%to handle multiple realizations of functional output (from the Mira-Titan 
+%simulation suite), we use hierarchical modeling and basis functions within our 
+%DGP framework to accurately estimate and predict power spectra for different 
+%cosmologies. 
 
 \section{Data}
 \label{sec:data}
