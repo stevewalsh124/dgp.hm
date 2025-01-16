@@ -18,6 +18,9 @@ library(Matrix) # bdiag
 
 PDF = T
 if(PDF) pdf("results/run_CAMB.pdf")
+par(mfrow=c(2,1))
+
+# keep track of coverages for CAMB based on DGP fit
 coverages = c()
 cov_mat = list()
 
