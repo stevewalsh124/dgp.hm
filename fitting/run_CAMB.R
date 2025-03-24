@@ -15,6 +15,7 @@
 library(dgp.hm)
 library(zoo) # rollmean
 library(Matrix) # bdiag
+library(pracma) #interp1
 
 PDF = T
 if(PDF) pdf("results/run_CAMB.pdf")
@@ -223,7 +224,7 @@ for(model in 1:32){ # integer 1-32
     # load in initialized estimates for warping and hyperparameters for fit
     # w_0 <- read.csv("results/w0.csv")[[1]]
     # params0 <- read.csv("results/params0.csv")
-    fit <- fit_two_layer_hm(x, y_avg, nmcmc = 15000, #w_0 = w_0, 
+    fit <- fit_two_layer_hm(x, y_avg, nmcmc = 20000, #w_0 = w_0, 
                             # theta_y_0 = params0$theta_y0,
                             # theta_w_0 = params0$theta_w0,
                             # settings = list(pmx=T),
@@ -269,16 +270,27 @@ for(model in 1:32){ # integer 1-32
   legend("topright", c("camb","lr","hr","avg","dgp"), lty=1, 
          col=c("blue","grey","red","green","orange"))
   
+  # interpolate posterior mean to a 
+  x_unif = seq(0, 1, length.out = 400)
+  # plot with loess avg subtracted...
+  fitm_int1 <- interp1(x, fit$m - loess_fit$fitted, x_unif, method = "cubic")
+  lines(x_unif, fitm_int1, col="purple",lwd=2, lty=3)
+  # ...but save a version without loess subtracted
+  fitm_int1 <- interp1(x, fit$m, x_unif, method = "cubic")
+  
   # Unscale results before storing
-  results <- data.frame(x = x, 
+  results <- data.frame(x = x*(b-a)+a, 
                         y = y_avg * sd_y + mean_y, 
                         m = fit$m * sd_y + mean_y, 
                         ub = fit$ub * sd_y + mean_y, 
                         lb = fit$lb * sd_y + mean_y,
                         ubb = fit$ubb * sd_y + mean_y, 
                         lbb = fit$lbb * sd_y + mean_y)
+  results_int = data.frame(x = x_unif*(b-a)+a, y = fitm_int1*sd_y+mean_y)
   write.csv(results, paste0("results/", ifelse(deep, "dgp", "gp"), "_",
                             model, "camb.csv"), row.names = FALSE)
+  write.csv(results_int, paste0("results/", ifelse(deep, "dgp", "gp"), "_",
+                                model, "postmean_int.csv"), row.names = FALSE)
   if(model == 1) save(fit, file = "results/fit_1camb.rda")
 }
 if(PDF) dev.off()
