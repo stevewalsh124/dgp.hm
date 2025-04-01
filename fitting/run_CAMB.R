@@ -19,6 +19,7 @@ library(pracma) #interp1
 
 PDF = T
 if(PDF) pdf("results/run_CAMB.pdf")
+par(mfrow=c(2,1))
 
 # keep track of coverages for CAMB based on DGP fit
 coverages = c()
@@ -55,20 +56,21 @@ for(model in 1:32){ # integer 1-32
                          "/L1300/PM001/output/m0",
                          if(model<10){"0"},model,".pk.ini"))
   x_lo = log10(h*lr[which(h*lr[,1]<=x_ub),1])
-  # plot(x_lo, scrP(lr[which(h*lr[,1]<=x_ub),2]/h^3, 10^x_lo),
-  #      col="gray", type="l", main = model, xlim=c(-3,0), ylim=c(-6,-3.2),
-  #      ylab = "script P (adj by h,g)",
-  #      xlab = "log10(k) (adj by h)")
   y_lo = matrix(NA, length(x_lo), n_lo)
-  y_lo[,1] = scrP(lr[which(h*lr[,1]<=x_ub),2]/h^3, 10^x_lo)
+  y_lo[,1] = scrP(lr[which(h*lr[,1]<=x_ub),2]/h^3/g^2, 10^x_lo)
+  
+  plot(x_lo, y_lo[,1],
+       col="gray", type="l", main = model, xlim=c(-3,0), ylim=c(-2,2),
+       ylab = "script P (adj by h,g)",
+       xlab = "log10(k) (adj by h)")
   
   for (i in 2:n_lo) {
     if(model==8 & i==9) next
     lr = read.table(paste0("../CosmicEmu_etc/pows/M0",if(model<10){"0"},model,
                            "/L1300/PM0",if(i<10){"0"},i,"/output/m0",
                            if(model<10){"0"},model,".pk.ini"))
-    y_lo[,i] = scrP(lr[which(h*lr[,1]<=x_ub),2]/h^3, 10^x_lo)
-    # lines(x_lo, y_lo[,i], col="gray")
+    y_lo[,i] = scrP(lr[which(h*lr[,1]<=x_ub),2]/h^3/g^2, 10^x_lo)
+    lines(x_lo, y_lo[,i], col="gray")
   }
   
   # only model 8 is missing the 9th run
@@ -81,21 +83,21 @@ for(model in 1:32){ # integer 1-32
   hr = read.table(paste0("../CosmicEmu_etc/pows/M0",if(model<10){"0"},model,
                          "/L2100/HACC000/output/m0",if(model<10){"0"},model,".pk.ini"))
   x_hi = log10(h*hr[which(h*hr[,1]<=x_ub),1])
-  y_hi = scrP(hr[which(h*hr[,1]<=x_ub),2]/h^3, 10^x_hi)
-  # lines(x_hi, y_hi, col="red")#, lwd=2)
+  y_hi = scrP(hr[which(h*hr[,1]<=x_ub),2]/h^3/g^2, 10^x_hi)
+  lines(x_hi, y_hi, col="red")#, lwd=2)
   
   # plot the CAMB data (adjusted by growth^2, h and h^3)
   camb = read.table(paste0("../CosmicEmu_etc/pow64/RUN",model,
                            "/oneh_matterpower.dat"))
   x_camb = log10(camb[,1]*h)
-  y_camb = scrP(camb[,2]/h^3*g^2, 10^x_camb)
-  # lines(x_camb, y_camb, col="blue1",type="l", lwd=3, lty=3)
-  # legend("bottomright", c("camb","lr","hr"), lty=1, col=c("blue","grey","red"))
+  y_camb = scrP(camb[,2]/h^3, 10^x_camb)
+  lines(x_camb, y_camb, col="blue1",type="l", lwd=3, lty=3)
+  legend("bottomright", c("camb","lr","hr"), lty=1, col=c("blue","grey","red"))
   
   # Interpolate responses -------------------------------------------------------
-  # Create x's of [-4.2, -2.2] for lower-res version of x_camb, use with x_lo
-  x = c(seq(round(min(x_camb), 1) + 0.1, round(min(x_lo), 1), by = 0.1), x_lo)
-  n_camb_only = length(seq(round(min(x_camb), 1) + 0.1, round(min(x_lo), 1), by = 0.1))
+  # Create x's of [-2.5, -2.2] for lower-res version of x_camb, use with x_lo
+  x = c(seq(-2.5, round(min(x_lo), 1), by = 0.1), x_lo)
+  n_camb_only = length(seq(-2.5, round(min(x_lo), 1), by = 0.1))
   y_hii = approx(x_hi, y_hi, x)$y
   y_cambi = approx(x_camb, y_camb, x)$y
   y_loi = matrix(NA, length(x), n_lo)
@@ -224,7 +226,7 @@ for(model in 1:32){ # integer 1-32
     # load in initialized estimates for warping and hyperparameters for fit
     # w_0 <- read.csv("results/w0.csv")[[1]]
     # params0 <- read.csv("results/params0.csv")
-    fit <- fit_two_layer_hm(x, y_avg, nmcmc = 20000, #w_0 = w_0, 
+    fit <- fit_two_layer_hm(x, y_avg, nmcmc = 15000, #w_0 = w_0, 
                             # theta_y_0 = params0$theta_y0,
                             # theta_w_0 = params0$theta_w0,
                             # settings = list(pmx=T),
@@ -241,8 +243,7 @@ for(model in 1:32){ # integer 1-32
   print(coverages[model])
   cov_mat[[model]] = (fit$lb < y_cambi & fit$ub > y_cambi)
 
-  par(mfrow=c(2,1))
-  # Plot with all of [-4.2, -2.2] camb
+  # Plot with all of [-2.5, -2.2] camb
   plot(x, y_cambi - loess_fit$fitted, type="l", col="blue", 
        main = paste(model, "cover", coverages[model]))
   abline(h=0, col="black", lty=2)
@@ -256,19 +257,19 @@ for(model in 1:32){ # integer 1-32
   legend("topleft", c("camb","lr","hr","avg","dgp"), lty=1, 
          col=c("blue","grey","red","green","orange"))
   
-  # focus plot on L1300 and L2100 runs
-  plot(x, y_cambi - loess_fit$fitted, type="l", col="blue", 
-       main = paste(model, "cover", coverages[model]), xlim=c(0.5,1))
-  abline(h=0, col="black", lty=2)
-  for (i in 1:n_lo) lines(x, y_loi[,i] - loess_fit$fitted, col="gray90")
-  lines(x, y_hii - loess_fit$fitted, col="red")
-  lines(x, y_cambi - loess_fit$fitted, col="blue")
-  lines(x, y_avg - loess_fit$fitted, col="green")
-  lines(x, fit$m - loess_fit$fitted , col="orange")
-  lines(x, fit$ub - loess_fit$fitted, col="orange")
-  lines(x, fit$lb - loess_fit$fitted, col="orange")
-  legend("topright", c("camb","lr","hr","avg","dgp"), lty=1, 
-         col=c("blue","grey","red","green","orange"))
+  # # focus plot on L1300 and L2100 runs
+  # plot(x, y_cambi - loess_fit$fitted, type="l", col="blue", 
+  #      main = paste(model, "cover", coverages[model]), xlim=c(0.5,1))
+  # abline(h=0, col="black", lty=2)
+  # for (i in 1:n_lo) lines(x, y_loi[,i] - loess_fit$fitted, col="gray90")
+  # lines(x, y_hii - loess_fit$fitted, col="red")
+  # lines(x, y_cambi - loess_fit$fitted, col="blue")
+  # lines(x, y_avg - loess_fit$fitted, col="green")
+  # lines(x, fit$m - loess_fit$fitted , col="orange")
+  # lines(x, fit$ub - loess_fit$fitted, col="orange")
+  # lines(x, fit$lb - loess_fit$fitted, col="orange")
+  # legend("topright", c("camb","lr","hr","avg","dgp"), lty=1, 
+  #        col=c("blue","grey","red","green","orange"))
   
   # interpolate posterior mean to a 
   x_unif = seq(0, 1, length.out = 400)
