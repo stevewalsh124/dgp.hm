@@ -36,6 +36,7 @@
         Annie S. Booth\thanks{Department of Statistics, North Carolina State University} \and
         David Higdon\thanks{Department of Statistics, Virginia Tech} \and
         Marco A.R. Ferreira\footnotemark[3] \and
+        Jared Clark\footnotemark[3] \and
         Kelly Moran\thanks{Los Alamos National Laboratory} \and
         Katrin Heitmann\thanks{Argonne National Laboratory}}
 \date{\today}
@@ -104,8 +105,8 @@ cosmological parameterizations.
 
 
 We are particularly motivated by the Mira-Titan simulation suite \citep{moran2023mira}
-which defines ``cosmologies'' according to eight cosmological parameters (\textcolor{red}{more on this
-in Section TBD}).  For a particular cosmology, the simulation of the power matter spectra 
+which defines ``cosmologies'' according to eight cosmological parameters (more on this
+in Section \ref{sec:data}).  For a particular cosmology, the simulation of the power matter spectra 
 is rather complex.  Although we presume there exists some true matter spectra as a function
 of wavenumber, we are not able to directly observe it.  Rather, the simulation outputs 
 a convoluted patchwork of potential spectra, which vary in fidelity and which are trusted
@@ -200,8 +201,13 @@ hear back regarding permissions for sharing the Mira-Titan data alongside our co
 \label{sec:data}
 
 The Mira-Titan simulation suite is a dataset consisting of simulated power spectra for 
-117 different cosmologies. Each of these cosmologies is specified by 8 cosmological 
-parameter values, which we will denote as $\theta \in \mathbb{R}^8$. Different simulation 
+117 different cosmologies. Each of these cosmologies is specified by eight cosmological 
+parameter values: matter density, baryon density, amplitude of density fluctuations, 
+dimensionless Hubble parameter, spectral index of scalar perturbations,
+dark energy equation of state parameters, and neutrino density. For more details 
+on these parameters and their effects, see \cite{dodelson2020modern, aghanim2020planck, heitmann2016mira}. 
+Parameter ranges for each of these parameters are specified in Table 2.1 of \cite{moran2023mira}.
+For simplicity, we will denote these eight parameters as $\theta \in \mathbb{R}^8$. Different simulation 
 output exists for different values of a ninth value, the redshift; in this work, we fix 
 this value at 0. For each cosmology, we have a batch of 18 simulated spectra: an inexpensive 
 spectrum estimated from linear perturbation theory ($y_p$), 16 spectra estimated from 
@@ -279,7 +285,7 @@ Specifically:
 
 where $d=||x_i-x_j||^2$. From here, we estimate $\tau_\ell, \theta_\ell$ with maximum 
 likelihood, and conditional on $\Sigma_\varepsilon$, we specify priors for $\tau_S, \theta_S$ 
-following \cite{sauer2023active}: \textcolor{cyan}{Annie, please ensure the most up-to-date 
+following \cite{sauer2023active}: \textcolor{red}{Annie, please ensure the most up-to-date 
 prior specs are shown above and here. Here is what I found from fit\$settings when using 
 deepgp v1.1.3: $\theta_S \sim G(\alpha=1.2, \beta=1)$ and $\tau_S \propto 1/\tau_S^2$.}
 
@@ -330,7 +336,7 @@ have a substantial impact on the model fit. We construct this model in the
 compositional form, and also use Markov Chain Monte Carlo (MCMC) to estimate and 
 obtain full uncertainty for each of the model parameters \citep{sauer2023active}.
 
-\textcolor{cyan}{Annie: want to add something here? For $\theta_w$, we also specify 
+\textcolor{red}{Annie: want to add something here? For $\theta_w$, we also specify 
 a Gamma prior of the form $\theta_w \sim G(\alpha=1.2, \beta=2)$. We discuss the 
 elliptical slice sampling of $W$, but otherwise it is plugged in to the methods 
 of the previous section with very few changes.}
@@ -409,32 +415,32 @@ is much faster than both of these.}
 \label{subsec:camb}
 
 In addition to simulated data, we investigate model fits for different cosmological 
-datasets from CAMB \citep{lewis2011CAMB}. \textcolor{magenta}{We have looked at two sets of model 
-runs, ``LT" runs where there is an underlying ``true" value alongside 15 computer 
-model runs, or the ``CAMB" runs, where we only have a single output. The performance 
-from the CAMB runs was better (with a 6-dimensional design space), and also did not 
-require obtaining a posterior mean from multiple model runs. When looking at the 
-CAMB runs on the $\Delta$ space, we see it generally is withing $\pm 5\%$ error. 
-Regarding these results, compared to the results for the 8-dimensional LT runs 
-which had less impressive predictive performance, I'm open to suggestions on whether 
-to include details on one or the other.}
+datasets from CAMB \citep{lewis2011CAMB}. These datasets contain power spectra based
+on six-dimensional cosmological parameter settings. Similar to the Mira-Titan suite, the
+CAMB dataset has multiple (sixty-four) batches of power spectra for each cosmology, with each batch 
+containing multiple (fifteen) low-resolution spectra, and one high-resolution sprectum. 
+Unlike the Mira-Titan suite, this dataset favorably contains an infinite-resolution 
+spectrum, which can be treated as the true spectrum for each cosmology,
+allowing us to accurately assess posterior mean estimates and credible intervals. 
 
 \begin{figure}
     \centering
     \includegraphics[width=6in]{CAMB_fit_model1.jpg}
     \caption{Example of model fit for the first model from the CAMB data, with LOESS
-             mean term subtracted. \textcolor{red}{Steve: Update this plot to be
+             mean term subtracted. \textcolor{red}{Currently, we can compare the 
+             orange lines (posterior mean and 95\% credible interval) to the blue line,
+             representing the infinite-resolution ``true" spectrum. Steve: Update this plot to be
              more clean, use different line types: dotted, dash, solid, etc.}}   
     \label{fig:fit_camb}
 \end{figure}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=6in]{plot_pca_CAMB.png}
-    \caption{Proportion of $\Delta_{emu}$ vs. $\Delta_{holdout}$ for model 
-             runs 11-42 (excluding 27-28).}   
-    \label{fig:pca_camb}
-\end{figure}
+We use 32 CAMB batches to train the DGP.HM model and reserve the other 32 as a test set.
+To imitate the role of the perturbation theory output of Mira-Titan, we anchor estimates of the CAMB
+power spectrum at the infinite-resolution for $\log_{10}(k) < -1.7$, and then rely 
+strictly on the low- and high-resolution runs for $k$ above this. We take a weighted
+average of the CAMB runs and assume heteroskedastic errors in a similar fashion, now with
+no spatial dependence (compare low-resolution runs of Figure \ref{fig:fit_camb} 
+with Figure \ref{fig:plot_data}).
 
 \subsection{Estimating Spectra with Mira-Titan Data}
 \label{subsec:mira_fit}
@@ -481,7 +487,7 @@ section details our second contribution - the use of the Bayesian DGP.HM model
 to predict the curve for held-out cosmologies. This is achieved with modeling the 
 weights of different basis functions as GPs.
 
-\subsection{GP-PC Model}
+\subsection{Functional Prediction Model}
 \label{subsec:pca}
 
 Here, we begin with a $n \times m$ matrix composed of $m=111$ posterior means, 
@@ -527,11 +533,17 @@ which will influence predictions and sensitivity analyses based on $\boldsymbol\
 \end{figure}
 
 
+
+% This is old: switched to SEPIA
+% We assume a powered exponential kernel for the Gaussian process and employ 
+% \texttt{GPfit} to perform a multi-start gradient based search for GP's hyperparameters 
+% \citep{macdonald2015gpfit}. 
 In alignment with \cite{heitmann2009coyote} and \cite{higdon2010estcosmo}, we use 
-GPs to model the principal components' weights; we shall denote this method GP-PC. 
-We assume a powered exponential kernel for the Gaussian process and employ 
-\texttt{GPfit} to perform a multi-start gradient based search for GP's hyperparameters 
-\citep{macdonald2015gpfit}. That is, the $i$th vector of PC weights $w_i(\theta)$, 
+GPs to model the principal components' weights. For direct comparison alongside
+\cite{moran2023mira}, we employ a Python implementation of this approach called 
+SEPIA \citep{gattiker2020sepia}. \textcolor{red}{Please note: currently show GPfit 
+predictions for Mira-Titan Data, NOT SEPIA. The CAMB results are based on SEPIA.}
+That is, the $i$th vector of PC weights $w_i(\theta)$, 
 $i \in \{1,\ldots,p_\eta\}$, will be modeled as a zero mean GP: 
 $w_i(\theta) \sim GP(0, \sigma^2R)$, with
 
@@ -539,8 +551,41 @@ $w_i(\theta) \sim GP(0, \sigma^2R)$, with
     R_{ij} = \prod_{k=1}^{p_\theta}\exp\left\{-10^{\beta_k}|x_{ik}-x_{jk}|^\alpha\right\}
 \end{equation*}
 
-We fix $\alpha=1.95$ and estimate each $\beta_k$ with $k \in \{1,...,p_\theta\}$. 
+\textcolor{red}{We fix $\alpha=1.95$ and estimate each $\beta_k$ with $k \in \{1,...,p_\theta\}$. 
+The above with $R_{ij}$ is based on GPfit; will update this to reflect SEPIA settings later.}
 Using these trained GPs from the PCs, we predict the spectra for unobserved cosmologies.
+
+\subsection{Predicting Spectra for CAMB Data}
+\label{subsec:camb_pred}
+
+From our 32 posterior means using DGP.HM, these are input into SEPIA in order to predict power spectra
+for the 32 test cosmologies. With the infinite-resolution output, we have a sense of the ``best-case" 
+predictions we can have (i.e., if we trained with the 32 true power spectra, as opposed to our 
+estimated posterior means). In Figure \ref{fig:pca_preds_v_camb}, we see comparisons of the heldout 
+infinite resolution alongside two predictions: one based on DGP.HM and the ``best-case" scenario using the
+infinite-resolution spectra of the training set. There is a high level of agreement between the pairs
+of predictions across cosmologies. Upon comparing MSEs for each of these prediction scenarios 
+(Figure \ref{fig:mse_camb}, most are very similar across the two groups (with the two most difficult 
+predictions being the exceptions), suggesting that overall DGP.HM is estimating the true spectra 
+for each batch well.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=4in]{preds_diff1_4_8.jpg}
+    \caption{Predictions for 16 of the 32 test cosmologies after centering and scaling. 
+             The interpolated infinite resolution run is shown in black, the prediction 
+             (trained on the infinite resolution) is in blue and the prediction from 
+             the DGP.HM posterior mean is in red.}   
+    \label{fig:pca_preds_v_camb}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=3in]{mse_dot.jpg}
+    \caption{Comparison of MSE for CAMB predictions, when training with DGP.HM posterior 
+             means (left), and training with the ``true" infinite-resolution spectra (right).}   
+    \label{fig:mse_camb}
+\end{figure}
 
 \subsection{Predicting Spectra from Mira-Titan Data}
 \label{subsec:mira_pred}
