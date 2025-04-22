@@ -33,10 +33,10 @@
         A Case Study in Cosmological Power Spectra}
 \author{Stephen A. Walsh\thanks{Corresponding author: Division of Natural Sciences, 
         Math and Technology, Elms College, {\tt walshst@elms.edu}} \and 
-        Annie S. Booth\thanks{Department of Statistics, North Carolina State University} \and
-        David Higdon\thanks{Department of Statistics, Virginia Tech} \and
-        Marco A.R. Ferreira\footnotemark[3] \and
-        Jared Clark\footnotemark[3] \and
+        Annie S. Booth\thanks{Department of Statistics, Virginia Tech} \and
+        David Higdon\footnotemark[2] \and
+        Marco A.R. Ferreira\footnotemark[2] \and
+        Jared Clark\footnotemark[2] \and
         Kelly Moran\thanks{Los Alamos National Laboratory} \and
         Katrin Heitmann\thanks{Argonne National Laboratory}}
 \date{\today}
@@ -57,15 +57,16 @@ provides multiple response curves of various fidelities, including correlated
 functional realizations.  Our objective is two-fold.  First, we estimate 
 the underlying true matter power spectra, with appropriate uncertainty 
 quantification (UQ), from all of the provided curves.  To this end, we propose a 
-novel Bayesian deep Gaussian process (DGP) hierarchical model which synthesize 
-all the information and estimates the underlying matter power spectra, while providing 
-effective UQ.  Our model extends previous work on Bayesian DGPs from scalar responses 
-to functional ones.  Second, we leverage our predicted power spectra from various 
-cosmologies in order to accurately predict the entire matter power spectra for an 
-unobserved cosmology.  For this task, we leverage basis function representations 
+novel Bayesian deep Gaussian process (DGP) hierarchical model which synthesizes 
+all the simulation information to estimate the underlying matter power spectra
+while providing effective UQ.  Our model extends previous work on Bayesian DGPs 
+from scalar responses to functional ones.  Second, we leverage our predicted 
+power spectra from various cosmologies in order to accurately predict the entire 
+matter power spectra for an 
+unobserved cosmology.  For this task, we use basis function representations 
 of the functional spectra to train a separate Gaussian process emulator.  
 Our method performs well in synthetic exercises and against the benchmark cosmological 
-emulator (Cosmic Emu).  We provide reproducible code in a public git repository.
+emulator (Cosmic Emu).
 \end{abstract}
 
 \noindent \textbf{Keywords:} surrogate, computer experiment, uncertainty quantification,
