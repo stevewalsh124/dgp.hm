@@ -69,8 +69,8 @@ Our method performs well in synthetic exercises and against the benchmark cosmol
 emulator (Cosmic Emu).
 \end{abstract}
 
-\noindent \textbf{Keywords:} surrogate, computer experiment, uncertainty quantification,
-principal components analysis, Mira-Titan, Cosmic Emu (???)
+\noindent \textbf{Keywords:} computer experiment, Cosmic Emu, 
+principal components analysis, Mira-Titan, surrogate, uncertainty quantification
 
 %\vfill
 
@@ -88,7 +88,7 @@ principal components analysis, Mira-Titan, Cosmic Emu (???)
 Computer simulation experiments are invaluable tools in the study of cosmology.
 Experiments which simulate the expansion of the universe are growing
 in prevalance and complexity \citep[e.g.,][]{lawrence2010coyote,moran2023mira}
-\textcolor{red}{(more cites here?)}.  
+\textcolor{red}{(more cites here? possibly those commented out above?)}.  
 We are particularly motivated by a simulation
 of the matter power spectrum, which describes the distribution of matter as a 
 function of spatial scale. 
@@ -100,40 +100,52 @@ dynamics require the use of computationally intensive simulations, yielding
 correlated functional data.
 %the Coyote Universe \citep{lawrence2010coyote} and the Mira-Titan Universe \citep{moran2023mira} 
 %are two simulation suites dedicated to this effort.  
-From the highest level, our aim is to leverage such simulation data to 
+Our overarching goal is to leverage such simulation data to 
 first estimate and then predict underlying power matter spectra for various 
 cosmological parameterizations.
 
 
-We are particularly motivated by the Mira-Titan simulation suite \citep{moran2023mira}
-which defines ``cosmologies'' according to eight cosmological parameters (more on this
+The Mira-Titan simulation suite \citep{moran2023mira}
+defines ``cosmologies'' according to eight cosmological parameters (more on this
 in Section \ref{sec:data}).  For a particular cosmology, the simulation of the power matter spectra 
 is rather complex.  Although we presume there exists some true matter spectra as a function
 of wavenumber, we are not able to directly observe it.  Rather, the simulation outputs 
 a convoluted patchwork of potential spectra, which vary in fidelity and which are trusted
 only over particular wavenumber ranges.  Our first objective is to synthesize expert knowledge
-and all of this simulation information into an effective estimate of the true underlying
-matter spectrum.
+and all available simulation information into an effective estimate of the true underlying
+matter spectrum.  \textcolor{red}{(In this paragraph, we need to narrate Figure 1.  The
+figure provides a useful visual, but it needs to be talked through.  Comment on how
+the weighted average takes into account the appropriate ranges.  Explain why the weighted
+average on its own is not an effective estimate.  Motivate why we need a more complex model.
+This is also a good place to introduce wavenumber as $k$.  Is there a particular reason
+we plot it on the log scale?)}
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=6in]{plot_data.png}
-    \caption{Left: The perturbation theory, low resolution runs, and high resolution run 
-             for the first training cosmology. The weighted average of these is shown as a dashed line. 
-             Dotted lines at the bottom indicate where each data type is deemed approximately unbiased. 
-             Right: The same image, but restricted to wavenumber ($k$) values where the low resolution 
-             runs are approximately unbiased.}
+    \includegraphics[width=\linewidth, trim=0 13 0 45, clip=TRUE]{plot_data.png}
+    \caption{{\it Left:} The perturbation theory (solid green), low resolution runs (solid grey), 
+    and high resolution run  (solid pink) for a particular cosmology. 
+    The weighted average of these is shown in dashed orange. Dotted lines at the bottom 
+    indicate where each data type is deemed approximately unbiased. 
+    {\it Right:} Same, but restricted to wavenumber ($k$) values where the low resolution 
+    runs are approximately unbiased.
+    \textcolor{red}{(Either make one legend for both graphs or ditch the legend 
+    altogether and narrate the colors/line types in the caption.  If legend stays, "ind" needs
+    to go.  Pink line is too hard to see.  Make gray lines thinner and pink thicker?
+    Since later we will use a centered version, we could add a 3rd panel here that shows the
+    same data centered, so the reader can understand the connection to the plots later.)}}
     \label{fig:plot_data}
 \end{figure}
 
 There are several challenges to estimating the underlying spectra.  Our model
-must: handle multiple correlated functional observations, offer enough 
+must: handle multiple correlated functional observations (like the low resolution
+runs shown in Figure \ref{fig:plot_data}), offer enough 
 flexibility to accommodate the nonstationarity present in power matter spectra 
 (which vary in smoothenss across wavenumbers), provide effective uncertainty
 quantification (UQ), and allow for the incorporation of expert knowledge 
 regarding the wavenumbers over which various outputs are trusted.  To this end, 
-we propose a Bayesian hierarchical model which treats each of functional simulation 
-output as a realization of a deep Gaussian process \citep[DGP;][]{damianou2013deep} 
+we propose a Bayesian hierarchical model which treats functional simulation 
+outputs as realizations of a deep Gaussian process \citep[DGP;][]{damianou2013deep} 
 centered on the true underlying spectra.  The hierarchical structure naturally
 accommodates the correlated observations.  The depth of the GP offers nonstationary
 flexibility.  The Bayesian framework facilitates UQ and the incorporation of prior
@@ -155,30 +167,30 @@ a statistical ``emulator'' or ``surrogate model''
 predictions of power matter spectra for any cosmological parameterization.
 \citet{moran2023mira} provide a state-of-the-art emulator for the Mira-Titan
 simulation suite, which was trained on 117 simulations, and is termed 
-the ``Cosmic Emu''.\footnote{\url{https://github.com/lanl/CosmicEmu}}
+the ``Cosmic Emu.''\footnote{\url{https://github.com/lanl/CosmicEmu}}
 We leverage the same training data, in conjunction with our Bayesian hierarchical
 DGP model and basis function representations, to train a Gaussian process surrogate 
-on the principal component weights in order to predict spectra for unobserved
+on principal component weights in order to predict spectra for unobserved
 cosmologies \citep{higdon2008computer, higdon2010estcosmo}. 
 Our method compares favorably to Cosmic Emu on held-out cosmologies.
 
-For a comprehensive assessment of our Bayesian hierarchical DGP model, we 
-further study its performance in a simulation study with synthetic data mimicing 
-the Mira-Titan data. Additionally, we also train our model with data output from 
-the Code for Anisotropies in the Microwave Background \citep[CAMB,][]{lewis2011CAMB};
-this model output exhibits similar behavior to Mira-Titan as well, but has the benefit 
-of including a ``true" power spectrum corresponding toeach cosmology. 
+For a comprehensive assessment of our Bayesian hierarchical DGP, we benchmark
+its performance in two additional settings: with synthetic data mimicing 
+the Mira-Titan data and with real-world data from 
+the Code for Anisotropies in the Microwave Background \citep[CAMB,][]{lewis2011CAMB}.
+The CAMB model also exhibits similar behavior to Mira-Titan, but crucially
+provides a ``true" power spectrum corresponding to each cosmology. 
 
 The remainder of the paper is organized as follows.  Section \ref{sec:data} 
 introduces our motivating application, the Mira-Titan simulation suite.  
-Section \ref{sec:hm_fit} describes our hierarchical Bayesian DGP model and 
+Section \ref{sec:hm_fit} describes our hierarchical Bayesian DGP and 
 validates its performance on synthetic exercises and the CAMB simulations.  
 Leveraging this trained model, Section \ref{sec:pred} details 
 our procedure for predicting at unobserved cosmologies, benchmarking against
 state-of-the-art competitors on the CAMB and Mira-Titan simulations. 
 Section \ref{sec:disc} concludes with a discussion of our contributions and avenues for 
-future research.  We provide reproducible code and an R package for our Bayesian DGP model
-in a public git repository.\footnote{\url{https://github.com/stevewalsh124/dgp.hm}}
+future research.  We provide reproducible code and an {\sf R} package for our 
+Bayesian DGP model in a public git repository.\footnote{\url{https://github.com/stevewalsh124/dgp.hm}}
 \textcolor{red}{Please note: this repository is currently private until we 
 hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
 
