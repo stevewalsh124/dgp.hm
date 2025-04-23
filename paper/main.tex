@@ -11,6 +11,7 @@
 \usepackage{setspace}
 \usepackage{verbatim}
 \usepackage{graphicx}
+\usepackage{xcolor} % only for coloring text while revising
 
 \hypersetup{
     colorlinks=true,
@@ -113,29 +114,7 @@ of wavenumber, we are not able to directly observe it.  Rather, the simulation o
 a convoluted patchwork of potential spectra, which vary in fidelity and which are trusted
 only over particular wavenumber ranges.  Our first objective is to synthesize expert knowledge
 and all available simulation information into an effective estimate of the true underlying
-matter spectrum.  \textcolor{red}{(Do we want to narrate Figure 1 here?  Or move it to Section 2?  
-The figure provides a useful visual, but it needs to be talked through.  Comment on how
-the weighted average takes into account the appropriate ranges.  Explain why the weighted
-average on its own is not an effective estimate.  Motivate why we need a more complex model.
-This is also a good place to introduce wavenumber as $k$.  Is there a particular reason
-we plot it on the log scale?)}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=\linewidth, trim=0 13 0 45, clip=TRUE]{plot_data.png}
-    \caption{{\it Left:} The perturbation theory (solid green), low resolution runs (solid grey), 
-    and high resolution run  (solid pink) for a particular cosmology. 
-    The weighted average of these is shown in dashed orange. Dotted lines at the bottom 
-    indicate where each data type is deemed approximately unbiased. 
-    {\it Right:} Same, but restricted to wavenumber ($k$) values where the low resolution 
-    runs are approximately unbiased.
-    \textcolor{red}{(Either make one legend for both graphs or ditch the legend 
-    altogether and narrate the colors/line types in the caption.  If legend stays, "ind" needs
-    to go.  Pink line is too hard to see.  Make gray lines thinner and pink thicker?
-    Since later we will use a centered version, we could add a 3rd panel here that shows the
-    same data centered, so the reader can understand the connection to the plots later.)}}
-    \label{fig:plot_data}
-\end{figure}
+matter spectrum.  
 
 There are several challenges to estimating the underlying spectra.  Our model
 must: handle multiple correlated functional observations (like the low resolution
@@ -191,7 +170,7 @@ state-of-the-art competitors on the CAMB and Mira-Titan simulations.
 Section \ref{sec:disc} concludes with a discussion of our contributions and avenues for 
 future research.  We provide reproducible code and an {\sf R} package for our 
 Bayesian DGP model in a public git repository.\footnote{\url{https://github.com/stevewalsh124/dgp.hm}}
-\textcolor{red}{Please note: this repository is currently private until we 
+\textcolor{cyan}{Please note: this repository is currently private until we 
 hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
 
 %Leveraging these simulations allows for emulation and prediction of the matter power 
@@ -210,52 +189,84 @@ hear back regarding permissions for sharing the Mira-Titan data alongside our co
 %DGP framework to accurately estimate and predict power spectra for different 
 %cosmologies. 
 
-\section{Data}
+\section{Mira-Titan}
 \label{sec:data}
 
 The Mira-Titan simulation suite is a dataset consisting of simulated power spectra for 
 117 different cosmologies. Each of these cosmologies is specified by eight cosmological 
-parameter values: matter density, baryon density, amplitude of density fluctuations, 
+parameters: matter density, baryon density, amplitude of density fluctuations, 
 dimensionless Hubble parameter, spectral index of scalar perturbations,
 dark energy equation of state parameters, and neutrino density. For more details 
 on these parameters and their effects, see \cite{dodelson2020modern, aghanim2020planck, heitmann2016mira}. 
-Parameter ranges for each of these parameters are specified in Table 2.1 of \cite{moran2023mira}.
-For simplicity, we will denote these eight parameters as $\theta \in \mathbb{R}^8$. Different simulation 
-output exists for different values of a ninth value, the redshift; in this work, we fix 
-this value at 0. For each cosmology, we have a batch of 18 simulated spectra: an inexpensive 
+Parameter ranges are specified in Table 2.1 of \cite{moran2023mira}.
+For simplicity, we will denote these eight parameters as $\theta \in \mathbb{R}^8$. 
+There is an optional ninth parameter, the redshift, which we fix at 0.
+%Different simulation output exists for different values of a ninth value, 
+%the redshift; in this work, we fix 
+%this value at 0. 
+For each cosmology, Mira-Titan contains a batch of 18 simulated spectra: an inexpensive 
 spectrum estimated from linear perturbation theory ($y_p$), 16 spectra estimated from 
-lower-resolutions simulations ($y_{\ell_r}, r \in \{1,\dots,16\}$), and one spectrum from 
+lower resolutions simulations ($y_{\ell_r}, r \in \{1,\dots,16\}$), and one spectrum from 
 a high resolution simulation ($y_h$). 
 
-These spectra are represented as a function of wavenumber $k$, and hence is denoted $P(k)$. 
-Following \cite{moran2023mira}, we model on the emulation space 
-$\mathcal{P}(k)=\log_{10}\left(\frac{k^{1.5}P(k)}{2\pi^2}\right)$. The output is available 
-for $0.001 \leq k \leq 5$ for $n=351$ different values of $k$, but each data type has differing 
-values where it is deemed approximately unbiased. For $k<0.04$, only $y_p$ provides a reliable 
-estimate of the spectra. $y_{\ell_r}$ are valid for $0.04 \leq k \leq 0.25$, and $y_h$ is valid 
-for $0.04 \leq k \leq 5$. Figure \ref{fig:plot_data} shows an example of the output for a 
-particular cosmology.
+\begin{figure}[ht]
+    \centering
+    \includegraphics[width=\linewidth, trim=0 13 0 45, clip=TRUE]{plot_data.png}
+    \caption{{\it Left:} The perturbation theory (solid green), low resolution runs (solid grey), 
+    and high resolution run  (solid pink) for a particular cosmology. 
+    The weighted average of these is shown in dashed orange. Dotted lines at the bottom 
+    indicate where each data type is deemed approximately unbiased. 
+    {\it Right:} Same, but restricted to wavenumber ($k$) values where the low resolution 
+    runs are approximately unbiased.
+    \textcolor{red}{(Either make one legend for both graphs or ditch the legend 
+    altogether and narrate the colors/line types in the caption.  If legend stays, "ind" needs
+    to go.  Pink line is too hard to see.  Make gray lines thinner and pink thicker?
+    Since later we will use a centered version, we could add a 3rd panel here that shows the
+    same data centered, so the reader can understand the connection to the plots later.)}}
+    \label{fig:plot_data}
+\end{figure}
+
+These spectra are represented as a function of wavenumber $k$.  Following 
+\cite{moran2023mira}, we model on the emulation space 
+$\mathcal{P}(k)=\log_{10}\left(\frac{k^{1.5}P(k)}{2\pi^2}\right)$, where $P(k)$ represents the
+original spectra. Output is available for $n=351$ values of $k$, spanning
+$0.001 \leq k \leq 5$, but each data type has unique wavenumber ranges
+where it is deemed approximately unbiased. For $k<0.04$, only $y_p$ provides a reliable 
+estimate of the true spectra. $y_{\ell_r}$ are valid for $0.04 \leq k \leq 0.25$, and 
+$y_h$ is valid for $0.04 \leq k \leq 5$.  Figure \ref{fig:plot_data} shows an example 
+of the output for a particular cosmology. \textcolor{red}{(Add some narration here?  Something
+that doesn't repeat the caption but complements it.)}
 
 From the multiple low- and high-resolution spectra across all cosmologies, 
 \cite{moran2023mira} obtained precision estimates of these spectra across the $n$ 
 wavenumber values ($p_1,\dots,p_n$) using a log-log regression model, and a multiplier 
-$c$ for the increase in precision from the low- to high- resolution output. Given 
-that the perturbation theory spectra is non-stochastic, we treat this as having a 
+$c$ for the increase in precision from the low- to high- resolution output. 
+\textcolor{red}{(I'm missing a bit of context here - why did we need the precision
+estimates in the first place?  Can we show a graph of $p_1,\dots, p_n$ to illustrate
+how these change over $k$ values?)}
+Given that the perturbation theory spectra is non-stochastic, we treat this as having a 
 precision of $10^5$. We leverage these precision estimates within our model at each 
 data type's unbiased wavenumber values to define 
 $\Lambda_p = \text{diag}\left((10^5)_{k < 0.04}\right)$, 
 $\Lambda_{\ell} = \text{diag}\left(16(p_1,\dots,p_n)_{0.04 \leq k < 0.25}\right)$, 
 $\Lambda_h = \text{diag}\left(c(p_1,\dots,p_n)_{0.04 \leq k \leq 5}\right)$. 
+\textcolor{red}{(Unless we are really short on space, could we show these in
+actual "bmatrix" form?  Or visually somehow?)}
 Here, each precision matrix is diagonal and the diagonal elements consist of the 
 precision values or zero, depending on whether the $k$ value is approximately unbiased 
 for that data type. With this, we calculate a weighted average for each cosmology: 
 $\bar y = \Lambda^{-1}(\Lambda_p y_p + \Lambda_h y_h + \Lambda_{\ell} \bar{y}_\ell)$, 
 where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ is the precision matrix for 
-the weighted average for a particular cosmology.
+the weighted average for a particular cosmology. \textcolor{red}{(Revisit the figure and
+comment on the weighted average.  Explain why the weighted
+average on its own is not an effective estimate.  Motivate why we need a more complex model.)}
 
-We will handle the data in two stages.  First, we will focus on 111 training cosmologies 
-and obtain the best estimated spectrum for each.  Second, we will use these estimates 
-to predict the spectra for six held-out cosmologies.
+We consider a training-testing split with 111 cosmologies used for estimation and 6 
+cosmologies held out for testing.  Our ultimate objective is to effectively predict
+the underlying power matter spectra for the held-out cosmologies based on their 
+8-dimensional input configuration (Section \ref{sec:pred}).  But first, we must 
+obtain effective estimates of the underlying spectrum for each training 
+cosmology (Section \ref{sec:hm_fit}). 
 
 \section{Bayesian Hierarchical Modeling for Particular Cosmologies}
 \label{sec:hm_fit}
