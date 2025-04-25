@@ -64,35 +64,44 @@ cbcols <- palette.colors(palette = "Okabe-Ito")
 #1 black, 2 orange, 3 skyblue , 4 bluishgreen, 5 yellow 
 #6 blue, 7 vermillion,  8 reddishpurple, 9 gray 
 
-par(mfrow=c(1,2))
+par(mfrow=c(1,3))
 matplot(log10(k), y_lo, col = cbcols[9], 
-        type = "l", lty = 1, ylim = range(y_avg),
+        type = "l", lty = 1, ylim = range(y_avg), lwd=0.5,
         xlab=expression(log[10](k)), 
         ylab=expression(paste("\U1D4AB","(k)")))
 lines(log10(k), y_pt, col = cbcols[4])
-lines(log10(k), y_hi, col = cbcols[8])
+lines(log10(k), y_hi, col = cbcols[8], lwd=2)
 lines(log10(k)[index_list$pert.ix], rep(-1, length(index_list$pert.ix)), 
       col = cbcols[4], lty = 3, lwd=3)
 lines(log10(k)[index_list$lowres.ix], rep(-1.1, length(index_list$lowres.ix)), 
       col = cbcols[9], lty = 3, lwd=3)
 lines(log10(k)[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)), 
       col = cbcols[8], lty = 3, lwd=3)
-lines(log10(k), y_avg, col = cbcols[2], lty = 2, lwd = 4)
-legend(x = "right", legend = c("pert","low res","hi res", "wt avg","ind"),
-       col = cbcols[c(4,9,8,2,1)], lty = c(1,1,1,2,3), 
-       lwd = c(1,1,1,4,3))
+lines(log10(k), y_avg, col = cbcols[2], lty = 2, lwd = 3)
 
-# Same plot, but only for the low-resolution indices
+# Same as first plot, but only for the low-resolution indices
 matplot(log10(k)[index_list$lowres.ix], y_lo[index_list$lowres.ix,], col = cbcols[9], 
-        type = "l", lty = 1, ylim = range(y_avg[index_list$lowres.ix]),
+        type = "l", lty = 1, ylim = range(y_avg[index_list$lowres.ix])+c(-.05,.05), lwd=0.5,
         xlab=expression(log[10](k)), 
         ylab=expression(paste("\U1D4AB","(k)")))
-lines(log10(k)[index_list$lowres.ix], y_hi[index_list$lowres.ix], col = cbcols[8])
+lines(log10(k)[index_list$lowres.ix], y_hi[index_list$lowres.ix], col = cbcols[8], lwd=2)
 lines(log10(k)[index_list$lowres.ix], y_avg[index_list$lowres.ix], 
-      col = cbcols[2], lty = 2, lwd = 4)
-legend(x = "bottomright", legend = c("low res","hi res", "wt avg"),
-       col = cbcols[c(9,8,2)], lty = c(1,1,2), 
-       lwd = c(1,1,4))
+      col = cbcols[2], lty = 2, lwd = 3)
+legend(x = "topleft", legend = c("pert","low res","hi res", "wt avg"),
+       col = cbcols[c(4,9,8,2)], lty = c(1,1,1,2), 
+       lwd = c(1,0.5,2,3), cex=1.25,
+       inset = 0.01, bty="n"  # nudges legend inward
+)
+
+# same as first plot, but posterior mean subtracted
+matplot(log10(k), y_lo - fit$m, col = cbcols[9], 
+        type = "l", lty = 1, ylim = c(-.015, .015), lwd=0.5,
+        xlab=expression(log[10](k)),
+        ylab=expression(paste("\U1D4AB","(k)", ", centered")))
+lines(log10(k), y_pt-fit$m, col = cbcols[4])
+lines(log10(k), y_hi-fit$m, col = cbcols[8], lwd=2)
+lines(log10(k), y_avg-fit$m, 
+      col = cbcols[2], lty = 2, lwd = 3)
 
 
 ######################

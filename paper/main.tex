@@ -88,8 +88,8 @@ principal components analysis, Mira-Titan, surrogate, uncertainty quantification
 
 Computer simulation experiments are invaluable tools in the study of cosmology.
 Experiments which simulate the expansion of the universe are growing
-in prevalance and complexity \citep[e.g.,][]{lawrence2010coyote,moran2023mira}
-\textcolor{red}{(more cites here? possibly those commented out above?)}.  
+in prevalance and complexity \citep[e.g.,][]{lawrence2010coyote,derose2019aemulus,
+nishimichi2019dark,angulo2021bacco,euclid2021euclid,moran2023mira}.  
 We are particularly motivated by a simulation
 of the matter power spectrum, which describes the distribution of matter as a 
 function of spatial scale. 
@@ -138,7 +138,7 @@ Mira-Titan simulation.
 Our second objective is to leverage simulation data from a limited set of
 cosmologies in order to predict power matter spectra for unobserved cosmologies.
 Due to the computationally expensive nature of the Mira-Titan simulation suite
-\textcolor{red}{(do we know how long it takes to run?)},
+(one batch of simulations can take multiple weeks to run on a supercomputer),
 it is infeasible to evaluate the simulation for every possible eight-dimensional
 cosmological configuration which may be of interest.  Instead, we desire
 a statistical ``emulator'' or ``surrogate model'' 
@@ -216,13 +216,10 @@ a high resolution simulation ($y_h$).
     and high resolution run  (solid pink) for a particular cosmology. 
     The weighted average of these is shown in dashed orange. Dotted lines at the bottom 
     indicate where each data type is deemed approximately unbiased. 
-    {\it Right:} Same, but restricted to wavenumber ($k$) values where the low resolution 
+    {\it Middle:} Same as left, but restricted to wavenumber ($k$) values where the low resolution 
     runs are approximately unbiased.
-    \textcolor{red}{(Either make one legend for both graphs or ditch the legend 
-    altogether and narrate the colors/line types in the caption.  If legend stays, "ind" needs
-    to go.  Pink line is too hard to see.  Make gray lines thinner and pink thicker?
-    Since later we will use a centered version, we could add a 3rd panel here that shows the
-    same data centered, so the reader can understand the connection to the plots later.)}}
+    {\it Right:} Same as left, but with estimated posterior mean subtracted.
+    \textcolor{red}{Rerun on Windows for $\mathcal{P}$}}
     \label{fig:plot_data}
 \end{figure}
 
@@ -234,32 +231,60 @@ $0.001 \leq k \leq 5$, but each data type has unique wavenumber ranges
 where it is deemed approximately unbiased. For $k<0.04$, only $y_p$ provides a reliable 
 estimate of the true spectra. $y_{\ell_r}$ are valid for $0.04 \leq k \leq 0.25$, and 
 $y_h$ is valid for $0.04 \leq k \leq 5$.  Figure \ref{fig:plot_data} shows an example 
-of the output for a particular cosmology. \textcolor{red}{(Add some narration here?  Something
-that doesn't repeat the caption but complements it.)}
+of the output for a particular cosmology. When we focus on $k$ values where $y_{\ell_r}$ 
+is valid, we see each low-resolution and the high-resolution run oscillate around 
+a mean term, which is relatively smooth, compared to these realizations. When such a 
+mean term is subtracted, we will obtain a plot like the right panel in 
+Figure \ref{fig:plot_data}.
 
 From the multiple low- and high-resolution spectra across all cosmologies, 
 \cite{moran2023mira} obtained precision estimates of these spectra across the $n$ 
 wavenumber values ($p_1,\dots,p_n$) using a log-log regression model, and a multiplier 
 $c$ for the increase in precision from the low- to high- resolution output. 
-\textcolor{red}{(I'm missing a bit of context here - why did we need the precision
-estimates in the first place?  Can we show a graph of $p_1,\dots, p_n$ to illustrate
-how these change over $k$ values?)}
+We can easily incorporate these estimates in our model to account for nonstationarity 
+(i.e., non-constant variance) of the runs. We see as $k$ increases, the runs' precision 
+increases in the middle panel of Figure \ref{fig:plot_data}). 
 Given that the perturbation theory spectra is non-stochastic, we treat this as having a 
 precision of $10^5$. We leverage these precision estimates within our model at each 
-data type's unbiased wavenumber values to define 
-$\Lambda_p = \text{diag}\left((10^5)_{k < 0.04}\right)$, 
-$\Lambda_{\ell} = \text{diag}\left(16(p_1,\dots,p_n)_{0.04 \leq k < 0.25}\right)$, 
-$\Lambda_h = \text{diag}\left(c(p_1,\dots,p_n)_{0.04 \leq k \leq 5}\right)$. 
-\textcolor{red}{(Unless we are really short on space, could we show these in
-actual "bmatrix" form?  Or visually somehow?)}
-Here, each precision matrix is diagonal and the diagonal elements consist of the 
-precision values or zero, depending on whether the $k$ value is approximately unbiased 
-for that data type. With this, we calculate a weighted average for each cosmology: 
+data type's unbiased wavenumber values to define the following diagonal precision matrix:
+% $\Lambda_p = \text{diag}\left((10^5)_{k < 0.04}\right)$, 
+% $\Lambda_{\ell} = \text{diag}\left(16\times(p_1,\dots,p_n)_{0.04 \leq k < 0.25}\right)$, 
+% $\Lambda_h = \text{diag}\left(c\times(p_1,\dots,p_n)_{0.04 \leq k \leq 5}\right)$. 
+
+\[
+\Lambda = 
+\begin{bmatrix}
+\Lambda_p & 0 & 0 \\
+0 & \Lambda_\ell & 0 \\
+0 & 0 & \Lambda_h
+\end{bmatrix}
+=
+\begin{bmatrix}
+\operatorname{diag}(10^5, \ldots, 10^5) &  &  \\
+ & \operatorname{diag}(16\times(p_1, \ldots, p_n)) &  \\
+ &  & \operatorname{diag}(c\times(p_1, \ldots, p_n))
+\end{bmatrix}
+\]
+
+\[
+\text{where } 
+\begin{cases}
+\Lambda_p \text{ for } k < 0.04 \\
+\Lambda_\ell \text{ for } 0.04 \leq k < 0.25 \\
+\Lambda_h \text{ for } 0.25 \leq k \leq 5
+\end{cases}
+\]
+
+
+Above, each matrix element is either the corresponding precision value or zero, 
+depending on whether the $k$ value is approximately unbiased for that data type. 
+With this, we calculate a weighted average for each cosmology: 
 $\bar y = \Lambda^{-1}(\Lambda_p y_p + \Lambda_h y_h + \Lambda_{\ell} \bar{y}_\ell)$, 
 where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ is the precision matrix for 
-the weighted average for a particular cosmology. \textcolor{red}{(Revisit the figure and
-comment on the weighted average.  Explain why the weighted
-average on its own is not an effective estimate.  Motivate why we need a more complex model.)}
+the weighted average for a particular cosmology. On its own, the weighted average
+has too much variation baked in from the limited number of model runs. There is also
+no spatial dependence accounting for the correlated errors seen in Figure \ref{fig:plot_data}.
+To account for these modeling challenges, we need a more complex model.
 
 We consider a training-testing split with 111 cosmologies used for estimation and 6 
 cosmologies held out for testing.  Our ultimate objective is to effectively predict
@@ -449,12 +474,11 @@ allowing us to accurately assess posterior mean estimates and credible intervals
 
 \begin{figure}
     \centering
-    \includegraphics[width=6in]{CAMB_fit_model1.jpg}
-    \caption{Example of model fit for the first model from the CAMB data, with LOESS
-             mean term subtracted. \textcolor{red}{Currently, we can compare the 
-             orange lines (posterior mean and 95\% credible interval) to the blue line,
-             representing the infinite-resolution ``true" spectrum. Steve: Update this plot to be
-             more clean, use different line types: dotted, dash, solid, etc.}}   
+    \includegraphics[width=\textwidth]{CAMB_fit_model1.jpg}
+    \caption{Example of DGP.HM model fit for the first batch of model runs from the CAMB data, 
+             with LOESS mean term subtracted. We can compare the orange lines 
+             (posterior mean and dotted 95\% credible interval) to the light blue line,
+             representing the infinite-resolution ``true" spectrum.}   
     \label{fig:fit_camb}
 \end{figure}
 
@@ -462,8 +486,10 @@ We use 32 CAMB batches to train the DGP.HM model and reserve the other 32 as a t
 To imitate the role of the perturbation theory output of Mira-Titan, we anchor estimates of the CAMB
 power spectrum at the infinite-resolution for $\log_{10}(k) < -1.7$, and then rely 
 strictly on the low- and high-resolution runs for $k$ above this. We take a weighted
-average of the CAMB runs and assume heteroskedastic errors in a similar fashion, now with
-no spatial dependence (compare low-resolution runs of Figure \ref{fig:fit_camb} 
+average of the CAMB runs and assume heteroskedastic errors in a similar fashion. For the CAMB
+data, lengthscale estimates are consistently around $3\times 10^{-7}$, evidence that we
+can simplify our covariance structure to contain no spatial dependence 
+(compare low-resolution runs of Figure \ref{fig:fit_camb} 
 with Figure \ref{fig:plot_data}).
 
 \subsection{Estimating Spectra with Mira-Titan Data}
