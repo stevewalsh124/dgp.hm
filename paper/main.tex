@@ -11,7 +11,11 @@
 \usepackage{setspace}
 \usepackage{verbatim}
 \usepackage{graphicx}
+\usepackage{bbm} % for indicator function
 \usepackage{xcolor} % only for coloring text while revising
+
+\usepackage{tikz} % for pretty diagonal matrix
+\usetikzlibrary{matrix,decorations.pathreplacing,calc}
 
 \hypersetup{
     colorlinks=true,
@@ -105,20 +109,18 @@ Our overarching goal is to leverage such simulation data to
 first estimate and then predict underlying power matter spectra for various 
 cosmological parameterizations.
 
-
 The Mira-Titan simulation suite \citep{moran2023mira}
 defines ``cosmologies'' according to eight cosmological parameters (more on this
 in Section \ref{sec:data}).  For a particular cosmology, the simulation of the power matter spectra 
 is rather complex.  Although we presume there exists some true matter spectra as a function
 of wavenumber, we are not able to directly observe it.  Rather, the simulation outputs 
-a convoluted patchwork of potential spectra, which vary in fidelity and which are trusted
+a convoluted patchwork of potential spectra, which vary in fidelity and are trusted
 only over particular wavenumber ranges.  Our first objective is to synthesize expert knowledge
 and all available simulation information into an effective estimate of the true underlying
 matter spectrum.  
 
 There are several challenges to estimating the underlying spectra.  Our model
-must: handle multiple correlated functional observations (like the low resolution
-runs shown in Figure \ref{fig:plot_data}), offer enough 
+must: handle multiple correlated functional observations, offer enough 
 flexibility to accommodate the nonstationarity present in power matter spectra 
 (which vary in smoothenss across wavenumbers), provide effective uncertainty
 quantification (UQ), and allow for the incorporation of expert knowledge 
@@ -131,9 +133,12 @@ flexibility.  The Bayesian framework facilitates UQ and the incorporation of pri
 knowledge.  While Bayesian DGPs have been previously deployed for computer experiments 
 with scalar responses \citep[e.g.,][]{sauer2023active,sauer2023vecchia,ming2023deep}, 
 they have yet to be extended to correlated functional outputs. 
-We will demonstrate profiency on synthetic examples and a low fidelity
-cosmological simulation, before deploying our model on the motivating 
-Mira-Titan simulation.
+To demonstrate the profiency of our Bayesian hierarchical DGP, 
+we benchmark its performance in two unique settings: with synthetic data 
+mimicing the Mira-Titan data and with real-world data from 
+the Code for Anisotropies in the Microwave Background \citep[CAMB;][]{lewis2011CAMB}.
+The CAMB model also exhibits similar behavior to Mira-Titan, but crucially
+provides a ``true" power spectrum corresponding to each cosmology.
 
 Our second objective is to leverage simulation data from a limited set of
 cosmologies in order to predict power matter spectra for unobserved cosmologies.
@@ -152,13 +157,6 @@ DGP model and basis function representations, to train a Gaussian process surrog
 on principal component weights in order to predict spectra for unobserved
 cosmologies \citep{higdon2008computer, higdon2010estcosmo}. 
 Our method compares favorably to Cosmic Emu on held-out cosmologies.
-
-For a comprehensive assessment of our Bayesian hierarchical DGP, we benchmark
-its performance in two additional settings: with synthetic data mimicing 
-the Mira-Titan data and with real-world data from 
-the Code for Anisotropies in the Microwave Background \citep[CAMB,][]{lewis2011CAMB}.
-The CAMB model also exhibits similar behavior to Mira-Titan, but crucially
-provides a ``true" power spectrum corresponding to each cosmology. 
 
 The remainder of the paper is organized as follows.  Section \ref{sec:data} 
 introduces our motivating application, the Mira-Titan simulation suite.  
@@ -219,7 +217,9 @@ a high resolution simulation ($y_h$).
     {\it Middle:} Same as left, but restricted to wavenumber ($k$) values where the low resolution 
     runs are approximately unbiased.
     {\it Right:} Same as left, but with estimated posterior mean subtracted.
-    \textcolor{red}{Rerun on Windows for $\mathcal{P}$}}
+    \textcolor{red}{Rerun on Windows for $\mathcal{P}$.  Make axis/labels and legend 
+    a bit larger so they are easier to read.  Am I tripping or are the horizontal lines
+    in the left panel not lined up correctly?}}
     \label{fig:plot_data}
 \end{figure}
 
@@ -232,50 +232,113 @@ where it is deemed approximately unbiased. For $k<0.04$, only $y_p$ provides a r
 estimate of the true spectra. $y_{\ell_r}$ are valid for $0.04 \leq k \leq 0.25$, and 
 $y_h$ is valid for $0.04 \leq k \leq 5$.  Figure \ref{fig:plot_data} shows an example 
 of the output for a particular cosmology. When we focus on $k$ values where $y_{\ell_r}$ 
-is valid, we see each low-resolution and the high-resolution run oscillate around 
-a mean term, which is relatively smooth, compared to these realizations. When such a 
+is valid (center panel), we see each low-resolution and the high-resolution run oscillate around 
+a mean term, which is relatively smooth, compared to these realizations. When this
 mean term is subtracted, we will obtain a plot like the right panel in 
-Figure \ref{fig:plot_data}.
+Figure \ref{fig:plot_data} \textcolor{red}{(This plot goes back to the original range,
+would it be prettier and easier for the reader to follow if we kept it to the 
+range of the middle panel here?)}
 
-From the multiple low- and high-resolution spectra across all cosmologies, 
-\cite{moran2023mira} obtained precision estimates of these spectra across the $n$ 
-wavenumber values ($p_1,\dots,p_n$) using a log-log regression model, and a multiplier 
-$c$ for the increase in precision from the low- to high- resolution output. 
-We can easily incorporate these estimates in our model to account for nonstationarity 
-(i.e., non-constant variance) of the runs. We see as $k$ increases, the runs' precision 
-increases in the middle panel of Figure \ref{fig:plot_data}). 
-Given that the perturbation theory spectra is non-stochastic, we treat this as having a 
-precision of $10^5$. We leverage these precision estimates within our model at each 
-data type's unbiased wavenumber values to define the following diagonal precision matrix:
+Notice, in the center panel of Figure \ref{fig:plot_data}, the precision of each
+spectra increases as $k$ increases.  The curves get progressively tighter from left
+to right.  We would like to conveniently wrap this domain-specific knowledge inside
+our Bayesian framework later.  To this end, \cite{moran2023mira} 
+used the multiple low- and high-resolution spectra across all cosmologies to
+obtained precision estimates of these spectra across the $n$ 
+wavenumber values ($p_1,\dots,p_n$) using a log-log regression model and a multiplier 
+$c$ for the increase in precision from the low- to high- resolution output.
+To streamline notation, we denote three unique diagonal matrices:
+\[
+\Lambda_p = 
+   \begin{tikzpicture}[decoration={brace,amplitude=5pt},baseline=(current bounding box.west)]
+     \matrix (magic) [matrix of math nodes,left delimiter=(,right delimiter=)] {
+      10^5 \\
+      & \ddots \\
+      & & 10^5 \\
+      & & & 0 \\
+      & & & & 0 \\
+      & & & & & \ddots \\
+      & & & & & & 0\\
+     };
+     \draw[decorate] (magic-1-1.north) -- (magic-3-3.north east) node[above=5pt,midway,sloped] {$k < 0.04$};
+   \end{tikzpicture}
+\quad
+\Lambda_l = 
+   \begin{tikzpicture}[decoration={brace,amplitude=5pt},baseline=(current bounding box.west)]
+     \matrix (magic) [matrix of math nodes,left delimiter=(,right delimiter=)] {
+      0 \\
+      & \ddots \\
+      & & 0 \\
+      & & & 10p_1 \\
+      & & & & \ddots \\
+      & & & & & 10p_n ? \\
+      & & & & & & 0 \\
+      & & & & & & & \ddots \\
+      & & & & & & & & 0 \\
+     };
+     \draw[decorate] (magic-4-4.north) -- (magic-6-6.north east) node[above=5pt,midway,sloped] {$0.04\leq k < 0.25$};
+   \end{tikzpicture}
+\]
+\[
+\Lambda_h = 
+   \begin{tikzpicture}[decoration={brace,amplitude=5pt},baseline=(current bounding box.west)]
+     \matrix (magic) [matrix of math nodes,left delimiter=(,right delimiter=)] {
+      0 \\
+      & \ddots \\
+      & & 0 \\
+      & & & cp_1 \\
+      & & & & \ddots \\
+      & & & & & cp_n \\
+     };
+     \draw[decorate] (magic-4-4.north) -- (magic-6-6.north east) node[above=5pt,midway,sloped] {$0.25\leq k \leq 5$};
+   \end{tikzpicture}
+\]
+\textcolor{red}{(@Steve - I am still quite confused here.  Are the above matrices helpful?
+I'm confused by $p_i$.  Isn't there some overlap
+between the low and high res runs?  The piecewise form you had doesn't have any overlap.  You
+had the large $\Lambda$ as the concatenation of the matrices, but then you also had
+it as a sum.  Perhaps we should talk this out sometime.  There has to be an easier 
+way to convey how we calculate the weighted average.  Perhaps we could represent 
+this better with indicator functions?  
+Or as a function of $k_i$?  The equations below are just some ideas.)}
+\[
+\Lambda_p(k) = 10^5 \mathbbm{I}_{\{k < 0.04\}}
+\]
+where $\mathbbm{I}$ is the indicator function.
+\[
+\Lambda(k_i) = \begin{cases}
+    10^5 \text{ for } k_i < 0.04 \text{  (perturbation theory)}\\
+    16p_i \text{ for } 0.04 \leq k_i < 0.25 \text{  (low resolution)}\\
+    cp_i \text{ for } 0.25 \leq k_i \leq 5 \text{  (high resolution)}
+    \end{cases},
+\]
+where we use the sufficiently high precision of $10^5$ to impose the deterministic
+nature of the perturbation theory output.  \textcolor{red}{(Then comment on how 
+we can put this all into one big diagonal matrix that we multiply to our y values?)}
+
+
+
 % $\Lambda_p = \text{diag}\left((10^5)_{k < 0.04}\right)$, 
 % $\Lambda_{\ell} = \text{diag}\left(16\times(p_1,\dots,p_n)_{0.04 \leq k < 0.25}\right)$, 
 % $\Lambda_h = \text{diag}\left(c\times(p_1,\dots,p_n)_{0.04 \leq k \leq 5}\right)$. 
 
-\[
-\Lambda = 
-\begin{bmatrix}
-\Lambda_p & 0 & 0 \\
-0 & \Lambda_\ell & 0 \\
-0 & 0 & \Lambda_h
-\end{bmatrix}
-=
-\begin{bmatrix}
-\operatorname{diag}(10^5, \ldots, 10^5) &  &  \\
- & \operatorname{diag}(16\times(p_1, \ldots, p_n)) &  \\
- &  & \operatorname{diag}(c\times(p_1, \ldots, p_n))
-\end{bmatrix}
-\]
+%\[
+%\Lambda = 
+%\begin{bmatrix}
+%\Lambda_p & 0 & 0 \\
+%0 & \Lambda_\ell & 0 \\
+%0 & 0 & \Lambda_h
+%\end{bmatrix}
+%=
+%\begin{bmatrix}
+%\operatorname{diag}(10^5, \ldots, 10^5) &  &  \\
+% & \operatorname{diag}(16\times(p_1, \ldots, p_n)) &  \\
+% &  & \operatorname{diag}(c\times(p_1, \ldots, p_n))
+%\end{bmatrix}
+%\]
 
-\[
-\text{where } 
-\begin{cases}
-\Lambda_p \text{ for } k < 0.04 \\
-\Lambda_\ell \text{ for } 0.04 \leq k < 0.25 \\
-\Lambda_h \text{ for } 0.25 \leq k \leq 5
-\end{cases}
-\]
-
-
+\textcolor{red}{(This part will need some revising, it is still unclear to me
+how the weighted average is calculated.  Although I know in reality it is super simple.}
 Above, each matrix element is either the corresponding precision value or zero, 
 depending on whether the $k$ value is approximately unbiased for that data type. 
 With this, we calculate a weighted average for each cosmology: 
@@ -297,13 +360,18 @@ cosmology (Section \ref{sec:hm_fit}).
 \label{sec:hm_fit}
 
 Here we describe our first contribution: the use of a Bayesian hierarchical model 
-to estimate the underlying spectra (and quantify uncertainty) for a particular cosmology.  
-We focus solely on one cosmology, independent of the others.
+to estimate the underlying spectra and quantify uncertainty for a particular cosmology,
+independent of the others.  Let $D_n = \{X_n, \bar{Y}, \Lambda\}$ represent the aggregated 
+data for a particular cosmology.  Let $S$ represent the true (but unknown) underlying
+power matter spectra from which $D_n$ was generated.
+\textcolor{red}{(What is X?  Why is $\bar{Y}$ capital here, but it wasn't earlier?
+Since $\Lambda$ is fixed and doesn't change, I do not think we need to consider it part
+of the data.)}
 
 \subsection{Gaussian Process Model}
 
-Here, we introduce the Bayesian Gaussian Process (GP) model leveraging the aggregated 
-data $D_n \equiv \{X_n, \bar Y, \Lambda\}$ for a particular cosmology. We assume 
+
+Here, we introduce the Bayesian Gaussian Process (GP) model We assume 
 the matter power spectrum $S$ for a given cosmology follows a GP with mean $\mu$ 
 and covariance matrix $\Sigma_S$.
 
