@@ -207,19 +207,17 @@ spectrum estimated from linear perturbation theory ($y_p$), 16 spectra estimated
 lower resolutions simulations ($y_{\ell_r}, r \in \{1,\dots,16\}$), and one spectrum from 
 a high resolution simulation ($y_h$). 
 
+% after \linewidth:, trim=0 13 0 45, clip=TRUE
 \begin{figure}[ht]
-    \centering
-    \includegraphics[width=\linewidth, trim=0 13 0 45, clip=TRUE]{plot_data.png}
+    \centering 
+    \includegraphics[width=\linewidth]{plot_data.png}
     \caption{{\it Left:} The perturbation theory (solid green), low resolution runs (solid grey), 
     and high resolution run  (solid pink) for a particular cosmology. 
     The weighted average of these is shown in dashed orange. Dotted lines at the bottom 
     indicate where each data type is deemed approximately unbiased. 
     {\it Middle:} Same as left, but restricted to wavenumber ($k$) values where the low resolution 
     runs are approximately unbiased.
-    {\it Right:} Same as left, but with estimated posterior mean subtracted.
-    \textcolor{red}{Rerun on Windows for $\mathcal{P}$.  Make axis/labels and legend 
-    a bit larger so they are easier to read.  Am I tripping or are the horizontal lines
-    in the left panel not lined up correctly?}}
+    {\it Right:} Same as middle, but with estimated posterior mean subtracted.}
     \label{fig:plot_data}
 \end{figure}
 
@@ -235,9 +233,7 @@ of the output for a particular cosmology. When we focus on $k$ values where $y_{
 is valid (center panel), we see each low-resolution and the high-resolution run oscillate around 
 a mean term, which is relatively smooth, compared to these realizations. When this
 mean term is subtracted, we will obtain a plot like the right panel in 
-Figure \ref{fig:plot_data} \textcolor{red}{(This plot goes back to the original range,
-would it be prettier and easier for the reader to follow if we kept it to the 
-range of the middle panel here?)}
+Figure \ref{fig:plot_data}.
 
 Notice, in the center panel of Figure \ref{fig:plot_data}, the precision of each
 spectra increases as $k$ increases.  The curves get progressively tighter from left
@@ -542,7 +538,7 @@ allowing us to accurately assess posterior mean estimates and credible intervals
 
 \begin{figure}
     \centering
-    \includegraphics[width=\textwidth]{CAMB_fit_model1.jpg}
+    \includegraphics[width=\textwidth]{CAMB_fit_model1.png}
     \caption{Example of DGP.HM model fit for the first batch of model runs from the CAMB data, 
              with LOESS mean term subtracted. We can compare the orange lines 
              (posterior mean and dotted 95\% credible interval) to the light blue line,
