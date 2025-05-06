@@ -236,113 +236,45 @@ mean term is subtracted, we will obtain a plot like the right panel in
 Figure \ref{fig:plot_data}.
 
 Notice, in the center panel of Figure \ref{fig:plot_data}, the precision of each
-spectra increases as $k$ increases.  The curves get progressively tighter from left
-to right.  We would like to conveniently wrap this domain-specific knowledge inside
-our Bayesian framework later.  To this end, \cite{moran2023mira} 
+low/high resolution spectra increases as $k$ increases.  The curves get progressively 
+tighter from left to right.  We would like to conveniently wrap this domain-specific 
+knowledge inside our Bayesian framework later.  To this end, \cite{moran2023mira} 
 used the multiple low- and high-resolution spectra across all cosmologies to
-obtained precision estimates of these spectra across the $n$ 
-wavenumber values ($p_1,\dots,p_n$) using a log-log regression model and a multiplier 
-$c$ for the increase in precision from the low- to high- resolution output.
-To streamline notation, we denote three unique diagonal matrices:
+obtained precision estimates, $p_1,\dots, p_n$, across the $n$ 
+wavenumber values using a log-log regression model.
+% and a multiplier $c$ for the increase in precision from the 
+% low- to high- resolution output.
+We use these estimates to define three diagonal precision matrices, 
+one for each data type (perturbation theory, low resolution, and high resolution).
+Specifically, denote $\Lambda_p$, $\Lambda_\ell$, and $\Lambda_h$ as the
+diagonal matrices with elements
 \[
-\Lambda_p = 
-   \begin{tikzpicture}[decoration={brace,amplitude=5pt},baseline=(current bounding box.west)]
-     \matrix (magic) [matrix of math nodes,left delimiter=(,right delimiter=)] {
-      10^5 \\
-      & \ddots \\
-      & & 10^5 \\
-      & & & 0 \\
-      & & & & 0 \\
-      & & & & & \ddots \\
-      & & & & & & 0\\
-     };
-     \draw[decorate] (magic-1-1.north) -- (magic-3-3.north east) node[above=5pt,midway,sloped] {$k < 0.04$};
-   \end{tikzpicture}
+\Lambda_p^{(ii)} = \begin{cases}
+    10^5 &\text{for } k_i < 0.04 \\
+    0  &\text{otherwise}\\
+    \end{cases}
 \quad
-\Lambda_l = 
-   \begin{tikzpicture}[decoration={brace,amplitude=5pt},baseline=(current bounding box.west)]
-     \matrix (magic) [matrix of math nodes,left delimiter=(,right delimiter=)] {
-      0 \\
-      & \ddots \\
-      & & 0 \\
-      & & & 10p_1 \\
-      & & & & \ddots \\
-      & & & & & 10p_n ? \\
-      & & & & & & 0 \\
-      & & & & & & & \ddots \\
-      & & & & & & & & 0 \\
-     };
-     \draw[decorate] (magic-4-4.north) -- (magic-6-6.north east) node[above=5pt,midway,sloped] {$0.04\leq k < 0.25$};
-   \end{tikzpicture}
+\Lambda_\ell^{(ii)} = \begin{cases}
+    16p_i &\text{for } 0.04 \leq k_i < 0.25 \\
+    0  &\text{otherwise}\\
+    \end{cases}
+\quad
+\Lambda_h^{(ii)} = \begin{cases}
+    cp_i &\text{for } 0.04 \leq k_i < 5 \\
+    0  &\text{otherwise}\\
+    \end{cases}
 \]
-\[
-\Lambda_h = 
-   \begin{tikzpicture}[decoration={brace,amplitude=5pt},baseline=(current bounding box.west)]
-     \matrix (magic) [matrix of math nodes,left delimiter=(,right delimiter=)] {
-      0 \\
-      & \ddots \\
-      & & 0 \\
-      & & & cp_1 \\
-      & & & & \ddots \\
-      & & & & & cp_n \\
-     };
-     \draw[decorate] (magic-4-4.north) -- (magic-6-6.north east) node[above=5pt,midway,sloped] {$0.25\leq k \leq 5$};
-   \end{tikzpicture}
-\]
-\textcolor{red}{(@Steve - I am still quite confused here.  Are the above matrices helpful?
-I'm confused by $p_i$.  Isn't there some overlap
-between the low and high res runs?  The piecewise form you had doesn't have any overlap.  You
-had the large $\Lambda$ as the concatenation of the matrices, but then you also had
-it as a sum.  Perhaps we should talk this out sometime.  There has to be an easier 
-way to convey how we calculate the weighted average.  Perhaps we could represent 
-this better with indicator functions?  
-Or as a function of $k_i$?  The equations below are just some ideas.)}
-\[
-\Lambda_p(k) = 10^5 \mathbbm{I}_{\{k < 0.04\}}
-\]
-where $\mathbbm{I}$ is the indicator function.
-\[
-\Lambda(k_i) = \begin{cases}
-    10^5 \text{ for } k_i < 0.04 \text{  (perturbation theory)}\\
-    16p_i \text{ for } 0.04 \leq k_i < 0.25 \text{  (low resolution)}\\
-    cp_i \text{ for } 0.25 \leq k_i \leq 5 \text{  (high resolution)}
-    \end{cases},
-\]
-where we use the sufficiently high precision of $10^5$ to impose the deterministic
-nature of the perturbation theory output.  \textcolor{red}{(Then comment on how 
-we can put this all into one big diagonal matrix that we multiply to our y values?)}
-
-
-
-% $\Lambda_p = \text{diag}\left((10^5)_{k < 0.04}\right)$, 
-% $\Lambda_{\ell} = \text{diag}\left(16\times(p_1,\dots,p_n)_{0.04 \leq k < 0.25}\right)$, 
-% $\Lambda_h = \text{diag}\left(c\times(p_1,\dots,p_n)_{0.04 \leq k \leq 5}\right)$. 
-
-%\[
-%\Lambda = 
-%\begin{bmatrix}
-%\Lambda_p & 0 & 0 \\
-%0 & \Lambda_\ell & 0 \\
-%0 & 0 & \Lambda_h
-%\end{bmatrix}
-%=
-%\begin{bmatrix}
-%\operatorname{diag}(10^5, \ldots, 10^5) &  &  \\
-% & \operatorname{diag}(16\times(p_1, \ldots, p_n)) &  \\
-% &  & \operatorname{diag}(c\times(p_1, \ldots, p_n))
-%\end{bmatrix}
-%\]
-
-\textcolor{red}{(This part will need some revising, it is still unclear to me
-how the weighted average is calculated.  Although I know in reality it is super simple.}
-Above, each matrix element is either the corresponding precision value or zero, 
-depending on whether the $k$ value is approximately unbiased for that data type. 
-With this, we calculate a weighted average for each cosmology: 
+for $i=1,\dots, n$.  In $\Lambda_p$, we use the sufficiently high precision 
+of $10^5$ to impose the deterministic nature of the perturbation theory output.  
+\textcolor{red}{(@Steve - what is $c$
+exactly?)}  We then calculate a weighted average for each cosmology: 
 $\bar y = \Lambda^{-1}(\Lambda_p y_p + \Lambda_h y_h + \Lambda_{\ell} \bar{y}_\ell)$, 
-where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ is the precision matrix for 
-the weighted average for a particular cosmology. On its own, the weighted average
-has too much variation baked in from the limited number of model runs. There is also
-no spatial dependence accounting for the correlated errors seen in Figure \ref{fig:plot_data}.
+where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ and 
+$\bar{y}_\ell = \frac{1}{16}\sum_{r=1}^{16} y_{\ell_r}$. In Figure \ref{fig:plot_data},
+the weighted average is shown in dashed orange.  As an estimate of the true
+underlying spectra, the weighted average fluctuates too drastically due 
+to the limited number of model runs.  It fails to account for the
+spatial dependence inherent in the smooth but stochastic spectra.
 To account for these modeling challenges, we need a more complex model.
 
 We consider a training-testing split with 111 cosmologies used for estimation and 6 
@@ -350,7 +282,8 @@ cosmologies held out for testing.  Our ultimate objective is to effectively pred
 the underlying power matter spectra for the held-out cosmologies based on their 
 8-dimensional input configuration (Section \ref{sec:pred}).  But first, we must 
 obtain effective estimates of the underlying spectrum for each training 
-cosmology (Section \ref{sec:hm_fit}). 
+cosmology (Section \ref{sec:hm_fit}). \textcolor{red}{(@Steve - maybe this is a
+good place to introduce the ``hold out'' and ``within sample'' terms?)}
 
 \section{Bayesian Hierarchical Modeling for Particular Cosmologies}
 \label{sec:hm_fit}
