@@ -240,14 +240,13 @@ low/high resolution spectra increases as $k$ increases.  The curves get progress
 tighter from left to right.  We would like to conveniently wrap this domain-specific 
 knowledge inside our Bayesian framework later.  To this end, \cite{moran2023mira} 
 used the multiple low- and high-resolution spectra across all cosmologies to
-obtained precision estimates, $p_1,\dots, p_n$, across the $n$ 
-wavenumber values using a log-log regression model.
-% and a multiplier $c$ for the increase in precision from the 
-% low- to high- resolution output.
-We use these estimates to define three diagonal precision matrices, 
-one for each data type (perturbation theory, low resolution, and high resolution).
-Specifically, denote $\Lambda_p$, $\Lambda_\ell$, and $\Lambda_h$ as the
-diagonal matrices with elements
+obtain precision estimates, $p_1,\dots, p_n$, across the $n$ 
+wavenumber values using a log-log regression model. A multiplier $c$ for 
+the increase in precision from the low- to high- resolution output is also 
+estimated with this regression model. We use these estimates to define three 
+diagonal precision matrices, one for each data type (perturbation theory, 
+low resolution average, and high resolution). Specifically, denote $\Lambda_p$, 
+$\Lambda_\ell$, and $\Lambda_h$ as the diagonal matrices with elements
 \[
 \Lambda_p^{(ii)} = \begin{cases}
     10^5 &\text{for } k_i < 0.04 \\
@@ -266,8 +265,7 @@ diagonal matrices with elements
 \]
 for $i=1,\dots, n$.  In $\Lambda_p$, we use the sufficiently high precision 
 of $10^5$ to impose the deterministic nature of the perturbation theory output.  
-\textcolor{red}{(@Steve - what is $c$
-exactly?)}  We then calculate a weighted average for each cosmology: 
+We then calculate a weighted average for each cosmology: 
 $\bar y = \Lambda^{-1}(\Lambda_p y_p + \Lambda_h y_h + \Lambda_{\ell} \bar{y}_\ell)$, 
 where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ and 
 $\bar{y}_\ell = \frac{1}{16}\sum_{r=1}^{16} y_{\ell_r}$. In Figure \ref{fig:plot_data},
@@ -290,19 +288,22 @@ good place to introduce the ``hold out'' and ``within sample'' terms?)}
 
 Here we describe our first contribution: the use of a Bayesian hierarchical model 
 to estimate the underlying spectra and quantify uncertainty for a particular cosmology,
-independent of the others.  Let $D_n = \{X_n, \bar{Y}, \Lambda\}$ represent the aggregated 
+independent of the others. In the previous seciton, we used lowercase $\bar{y}$ to denote 
+the observed weighted average; here, we use $\bar{Y}$ to indicate the corresponding 
+random variable within the statistical model. Specifically, our input $X$ is the 
+$n$ values of $\log_{10}(k)$ and the output is the weighted average $\bar{Y}$. 
+Let $D = \{X, \bar{Y}, \Lambda\}$ represent the aggregated 
 data for a particular cosmology.  Let $S$ represent the true (but unknown) underlying
-power matter spectra from which $D_n$ was generated.
-\textcolor{red}{(What is X?  Why is $\bar{Y}$ capital here, but it wasn't earlier?
-Since $\Lambda$ is fixed and doesn't change, I do not think we need to consider it part
-of the data.)}
+power matter spectra from which $D$ was generated.
+\textcolor{red}{(@Annie You suggested removing $\Lambda$ from $D$; is fixed and 
+doesn't change here, but it would if $X$ or $Y$ changed. Also, we use $\Lambda$ to pre-scale the data)}
 
 \subsection{Gaussian Process Model}
 
-
-Here, we introduce the Bayesian Gaussian Process (GP) model We assume 
+Here, we introduce the Bayesian Gaussian Process (GP) model. We assume 
 the matter power spectrum $S$ for a given cosmology follows a GP with mean $\mu$ 
-and covariance matrix $\Sigma_S$.
+and covariance matrix $\Sigma_S$. From the data, we obtain $\bar Y$, which is a 
+noisy version of $S$.
 
 From plots of the multiple low-resolution spectra (e.g., Figure \ref{fig:plot_data}), 
 we find they vary smoothly about some mean $S$, suggesting that a dense covariance 
@@ -317,7 +318,15 @@ $\Sigma_\varepsilon=\left(\Lambda_p^{-1} + \Sigma_\ell + \Lambda_h^{-1}\right)^{
 where $\Lambda_p, \Sigma_\ell^{-1}, \text{ and } \Lambda_h$ are all $n\times n$ 
 and are 0 wherever the corresponding data type is biased.
 
-We transform $X$ values to fall within $[0,1]$ and $Y$ so that the mean and variance 
+Therefore, we model $\bar Y|S$ as a GP with mean $S$ and block-diagonal covariance 
+matrix $\Sigma_\varepsilon$:
+
+\begin{align}
+\bar Y|S &\sim GP\left(S,\Sigma_\varepsilon\right) \\
+S &\sim GP\left(\mu, \Sigma_S(x,x')\right)
+\end{align}
+
+We transform $X$ values to fall within $[0,1]$ and $\bar Y$ so that the mean and variance 
 are 0 and 1, respectively. This allows for a straightforward specification of priors, 
 where the hyperparameters for the Mat\'ern covariance $\Sigma_S$ each take a vague prior. 
 Specifically:
@@ -344,15 +353,9 @@ deepgp v1.1.3: $\theta_S \sim G(\alpha=1.2, \beta=1)$ and $\tau_S \propto 1/\tau
 % \end{bmatrix}
 % $$
 
-Therefore, we model $\bar Y|S$ as a GP with mean $S$ and block-diagonal covariance 
-matrix $\Sigma_\varepsilon$:
-
-\begin{align}
-\bar Y|S &\sim \mathcal{N}_n(S,\Sigma_\varepsilon) \\
-S &\sim GP\left(\mu, \Sigma_S(x,x')\right)
-\end{align}
-
-Upon integrating out $S$, we obtain $\bar Y \sim \mathcal{N}_n(\mu, \Sigma_S+\Sigma_\varepsilon)$. 
+A key property of GPs is that any finite set of $n$ observations from the GP is a 
+multivariate normal distribution. Therefore, upon integrating out $S$, we obtain 
+$\bar{Y} \sim \mathcal{N}_n(\mu, \Sigma_S+\Sigma_\varepsilon)$ for the $n$ observed X locations. 
 Additionally, this model yields the posterior distribution $S|\bar Y \sim \mathcal{N}_n(m, C)$, 
 where $C=\left(\Sigma_S^{-1}+\Sigma_\varepsilon^{-1}\right)^{-1}$ and 
 $m=C\left(\Sigma_\varepsilon^{-1}\bar Y+\Sigma_S^{-1}\mu\right)$. 
