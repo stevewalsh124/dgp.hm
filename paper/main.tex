@@ -289,7 +289,7 @@ which is pivotal to effectively inferring the true spectrum.
 
 Here we describe our first contribution: the use of a Bayesian hierarchical model 
 to estimate the underlying spectra and quantify uncertainty for a particular cosmology.
-Let input $X$ represent the $n$-vector of $\log_{10}(k)$ values.
+Let input $X$ represent the vector with elements $x_i = \log_{10}(k_i)$ for $i=1,\dots,n$.
 In the previous section, we used lowercase $\bar{y}$ to denote 
 the observed weighted average; now, we use $\bar{Y}$ to indicate the corresponding 
 random variable within the statistical model.  $\bar{Y}$ is typically pre-processed
@@ -299,48 +299,66 @@ We will reserve specific integration
 of expert knowledge for the CAMB and Mira-Titan suites, such as this pre-processing,
 for Sections \ref{subsec:camb} and \ref{subsec:mira_fit}, respectively.  
 
-\subsection{Deep Gaussian Process Hierarchical Model}
+\subsection{Model Specification}
 
-Here, we introduce the Bayesian Gaussian Process (GP) model. We assume 
-the matter power spectrum $S$ for a given cosmology follows a GP with mean $\mu$ 
-and covariance matrix $\Sigma_S$. From the data, we obtain $\bar Y$, which is a 
-noisy version of $S$.  Let $S$ represent the true (but unknown) underlying
-power matter spectra from which $D$ was generated.
+Let $S$ represent the true (but unknown) underlying power matter spectra for
+a particular cosmology.  We consider $\bar{Y}$ a noisy realization of $S$.
+Specifically, we assume $\bar{Y}$ is a random realization of a Gaussian 
+process centered at $S$ with some covariance, i.e. 
+$\bar{Y}|S \sim \mathrm{GP}(S, \Sigma_\varepsilon)$.  While previous works
+have considered diagonal $\Sigma_\varepsilon$ \citep{moran2024dpc}, we find it
+essential to account for the smoothly varying spatial dependence of the
+low resolution runs (as visualized in Figure \ref{fig:plot_data}).  For
+this, we embrace variations of the Mat\'ern kernel \citep{stein1999interpolation},
+tailored to each scenario (more on this in later subsections).
 
-From plots of the multiple low-resolution spectra (e.g., Figure \ref{fig:plot_data}), 
-we find they vary smoothly about some mean $S$, suggesting that a dense covariance 
-matrix $\Sigma_\varepsilon$ (accounting for spatial dependence) may outperform a 
-diagonal covariance $\Lambda_\ell^{-1}$ for $\bar Y$. In previous work, we have 
-modeled multiple candidates for $\Sigma_\varepsilon$ \citep{walsh2023bayesian} and 
-found that a Mat\'ern covariance $\Sigma_\ell$ trained on the low-resolution runs 
-(pre-scaled by the precision values and subtracting a LOESS-smoothed average) performs 
-the best. We specify this structure within $\Sigma_\varepsilon$ and refer readers 
-to \cite{walsh2023bayesian} for a more detailed exposition. This yields 
-$\Sigma_\varepsilon=\left(\Lambda_p^{-1} + \Sigma_\ell + \Lambda_h^{-1}\right)^{-1}$, 
-where $\Lambda_p, \Sigma_\ell^{-1}, \text{ and } \Lambda_h$ are all $n\times n$ 
-and are 0 wherever the corresponding data type is biased.
+We next place a zero-mean Gaussian process prior on $S$, i.e.,
+$S\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_S(\cdot)\right)$, again with a 
+spatial Mat\`ern kernel.  
+\textcolor{red}{(@Steve - is a zero mean the right thing?  If not, what is the mean?)}
+Standard practice would be to use locations $X$ as the inputs to kernel $\Sigma_S(\cdot)$.
+Yet we have found that prior to lack sufficient flexibility for our motivating
+application.  In the Mira-Titan setting, some nonstationarity is expected due to 
+baryonic acoustic oscillations when $-2 \leq \log_{10}(k) \leq -1$. To account 
+for this, we incorporate an additional latent Gaussian process, $W$, which accommodates
+nonstationarity by warping $X$.  Ultimately, this yields the following hierarchical model:
+\begin{equation}\label{eq:dgphm}
+\begin{aligned}
+\bar{Y}|S,W &\sim \mathrm{GP}(S,\Sigma_\varepsilon) \\
+S|W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_S(W)\right) \\
+W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_W(X)\right)
+\end{aligned}
+\end{equation}
+The functional composition of GPs in the latter two lines forms a ``deep Gaussian process'' 
+\citep{damianou2013deep,dunlop2018deep}. Additional latent layers could be considered, 
+although we find one is sufficient.
 
-Therefore, we model $\bar Y|S$ as a GP with mean $S$ and block-diagonal covariance 
-matrix $\Sigma_\varepsilon$:
 
-\begin{align}
-\bar Y|S &\sim GP\left(S,\Sigma_\varepsilon\right) \\
-S &\sim GP\left(\mu, \Sigma_S(x,x')\right)
-\end{align}
+\[
+\Sigma_S(X)^{i,j} = \tau^2  \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta}} + 
+  \frac{5d^2}{3\theta}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta}}\right)
+\quad\textrm{for}\quad 
+d=||x_i-x_j||^2
+\]
+Hyperparameters $\tau^2$ and $\theta$ govern the correlation scale and decay respectively.
+
+
+We have found that whether the prior mean of $W$ is set to 0 or $X$ 
+\citep[which would indicate stationarity apriori,][]{schmidt2003bayesian} does not 
+have a substantial impact on the model fit. We construct this model in the 
+compositional form, and also use Markov Chain Monte Carlo (MCMC) to estimate and 
+obtain full uncertainty for each of the model parameters \citep{sauer2023active}.
+
+
 
 We transform $X$ values to fall within $[0,1]$ and $\bar Y$ so that the mean and variance 
 are 0 and 1, respectively. This allows for a straightforward specification of priors, 
 where the hyperparameters for the Mat\'ern covariance $\Sigma_S$ each take a vague prior. 
 Specifically:
 
-\begin{align}
-\Sigma_\ell^{i,j} = \tau_\ell^2  \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_\ell}} + 
-  \frac{5d^2}{3\theta_\ell}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_\ell}}\right),\\
-\Sigma_S^{i,j} = \tau_S^2  \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_S}} + 
-  \frac{5d^2}{3\theta_S}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_S}}\right),
-\end{align}
 
-where $d=||x_i-x_j||^2$. From here, we estimate $\tau_\ell, \theta_\ell$ with maximum 
+
+where. From here, we estimate $\tau_\ell, \theta_\ell$ with maximum 
 likelihood, and conditional on $\Sigma_\varepsilon$, we specify priors for $\tau_S, \theta_S$ 
 following \cite{sauer2023active}: \textcolor{red}{Annie, please ensure the most up-to-date 
 prior specs are shown above and here. Here is what I found from fit\$settings when using 
@@ -355,6 +373,8 @@ deepgp v1.1.3: $\theta_S \sim G(\alpha=1.2, \beta=1)$ and $\tau_S \propto 1/\tau
 % \end{bmatrix}
 % $$
 
+\subsection{Model Inference}
+
 A key property of GPs is that any finite set of $n$ observations from the GP is a 
 multivariate normal distribution. Therefore, upon integrating out $S$, we obtain 
 $\bar{Y} \sim \mathcal{N}_n(\mu, \Sigma_S+\Sigma_\varepsilon)$ for the $n$ observed X locations. 
@@ -365,25 +385,6 @@ This distribution provides the posterior mean and corresponding uncertainty for
 $S$ within a given cosmology. 
 % With this hierarchical model, we improve the efficiency of estimating $S|\bar{Y}$.
 
-Considering the Mira-Titan data, some nonstationarity is expected (e.g., due to 
-baryonic acoustic oscillations when $-2 \leq \log_{10}(k) \leq -1$). To account 
-for this, we incorporate a latent layer $W$ within the hierarchical model to warp 
-locations of $X$ and incorporate nonstationary dynamics of the matter power spectra. 
-When $W$ is a GP, this creates a deep Gaussian process (DGP) model \citep{damianou2013deep}. 
-Additional latent layers could be considered, although one is sufficient for this 
-dataset \citep{dunlop2018deep}.
-
-\begin{align}
-\bar Y|S,W &\sim \mathcal{N}_n(S,\Sigma_\varepsilon) \\
-S|W &\sim GP\left(\mu, \Sigma_S(w,w')\right) \\
-W &\sim GP\left(0, \Sigma_W(x,x')\right)
-\end{align}
-
-We have found that whether the prior mean of $W$ is set to 0 or $X$ 
-\citep[which would indicate stationarity apriori,][]{schmidt2003bayesian} does not 
-have a substantial impact on the model fit. We construct this model in the 
-compositional form, and also use Markov Chain Monte Carlo (MCMC) to estimate and 
-obtain full uncertainty for each of the model parameters \citep{sauer2023active}.
 
 \textcolor{red}{Annie: want to add something here? For $\theta_w$, we also specify 
 a Gamma prior of the form $\theta_w \sim G(\alpha=1.2, \beta=2)$. We discuss the 
@@ -494,6 +495,19 @@ with Figure \ref{fig:plot_data}).
 
 \subsection{Estimating Spectra with Mira-Titan Data}
 \label{subsec:mira_fit}
+
+From plots of the multiple low-resolution spectra (e.g., Figure \ref{fig:plot_data}), 
+we find they vary smoothly about some mean $S$, suggesting that a dense covariance 
+matrix $\Sigma_\varepsilon$ (accounting for spatial dependence) may outperform a 
+diagonal covariance $\Lambda_\ell^{-1}$ for $\bar Y$. In previous work, we have 
+modeled multiple candidates for $\Sigma_\varepsilon$ \citep{walsh2023bayesian} and 
+found that a Mat\'ern covariance $\Sigma_\ell$ trained on the low-resolution runs 
+(pre-scaled by the precision values and subtracting a LOESS-smoothed average) performs 
+the best. We specify this structure within $\Sigma_\varepsilon$ and refer readers 
+to \cite{walsh2023bayesian} for a more detailed exposition. This yields 
+$\Sigma_\varepsilon=\left(\Lambda_p^{-1} + \Sigma_\ell + \Lambda_h^{-1}\right)^{-1}$, 
+where $\Lambda_p, \Sigma_\ell^{-1}, \text{ and } \Lambda_h$ are all $n\times n$ 
+and are 0 wherever the corresponding data type is biased.
 
 To train our hierarchical model, we initialize our hyperparameter estimates across 
 all cosmologies by modeling the first (M001) with 50,000 MCMC runs, and use these 
