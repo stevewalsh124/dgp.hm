@@ -113,9 +113,9 @@ The Mira-Titan simulation suite \citep{moran2023mira}
 defines ``cosmologies'' according to eight cosmological parameters (more on this
 in Section \ref{sec:data}).  For a particular cosmology, the simulation of the power matter spectra 
 is rather complex.  Although we presume there exists some true matter spectra as a function
-of wavenumber, we are not able to directly observe it.  Rather, the simulation outputs 
-a convoluted patchwork of potential spectra, which vary in fidelity and are trusted
-only over particular wavenumber ranges.  Our first objective is to synthesize expert knowledge
+of wavenumber, we are not able to directly observe it.  Rather, the simulation returns
+a convoluted patchwork of potential spectra, which vary in fidelity and are only trusted
+over particular wavenumber ranges.  Our first objective is to synthesize expert knowledge
 and all available simulation information into an effective estimate of the true underlying
 matter spectrum.  
 
@@ -128,7 +128,7 @@ regarding the wavenumbers over which various outputs are trusted.  To this end,
 we propose a Bayesian hierarchical model which treats functional simulation 
 outputs as realizations of a deep Gaussian process \citep[DGP;][]{damianou2013deep} 
 centered on the true underlying spectra.  The hierarchical structure naturally
-accommodates the correlated observations.  The depth of the GP offers nonstationary
+accommodates the correlated observations.  The depth of the DGP offers nonstationary
 flexibility.  The Bayesian framework facilitates UQ and the incorporation of prior
 knowledge.  While Bayesian DGPs have been previously deployed for computer experiments 
 with scalar responses \citep[e.g.,][]{sauer2023active,sauer2023vecchia,ming2023deep}, 
@@ -197,15 +197,10 @@ dimensionless Hubble parameter, spectral index of scalar perturbations,
 dark energy equation of state parameters, and neutrino density. For more details 
 on these parameters and their effects, see \cite{dodelson2020modern, aghanim2020planck, heitmann2016mira}. 
 Parameter ranges are specified in Table 2.1 of \cite{moran2023mira}.
-For simplicity, we will denote these eight parameters as $\theta \in \mathbb{R}^8$. 
 There is an optional ninth parameter, the redshift, which we fix at 0.
 %Different simulation output exists for different values of a ninth value, 
 %the redshift; in this work, we fix 
 %this value at 0. 
-For each cosmology, Mira-Titan contains a batch of 18 simulated spectra: an inexpensive 
-spectrum estimated from linear perturbation theory ($y_p$), 16 spectra estimated from 
-lower resolutions simulations ($y_{\ell_r}, r \in \{1,\dots,16\}$), and one spectrum from 
-a high resolution simulation ($y_h$). 
 
 % after \linewidth:, trim=0 13 0 45, clip=TRUE
 \begin{figure}[ht]
@@ -221,6 +216,10 @@ a high resolution simulation ($y_h$).
     \label{fig:plot_data}
 \end{figure}
 
+For each cosmology, Mira-Titan contains a batch of 18 simulated spectra: an inexpensive 
+spectrum estimated from linear perturbation theory ($y_p$), 16 spectra estimated from 
+lower resolutions simulations ($y_{\ell_r}, r \in \{1,\dots,16\}$), and one spectrum from 
+a high resolution simulation ($y_h$). 
 These spectra are represented as a function of wavenumber $k$.  Following 
 \cite{moran2023mira}, we model on the emulation space 
 $\mathcal{P}(k)=\log_{10}\left(\frac{k^{1.5}P(k)}{2\pi^2}\right)$, where $P(k)$ represents the
@@ -235,7 +234,7 @@ a mean term, which is relatively smooth, compared to these realizations. When th
 mean term is subtracted, we will obtain a plot like the right panel in 
 Figure \ref{fig:plot_data}.
 
-Notice, in the center panel of Figure \ref{fig:plot_data}, the precision of each
+Notice, in the center/right panels of Figure \ref{fig:plot_data}, the precision of each
 low/high resolution spectra increases as $k$ increases.  The curves get progressively 
 tighter from left to right.  We would like to conveniently wrap this domain-specific 
 knowledge inside our Bayesian framework later.  To this end, \cite{moran2023mira} 
@@ -246,7 +245,7 @@ the increase in precision from the low- to high- resolution output is also
 estimated with this regression model. We use these estimates to define three 
 diagonal precision matrices, one for each data type (perturbation theory, 
 low resolution average, and high resolution). Specifically, denote $\Lambda_p$, 
-$\Lambda_\ell$, and $\Lambda_h$ as the diagonal matrices with elements
+$\Lambda_\ell$, and $\Lambda_h$ as the $n\times n$ diagonal matrices with elements
 \[
 \Lambda_p^{(ii)} = \begin{cases}
     10^5 &\text{for } k_i < 0.04 \\
@@ -264,16 +263,19 @@ $\Lambda_\ell$, and $\Lambda_h$ as the diagonal matrices with elements
     \end{cases}
 \]
 for $i=1,\dots, n$.  In $\Lambda_p$, we use the sufficiently high precision 
-of $10^5$ to impose the deterministic nature of the perturbation theory output.  
+of $10^5$ to impose the deterministic nature of the perturbation theory output.
+In $\Lambda_\ell$, the multiplication by 16 accounts for the sample size of the
+low resolution runs.
 We then calculate a weighted average for each cosmology: 
-$\bar y = \Lambda^{-1}(\Lambda_p y_p + \Lambda_h y_h + \Lambda_{\ell} \bar{y}_\ell)$, 
+$\bar y = \Lambda^{-1}(\Lambda_p y_p + \Lambda_{\ell} \bar{y}_\ell + \Lambda_h y_h)$, 
 where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ and 
 $\bar{y}_\ell = \frac{1}{16}\sum_{r=1}^{16} y_{\ell_r}$. In Figure \ref{fig:plot_data},
 the weighted average is shown in dashed orange.  As an estimate of the true
 underlying spectra, the weighted average fluctuates too drastically due 
 to the limited number of model runs.  It fails to account for the
 spatial dependence inherent in the smooth but stochastic spectra.
-To account for these modeling challenges, we need a more complex model.
+To account for these modeling challenges, we need a more complex model which can
+also provide UQ.
 
 We consider a training-testing split with 111 cosmologies used for estimation and 6 
 cosmologies held out for testing.  Our ultimate objective is to effectively predict
@@ -531,6 +533,9 @@ average warping. Some departure from stationarity is estimated in the higher $X$
 
 \section{Prediction for Unobserved Cosmologies}
 \label{sec:pred}
+
+For simplicity, we will denote these eight parameters as $\theta \in \mathbb{R}^8$.
+
 
 Upon obtaining the posterior means from each of the 111 training cosmologies, this 
 section details our second contribution - the use of the Bayesian DGP.HM model 
