@@ -314,7 +314,7 @@ tailored to each scenario (more on this in later subsections).
 
 We next place a zero-mean Gaussian process prior on $S$, i.e.,
 $S\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_S(\cdot)\right)$, again with a 
-spatial Mat\`ern kernel.  
+spatial kernel.  
 \textcolor{red}{(@Steve - is a zero mean the right thing?  If not, what is the mean?)}
 Standard practice would be to use locations $X$ as the inputs to kernel $\Sigma_S(\cdot)$.
 Yet we have found that prior to lack sufficient flexibility for our motivating
@@ -329,26 +329,33 @@ S|W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_S(W)\right) \\
 W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_W(X)\right)
 \end{aligned}
 \end{equation}
+$W$ is also an $n$-vector whose entries $w_i$ correspond to warped versions of each $x_i$.
 The functional composition of GPs in the latter two lines forms a ``deep Gaussian process'' 
 \citep{damianou2013deep,dunlop2018deep}. Additional latent layers could be considered, 
 although we find one is sufficient.
 
-
-\[
-\Sigma_S(X)^{i,j} = \tau^2  \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta}} + 
-  \frac{5d^2}{3\theta}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta}}\right)
+We use the Mat\`ern kernels,
+\begin{align}
+&\Sigma_S(W)^{i,j} = \tau^2 \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_S}} + 
+  \frac{5d^2}{3\theta_S}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_S}}\right)
 \quad\textrm{for}\quad 
-d=||x_i-x_j||^2
-\]
-Hyperparameters $\tau^2$ and $\theta$ govern the correlation scale and decay respectively.
+d=||w_i-w_j||^2, \;\;\textrm{and} \\
+&\Sigma_W(X)^{i,j} = \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_W}} + 
+  \frac{5d^2}{3\theta_W}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_W}}\right)
+\quad\textrm{for}\quad 
+d=||x_i-x_j||^2.
+\end{align}
+On the $S$ layer, hyperparameters $\tau^2$ and $\theta_S$ govern the 
+correlation scale and lengthscale respectively.  On the $W$ layer, we allow for a
+unique lengthscale $\theta_W$ but enforce unit scale following \citet{sauer2023active}.
 
-
-We have found that whether the prior mean of $W$ is set to 0 or $X$ 
+We have found that setting the prior mean of $W$ to $X$ instead of the $\mathbf{0}$
+in Eq.~\ref{eq:dgphm},
 \citep[which would indicate stationarity apriori,][]{schmidt2003bayesian} does not 
 have a substantial impact on the model fit. We construct this model in the 
 compositional form, and also use Markov Chain Monte Carlo (MCMC) to estimate and 
 obtain full uncertainty for each of the model parameters \citep{sauer2023active}.
-
+\textcolor{red}{(Need more details on inference, in next section...)}
 
 
 We transform $X$ values to fall within $[0,1]$ and $\bar Y$ so that the mean and variance 
