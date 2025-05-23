@@ -271,41 +271,41 @@ $\bar y = \Lambda^{-1}(\Lambda_p y_p + \Lambda_{\ell} \bar{y}_\ell + \Lambda_h y
 where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ and 
 $\bar{y}_\ell = \frac{1}{16}\sum_{r=1}^{16} y_{\ell_r}$. In Figure \ref{fig:plot_data},
 the weighted average is shown in dashed orange.  As an estimate of the true
-underlying spectra, the weighted average fluctuates too drastically due 
-to the limited number of model runs.  It fails to account for the
-spatial dependence inherent in the smooth but stochastic spectra.
-To account for these modeling challenges, we need a more complex model which can
-also provide UQ.
+underlying spectrum, the weighted average fluctuates too drastically due 
+to the limited amount of data.  It fails to account for the
+spatial dependence inherent in the smooth but stochastic spectra,
+which is pivotal to effectively inferring the true spectrum.
 
-We consider a training-testing split with 111 cosmologies used for estimation and 6 
-cosmologies held out for testing.  Our ultimate objective is to effectively predict
-the underlying power matter spectra for the held-out cosmologies based on their 
-8-dimensional input configuration (Section \ref{sec:pred}).  But first, we must 
-obtain effective estimates of the underlying spectrum for each training 
-cosmology (Section \ref{sec:hm_fit}). \textcolor{red}{(@Steve - maybe this is a
-good place to introduce the ``hold out'' and ``within sample'' terms?)}
+%We consider a training-testing split with 111 cosmologies used for estimation and 6 
+%cosmologies held out for testing.  Our ultimate objective is to effectively predict
+%the underlying power matter spectra for the held-out cosmologies based on their 
+%8-dimensional input configuration (Section \ref{sec:pred}).  But first, we must 
+%obtain effective estimates of the underlying spectrum for each training 
+%cosmology (Section \ref{sec:hm_fit}). \textcolor{red}{(@Steve - maybe this is a
+%good place to introduce the ``hold out'' and ``within sample'' terms?)}
 
 \section{Bayesian Hierarchical Modeling for Particular Cosmologies}
 \label{sec:hm_fit}
 
 Here we describe our first contribution: the use of a Bayesian hierarchical model 
-to estimate the underlying spectra and quantify uncertainty for a particular cosmology,
-independent of the others. In the previous seciton, we used lowercase $\bar{y}$ to denote 
-the observed weighted average; here, we use $\bar{Y}$ to indicate the corresponding 
-random variable within the statistical model. Specifically, our input $X$ is the 
-$n$ values of $\log_{10}(k)$ and the output is the weighted average $\bar{Y}$. 
-Let $D = \{X, \bar{Y}, \Lambda\}$ represent the aggregated 
-data for a particular cosmology.  Let $S$ represent the true (but unknown) underlying
-power matter spectra from which $D$ was generated.
-\textcolor{red}{(@Annie You suggested removing $\Lambda$ from $D$; is fixed and 
-doesn't change here, but it would if $X$ or $Y$ changed. Also, we use $\Lambda$ to pre-scale the data)}
+to estimate the underlying spectra and quantify uncertainty for a particular cosmology.
+Let input $X$ represent the $n$-vector of $\log_{10}(k)$ values.
+In the previous section, we used lowercase $\bar{y}$ to denote 
+the observed weighted average; now, we use $\bar{Y}$ to indicate the corresponding 
+random variable within the statistical model.  $\bar{Y}$ is typically pre-processed
+in a domain-specific manner, such as that defined in Section \ref{sec:data}.
+Together, $X$ and $\bar{Y}$ comprise the training data for a particular cosmology.
+We will reserve specific integration 
+of expert knowledge for the CAMB and Mira-Titan suites, such as this pre-processing,
+for Sections \ref{subsec:camb} and \ref{subsec:mira_fit}, respectively.  
 
-\subsection{Gaussian Process Model}
+\subsection{Deep Gaussian Process Hierarchical Model}
 
 Here, we introduce the Bayesian Gaussian Process (GP) model. We assume 
 the matter power spectrum $S$ for a given cosmology follows a GP with mean $\mu$ 
 and covariance matrix $\Sigma_S$. From the data, we obtain $\bar Y$, which is a 
-noisy version of $S$.
+noisy version of $S$.  Let $S$ represent the true (but unknown) underlying
+power matter spectra from which $D$ was generated.
 
 From plots of the multiple low-resolution spectra (e.g., Figure \ref{fig:plot_data}), 
 we find they vary smoothly about some mean $S$, suggesting that a dense covariance 
@@ -364,8 +364,6 @@ $m=C\left(\Sigma_\varepsilon^{-1}\bar Y+\Sigma_S^{-1}\mu\right)$.
 This distribution provides the posterior mean and corresponding uncertainty for 
 $S$ within a given cosmology. 
 % With this hierarchical model, we improve the efficiency of estimating $S|\bar{Y}$.
-
-\subsection{Deep Gaussian Process Model}
 
 Considering the Mira-Titan data, some nonstationarity is expected (e.g., due to 
 baryonic acoustic oscillations when $-2 \leq \log_{10}(k) \leq -1$). To account 
