@@ -146,8 +146,8 @@ if(setting %in% 1:3) {
                     params_hat$theta_hat, g = 1e-8, v = 2.5) %*% diag(sddtrue)
 }
 
-fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat, nmcmc = 10000)
-fit <- dgp.hm::trim(fit, 5000, 5)
+fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat, nmcmc = 15000)
+fit <- dgp.hm::trim(fit, 5000, 1)
 if(vis) plot(fit)
 fit <- dgp.hm::est_true(fit, return_all = TRUE)
 
@@ -173,9 +173,9 @@ dgp_time <- toc - tic
 
 tic <- proc.time()[3]
 fit1a <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat/r, 
-                                  nmcmc = 10000)
+                                  nmcmc = 15000)
 if(vis) plot(fit1a)
-fit1a <- dgp.hm::trim(fit1a, 5000, 5)
+fit1a <- dgp.hm::trim(fit1a, 5000, 1)
 fit1a <- dgp.hm::est_true(fit1a, return_all = TRUE)
 
 if (vis) {
@@ -197,9 +197,9 @@ dgp_r_time <- toc - tic
 # deepgp model ----------------------------------------------------------------
 
 tic <- proc.time()[3]
-fit2 <- deepgp::fit_two_layer(x_all, y_all, nmcmc = 10000, vecchia = T)
+fit2 <- deepgp::fit_two_layer(x_all, y_all, nmcmc = 15000, vecchia = T)
 if(vis) plot(fit2)
-fit2 <- deepgp::trim(fit2, 5000, 5)
+fit2 <- deepgp::trim(fit2, 5000, 1)
 fit2 <- predict(fit2, x)
 if(vis) plot(fit2)
 deepgp_mse <- mean((fit2$mean - y_true)^2)
@@ -247,7 +247,7 @@ for(i in 1:1){ # if you only have one function
 library(dpc)
 n_u=30; n_v=10
 dpc_out = dpc(Y=Y_list, vars=vars_list, n_u=n_u, n_v=n_v, 
-              nmcmc=20000, burn=10000,
+              nmcmc=15000, burn=5000,
               sprop_tau2_u=0.005, sprop_delta=0.3,
               sprop_v=rep(0.1, n_v))
 
