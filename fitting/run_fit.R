@@ -156,4 +156,5 @@ results <- data.frame(x = log10(k),
                       lbb = fit$lbb * sd_y + mean_y)
 write.csv(results, paste0("results/", ifelse(deep, "dgp", "gp"), "_", 
                           model_name, ".csv"), row.names = FALSE)
+if(model == 1) write.table(log10(k), file = "results/logk.txt",row.names = FALSE, col.names = FALSE)
 if(model_name == "M001") save(fit, file = "results/fit_M001.rda")

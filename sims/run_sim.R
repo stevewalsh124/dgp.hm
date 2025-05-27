@@ -229,20 +229,65 @@ hetgp_logs <- sum(logs.numeric(drop(y_true), family = "normal",
 toc <- proc.time()[3]
 hetgp_time <- toc - tic
 
+# Deep Process Convolutions (DPC) results -------------------------------------
+# For the DPC model, Y and vars should be a length nfuncs list.
+# List element i holds the n_i sets of observations of function i.
+# Here n_i = r.
+tic <- proc.time()[3]
+Y_list = list(); vars_list = list()
+for(i in 1:1){ # if you only have one function
+  Y_list[[i]] = list(); vars_list[[i]] = list()
+  for(j in 1:r) {
+    Y_list[[i]][[j]] = cbind(x, Y[j, ])
+    vars_list[[i]][[j]] = diag(Sigma_true)
+  }
+}
+
+# Run DPC model
+library(dpc)
+n_u=30; n_v=10
+dpc_out = dpc(Y=Y_list, vars=vars_list, n_u=n_u, n_v=n_v, 
+              nmcmc=20000, burn=10000,
+              sprop_tau2_u=0.005, sprop_delta=0.3,
+              sprop_v=rep(0.1, n_v))
+
+# Get the DPC function estimate, LL, and UL
+out_f = plot.dpc(output=dpc_out, graph=FALSE, return_mean=TRUE, 
+                 return_draws=TRUE, gridpoints=x)
+f_es = out_f$pmean[,-1]
+f_ll = apply(out_f$pdraws, c(1,3), function(x) quantile(x,0.025, na.rm=T))
+f_ul = apply(out_f$pdraws, c(1,3), function(x) quantile(x,0.975, na.rm=T))
+if(vis){
+  plot(x_all, y_all)
+  lines(x, f_es, col='blue')
+  lines(x, f_ll, lty=3, col='blue')
+  lines(x, f_ul, lty=3, col='blue')
+}
+dpc_mse <- mean((f_es - y_true)^2)
+dpc_logs <- sum(logs.numeric(drop(y_true), family = "normal", 
+                               mean = f_es, sd = sqrt(apply(out_f$pdraws, 1, var))))
+toc <- proc.time()[3]
+dpc_time <- toc - tic
+
 # Store results ---------------------------------------------------------------
 
 filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
 if (file.exists(filename)) {
   results <- read.csv(filename)
-  results <- rbind(results, c(seed, dgp_mse, dgp_r_mse, deepgp_mse, hetgp_mse,
-                              dgp_logs, dgp_r_logs, deepgp_logs, hetgp_logs,
-                              dgp_time, dgp_r_time, deepgp_time, hetgp_time))
+  results <- rbind(results, 
+                   c(seed, dgp_mse, dgp_r_mse, deepgp_mse, hetgp_mse, dpc_mse,
+                     dgp_logs, dgp_r_logs, deepgp_logs, hetgp_logs, dpc_logs,
+                     dgp_time, dgp_r_time, deepgp_time, hetgp_time, dpc_time))
 } else {
   results <- data.frame(seed = seed, dgp_mse = dgp_mse, dgp_r_mse = dgp_r_mse,
-                        deepgp_mse = deepgp_mse, hetgp_mse = hetgp_mse,
-                        dgp_logs = dgp_logs, dgp_r_logs = dgp_r_logs,
-                        deepgp_logs = deepgp_logs, hetgp_logs = hetgp_logs,
+                        deepgp_mse = deepgp_mse, hetgp_mse = hetgp_mse, 
+                        dpc_mse = dpc_mse, dgp_logs = dgp_logs, 
+                        dgp_r_logs = dgp_r_logs, deepgp_logs = deepgp_logs, 
+                        hetgp_logs = hetgp_logs, dpc_logs = dpc_logs,
                         dgp_time = dgp_time, dgp_r_time = dgp_r_time,
-                        deepgp_time = deepgp_time, hetgp_time = hetgp_time)
+                        deepgp_time = deepgp_time, hetgp_time = hetgp_time, 
+                        dpc_time = dpc_time)
 }
+
 write.csv(results, filename, row.names = FALSE)
+
