@@ -22,6 +22,7 @@
 ###############################################################################
 
 library(dgp.hm) # must install locally
+library(dpc)
 library(deepgp)
 library(hetGP)
 library(mvtnorm)
