@@ -36,7 +36,7 @@ if(length(args) > 0)
   for(i in 1:length(args))
     eval(parse(text=args[[i]]))
 if(!(func %in% 1:2)) stop("func should be 1 or 2")
-if(!(setting %in% 1:6)) stop("setting should be 1, 2, 3, 4, 5, or 6")
+if(!(setting %in% 1:7)) stop("setting should be 1, 2, 3, 4, 5, 6, or 7")
 
 set.seed(seed)
 source("functions.R") # generates random model parameters upon sourcing
@@ -49,7 +49,7 @@ vis <- FALSE # should plots be generated
 x <- seq(0, 4, by = 0.1)
 n <- length(x)
 if(setting==5) sddtrue <- 1/exp(seq(0,2,length=length(x)))
-if(setting==6) sddtrue <- 1/1.5^(seq(0,2,length=length(x)))
+if(setting %in% 6:7) sddtrue <- 1/1.5^(seq(0,2,length=length(x)))
 Sigma_true <- get_Sigma_true(x, n, func, setting)
 if(vis) image(Sigma_true) # make sure sd plot looks right
 
@@ -114,7 +114,7 @@ if(setting %in% 1:3) {
                                     log(tau2hat_0)))
   Sigma_hat <- deepgp:::Matern(dx, params_hat$tau2_hat, params_hat$theta_hat,
                                g = 1e-8, v = 2.5)
-} else if(setting %in% 5:6) {
+} else if(setting %in% 5:7) {
   # Get initial tau2 estimate
   tau2hat_0 <- mean(apply(Yzm, 2, var))
   
