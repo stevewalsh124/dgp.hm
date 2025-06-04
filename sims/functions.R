@@ -41,6 +41,11 @@ get_Sigma_true <- function(x, n, func = 1, setting = 1) {
       Sigma <- deepgp:::Matern(distmat = D, tau2 = 0.1^2, 
                                theta = 5e-2, g = 1e-8, v = 2.5)
       Sigma_true <- diag(sddtrue) %*% Sigma %*% diag(sddtrue)
+    } else if(setting == 6) {
+      D <- deepgp::sq_dist(x)
+      Sigma <- deepgp:::Matern(distmat = D, tau2 = .1, 
+                               theta = 1e-1, g = 1e-8, v = 2.5)
+      Sigma_true <- diag(sddtrue) %*% Sigma %*% diag(sddtrue)
     }
   } else if(func == 2) {
     if(setting == 1) {
@@ -63,6 +68,11 @@ get_Sigma_true <- function(x, n, func = 1, setting = 1) {
       D <- deepgp::sq_dist(x)
       Sigma <- deepgp:::Matern(distmat = D, tau2 = 0.1^2, 
                                theta = 5e-2, g = 1e-8, v = 2.5)
+      Sigma_true <- diag(sddtrue) %*% Sigma %*% diag(sddtrue)
+    } else if(setting == 6) {
+      D <- deepgp::sq_dist(x)
+      Sigma <- deepgp:::Matern(distmat = D, tau2 = .1, 
+                               theta = 1e-1, g = 1e-8, v = 2.5)
       Sigma_true <- diag(sddtrue) %*% Sigma %*% diag(sddtrue)
     }
   }
