@@ -312,11 +312,11 @@ low resolution runs (as visualized in Figure \ref{fig:plot_data}).  For
 this, we embrace variations of the Mat\'ern kernel \citep{stein1999interpolation},
 tailored to each scenario (more on this in later subsections).
 
-We next place a zero-mean Gaussian process prior on $S$, i.e.,
-$S\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_S(\cdot)\right)$, again with a 
-spatial kernel.  
-\textcolor{red}{(@Steve - is a zero mean the right thing?  If not, what is the mean?)}
-Standard practice would be to use locations $X$ as the inputs to kernel $\Sigma_S(\cdot)$.
+We next place a Gaussian process prior on $S$, i.e.,
+$S\sim \mathrm{GP}\left(\boldsymbol{\mu}, \Sigma_S(\cdot)\right)$, again with a 
+spatial kernel. Here, we set $\boldsymbol{\mu}=\mathbf{0}$, although the modeling can 
+be carried out with any selection of $\boldsymbol{\mu}$. Standard practice would 
+be to use locations $X$ as the inputs to kernel $\Sigma_S(\cdot)$.
 Yet we have found that prior to lack sufficient flexibility for our motivating
 application.  In the Mira-Titan setting, some nonstationarity is expected due to 
 baryonic acoustic oscillations when $-2 \leq \log_{10}(k) \leq -1$. To account 
@@ -325,7 +325,7 @@ nonstationarity by warping $X$.  Ultimately, this yields the following hierarchi
 \begin{equation}\label{eq:dgphm}
 \begin{aligned}
 \bar{Y}\mid S,\Sigma_\varepsilon &\sim \mathrm{GP}(S,\Sigma_\varepsilon) \\
-S\mid W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_S(W)\right) \\
+S\mid W &\sim \mathrm{GP}\left(\boldsymbol{\mu}, \Sigma_S(W)\right) \\
 W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_W(X)\right)
 \end{aligned}
 \end{equation}
@@ -361,7 +361,7 @@ $S\mid\bar{Y},\Sigma_\varepsilon$, this requires inferring latent quantity $W$.
 We first integrate over $S$ to condense our hierarchical model of Eq.~\ref{eq:dgphm} into
 \begin{align}
 \label{eq:likelihood}
-\bar{Y} \mid W, \Sigma_\varepsilon &\sim \textrm{GP}(\mathbf{0}, \Sigma_S(W) + \Sigma_\varepsilon) \\
+\bar{Y} \mid W, \Sigma_\varepsilon &\sim \textrm{GP}(\boldsymbol{\mu}, \Sigma_S(W) + \Sigma_\varepsilon) \\
 \label{eq:prior}
 W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_W(X)\right)
 \end{align}
@@ -391,7 +391,7 @@ S^{(t)}\mid\bar{Y}, \Sigma_\varepsilon \sim \mathcal{N}_n(m^{(t)}, C^{(t)})
 \quad\textrm{where}\quad
 \begin{array}{rl}
 C^{(t)}&=\left(\Sigma_S(W^{(t)})^{-1}+\Sigma_\varepsilon^{-1}\right)^{-1} \\
-m^{(t)}&=C^{(t)}\left(\Sigma_\varepsilon^{-1}\bar{Y}+\Sigma_S(W^{(t)})^{-1}\mu\right).
+m^{(t)}&=C^{(t)}\left(\Sigma_\varepsilon^{-1}\bar{Y}+\Sigma_S(W^{(t)})^{-1}\boldsymbol{\mu}\right).
 \end{array}
 \] 
 \textcolor{red}{(@Steve - provide details of this derivation.  Also what is $\mu$?  Are we 
@@ -740,8 +740,53 @@ may also help to obtain accurate estimates on the lower and higher ends of $k$ v
 respectively. Additionally, Bayesian smoothing spline ANOVA (BSS-ANOVA) or other methods 
 could be compared in addition to DGPs. 
 
-\section{Appendix}
-\label{sec:apdx}
+\appendix
+\renewcommand{\thesection}{Appendix \Alph{section}}
+
+\section{Integrated Likelihood}
+\label{sec:apdx_int_lik}
+Here, we establish that under the model:
+
+$$
+\begin{aligned}
+Y_i|S,W &\sim N\big(S, \Sigma_\varepsilon(w,w')\big), \quad i \in \{1,\dots, r\}\\
+S|W &\sim N\big(m, \Sigma_S(w,w')\big)\\
+W &\sim N\big(0, \Sigma_W(x,x')\big) \\
+\end{aligned}
+$$
+
+We can obtain the integrated likelihood $p(Y_i|W)=\int p(Y_i|S,W)p(S|W) dS$, with the following calculations:
+$$
+\begin{aligned}
+p(Y_i|W) &= \int p(Y_i|S,W)p(S|W)dS \\
+&\propto \int\exp\left(-\frac{1}{2} \left[Y_i^T\Sigma_\varepsilon^{-1} Y_i - 2Y_i^T\Sigma_\varepsilon^{-1} S + S^T \Sigma_\varepsilon^{-1} S + S^T \Sigma_S^{-1} S -2S^T \Sigma_S^{-1} m + m^T \Sigma_S^{-1} m \right]\right)dS \\
+\end{aligned}
+$$
+
+If we focus only on terms containing $S$, we have 
+$$
+\begin{aligned}
+    \exp\Big(-\frac{1}{2} \big[S^T &(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1}) S -2S^T (\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i) \big]\Big) \\
+&= \exp\left(-\frac{1}{2} \left[S^T (\Sigma_\varepsilon^{-1}+\Sigma_S^{-1}) S -2S^T (\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}(\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i) \right]\right)
+\end{aligned}
+$$
+
+To complete the square, we add and subtract $(\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i)^T(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}(\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i)$, which then gives the kernel for $S \sim N\left((\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}(\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i), (\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1} \right)$. This removes the integral and leaves us with the following terms for $Y_i|W$:
+$$
+\begin{aligned}
+&\exp\Big(-\frac{1}{2}\big[Y_i^T\Sigma_\varepsilon^{-1} Y + m^T\Sigma_S^{-1} m - (\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i)^T(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1} (\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i)\big]\Big) \\
+&= \exp\Big(-\frac{1}{2}\big[Y_i^T\big(\Sigma_\varepsilon^{-1} - \Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_\varepsilon^{-1}\big)Y_i -2Y_i^T \Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_S^{-1} m \\
+&\qquad \qquad \qquad + m^T (\Sigma_S^{-1} - \Sigma_S^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_S^{-1}) m\big]\Big) \\
+&= \exp\Big(-\frac{1}{2}\big((Y_i-m)^T(\Sigma_\varepsilon+\Sigma_S)^{-1}(Y_i-m) \big)\Big)
+\end{aligned}
+$$
+
+With the last equality resulting from the use of the Sherman–Morrison–Woodbury formula, yielding $\big(\Sigma_\varepsilon^{-1} - \Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_\varepsilon^{-1} = (\Sigma_S^{-1} - \Sigma_S^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_S^{-1}) = (\Sigma_\varepsilon+\Sigma_S)^{-1}$. We also use the fact that $\Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_S^{-1} = (\Sigma_\varepsilon + \Sigma_S)^{-1}$, which holds since it can be shown that $[\Sigma_S(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})\Sigma_\varepsilon](\Sigma_\varepsilon+\Sigma_S)=(\Sigma_\varepsilon+\Sigma_S)(\Sigma_\varepsilon+\Sigma_S)$.
+
+Therefore, we have that $Y_i|W \sim N\big(m, \Sigma_S(w,w')+\Sigma_\varepsilon(w,w')\big)$.
+
+\section{Mira-Titan Predictive Plots}
+\label{sec:apdx_mira_plots}
 
 \textcolor{magenta}{The different appendices from dissertation as necessary. 
 Can also put details of dataset in supplementary material.} 
