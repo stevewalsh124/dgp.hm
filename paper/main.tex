@@ -365,7 +365,7 @@ We first integrate over $S$ to condense our hierarchical model of Eq.~\ref{eq:dg
 \label{eq:prior}
 W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_W(X)\right)
 \end{align}
-Details are provided in Appendix \textcolor{red}{???}. We then use elliptical slice
+Details are provided in \ref{sec:apdx_int_lik}. We then use elliptical slice
 sampling \citep[ESS;][]{murray2010elliptical} to generate posterior samples of $W$.  
 Proposals are generated from prior samples from Eq.~(\ref{eq:prior}), and acceptances 
 involve the ratio of likelihoods from Eq.~\ref{eq:likelihood}.
@@ -374,9 +374,8 @@ We also embrace a fully-Bayesian treatment of unknown kernel hyperparameters
 $\{\tau^2, \theta_S, \theta_W\}$.  We prescale $X$ to $[0, 1]$
 and $\bar{Y}$ to zero mean and unit variance.  On this scale, we adopt the default 
 prior specifications provided in the {\tt deepgp} {\sf R}-package \citep{deepgp}.
-\textcolor{red}{(@Steve - check the version number of the package in this reference.  Also,
-I'm not sure what we really do with $\tau^2$.  In my package, we assign it a reference prior and
-integrate it out.  I don't think we can do that here since we have the $\Sigma_\varepsilon$.)}
+\textcolor{red}{(@Annie - from our email 5/29, can you comment on how we handle $\tau^2$/
+cite Bobby's book/etc? Thanks!)}
 %\textcolor{red}{Annie, please ensure the most up-to-date 
 %prior specs are shown above and here. Here is what I found from fit\$settings when using 
 %deepgp v1.1.3: $\theta_S \sim G(\alpha=1.2, \beta=1)$ and $\tau_S \propto 1/\tau_S^2$.}
@@ -394,12 +393,14 @@ C^{(t)}&=\left(\Sigma_S(W^{(t)})^{-1}+\Sigma_\varepsilon^{-1}\right)^{-1} \\
 m^{(t)}&=C^{(t)}\left(\Sigma_\varepsilon^{-1}\bar{Y}+\Sigma_S(W^{(t)})^{-1}\boldsymbol{\mu}\right).
 \end{array}
 \] 
-\textcolor{red}{(@Steve - provide details of this derivation.  Also what is $\mu$?  Are we 
-going with zero here?  Add details of how we combine these things across all the $t$ samples.)}
+
+These results come from Bayes' Theorem, with details of this derivation provided 
+in \ref{sec:apdx_SgivenY}. In our application, we find success setting 
+$\boldsymbol{\mu}=\boldsymbol{0}$. With all posterior draws $S^{(t)}$, we compute
+the average of these to obtain our posterior mean for a particular cosmology.
 We denote our inference procedure for the hierarchical model of Eq.~\ref{eq:dgphm} as
 ``DGP.HM'' given its deep Gaussian process foundation with additional hierarchical modeling (HM)
 structure to incorporate multiple functional outputs.
-\textcolor{red}{(Is it too late to change this?  Maybe DGP-FCO for functional correlated output?)}
 
 \subsection{Simulation Study}
 \label{subsec:sim}
@@ -556,7 +557,7 @@ average warping. Some departure from stationarity is estimated in the higher $X$
 \section{Prediction for Unobserved Cosmologies}
 \label{sec:pred}
 
-For simplicity, we will denote these eight parameters as $\theta \in \mathbb{R}^8$.
+For simplicity, we will denote these eight parameters as $\psi \in \mathbb{R}^8$.
 
 
 Upon obtaining the posterior means from each of the 111 training cosmologies, this 
@@ -592,8 +593,8 @@ result in an approximation where
 
 Figure \ref{fig:mean_PCs_oneW} illustrates this decomposition with the estimated 
 mean trend, the principal components contained in $B$, and one example of how the 
-weight for the first PC will vary dependent on the first of $p_\theta=8$ cosmological 
-parameters contained in $\theta$.
+weight for the first PC will vary dependent on the first of $p_\psi=8$ cosmological 
+parameters contained in $\psi$.
 
 In the following subsections, we consider different modeling strategies for $W$, 
 which will influence predictions and sensitivity analyses based on $\boldsymbol\eta$.
@@ -620,15 +621,15 @@ GPs to model the principal components' weights. For direct comparison alongside
 \cite{moran2023mira}, we employ a Python implementation of this approach called 
 SEPIA \citep{gattiker2020sepia}. \textcolor{red}{Please note: currently show GPfit 
 predictions for Mira-Titan Data, NOT SEPIA. The CAMB results are based on SEPIA.}
-That is, the $i$th vector of PC weights $w_i(\theta)$, 
+That is, the $i$th vector of PC weights $w_i(\psi)$, 
 $i \in \{1,\ldots,p_\eta\}$, will be modeled as a zero mean GP: 
-$w_i(\theta) \sim GP(0, \sigma^2R)$, with
+$w_i(\psi) \sim GP(0, \sigma^2R)$, with
 
 \begin{equation*}
-    R_{ij} = \prod_{k=1}^{p_\theta}\exp\left\{-10^{\beta_k}|x_{ik}-x_{jk}|^\alpha\right\}
+    R_{ij} = \prod_{k=1}^{p_\psi}\exp\left\{-10^{\beta_k}|x_{ik}-x_{jk}|^\alpha\right\}
 \end{equation*}
 
-\textcolor{red}{We fix $\alpha=1.95$ and estimate each $\beta_k$ with $k \in \{1,...,p_\theta\}$. 
+\textcolor{red}{We fix $\alpha=1.95$ and estimate each $\beta_k$ with $k \in \{1,...,p_\psi\}$. 
 The above with $R_{ij}$ is based on GPfit; will update this to reflect SEPIA settings later.}
 Using these trained GPs from the PCs, we predict the spectra for unobserved cosmologies.
 
@@ -683,7 +684,7 @@ estimate the weights of the PCs from the estimated spectra. Below, we compare pr
 performance between Cosmic Emu and DGP.HM for the 6 held-out cosmologies. 
 \textcolor{magenta}{In addition, we can also predict over a large uniform or full 
 factorial design to obtain estimated main effects for each cosmological parameter in 
-$\theta$, interactions amongst the $p_\theta=8$ parameters, and decompose the overall 
+$\psi$, interactions amongst the $p_\psi=8$ parameters, and decompose the overall 
 variation by main effects, two-way interactions, and so on. Should this be included?}
 
 Plots for the average root mean squared error (RMSE) for each prediction method over the 
@@ -749,41 +750,127 @@ Here, we establish that under the model:
 
 $$
 \begin{aligned}
-Y_i|S,W &\sim N\big(S, \Sigma_\varepsilon(w,w')\big), \quad i \in \{1,\dots, r\}\\
-S|W &\sim N\big(m, \Sigma_S(w,w')\big)\\
-W &\sim N\big(0, \Sigma_W(x,x')\big) \\
+Y_i|S,W &\sim N\big(S, \Sigma_\varepsilon\big), \quad i \in \{1,\dots, r\}\\
+S|W &\sim N\big(\boldsymbol{\mu}, \Sigma_S(w,w')\big)\\
+W &\sim N\big(\mathbf{0}, \Sigma_W(x,x')\big) \\
 \end{aligned}
 $$
 
-We can obtain the integrated likelihood $p(Y_i|W)=\int p(Y_i|S,W)p(S|W) dS$, with the following calculations:
+We can obtain the integrated likelihood $p(Y_i|W)=\int p(Y_i|S,W)p(S|W) dS$, 
+with the following calculations:
 $$
 \begin{aligned}
 p(Y_i|W) &= \int p(Y_i|S,W)p(S|W)dS \\
-&\propto \int\exp\left(-\frac{1}{2} \left[Y_i^T\Sigma_\varepsilon^{-1} Y_i - 2Y_i^T\Sigma_\varepsilon^{-1} S + S^T \Sigma_\varepsilon^{-1} S + S^T \Sigma_S^{-1} S -2S^T \Sigma_S^{-1} m + m^T \Sigma_S^{-1} m \right]\right)dS \\
+&\propto \int\exp\left(-\frac{1}{2} \left[Y_i^T\Sigma_\varepsilon^{-1} Y_i 
+- 2Y_i^T\Sigma_\varepsilon^{-1} S + S^T \Sigma_\varepsilon^{-1} S + S^T \Sigma_S^{-1} S 
+-2S^T \Sigma_S^{-1} \boldsymbol{\mu} 
++ \boldsymbol{\mu}^T \Sigma_S^{-1} \boldsymbol{\mu} \right]\right)dS \\
 \end{aligned}
 $$
 
 If we focus only on terms containing $S$, we have 
 $$
 \begin{aligned}
-    \exp\Big(-\frac{1}{2} \big[S^T &(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1}) S -2S^T (\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i) \big]\Big) \\
-&= \exp\left(-\frac{1}{2} \left[S^T (\Sigma_\varepsilon^{-1}+\Sigma_S^{-1}) S -2S^T (\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}(\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i) \right]\right)
+    \exp\Big(-\frac{1}{2} \big[S^T &(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1}) S 
+    -2S^T (\Sigma_S^{-1} \boldsymbol{\mu} + \Sigma_\varepsilon^{-1} Y_i) \big]\Big) \\
+&= \exp\left(-\frac{1}{2} \left[S^T (\Sigma_\varepsilon^{-1}+\Sigma_S^{-1}) S 
+-2S^T (\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})(\Sigma_\varepsilon^{-1}
++\Sigma_S^{-1})^{-1}(\Sigma_S^{-1} \boldsymbol{\mu} + \Sigma_\varepsilon^{-1} Y_i) \right]\right)
 \end{aligned}
 $$
 
-To complete the square, we add and subtract $(\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i)^T(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}(\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i)$, which then gives the kernel for $S \sim N\left((\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}(\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i), (\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1} \right)$. This removes the integral and leaves us with the following terms for $Y_i|W$:
+To complete the square, we add and subtract $(\Sigma_S^{-1} \boldsymbol{\mu} 
++ \Sigma_\varepsilon^{-1} Y_i)^T(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}
+(\Sigma_S^{-1} \boldsymbol{\mu} + \Sigma_\varepsilon^{-1} Y_i)$, 
+which then gives the kernel for $S \sim N\left((\Sigma_\varepsilon^{-1}
++\Sigma_S^{-1})^{-1}(\Sigma_S^{-1} \boldsymbol{\mu} + \Sigma_\varepsilon^{-1} Y_i), 
+(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1} \right)$. 
+This removes the integral and leaves us with the following terms for $Y_i|W$:
 $$
 \begin{aligned}
-&\exp\Big(-\frac{1}{2}\big[Y_i^T\Sigma_\varepsilon^{-1} Y + m^T\Sigma_S^{-1} m - (\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i)^T(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1} (\Sigma_S^{-1} m + \Sigma_\varepsilon^{-1} Y_i)\big]\Big) \\
-&= \exp\Big(-\frac{1}{2}\big[Y_i^T\big(\Sigma_\varepsilon^{-1} - \Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_\varepsilon^{-1}\big)Y_i -2Y_i^T \Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_S^{-1} m \\
-&\qquad \qquad \qquad + m^T (\Sigma_S^{-1} - \Sigma_S^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_S^{-1}) m\big]\Big) \\
-&= \exp\Big(-\frac{1}{2}\big((Y_i-m)^T(\Sigma_\varepsilon+\Sigma_S)^{-1}(Y_i-m) \big)\Big)
+&\exp\Big(-\frac{1}{2}\big[Y_i^T\Sigma_\varepsilon^{-1} Y + 
+\boldsymbol{\mu}^T\Sigma_S^{-1} \boldsymbol{\mu} - (\Sigma_S^{-1} \boldsymbol{\mu} + 
+\Sigma_\varepsilon^{-1} Y_i)^T(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1} 
+(\Sigma_S^{-1} \boldsymbol{\mu} + \Sigma_\varepsilon^{-1} Y_i)\big]\Big) \\
+&= \exp\Big(-\frac{1}{2}\big[Y_i^T\big(\Sigma_\varepsilon^{-1} - 
+\Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_\varepsilon^{-1}\big)Y_i 
+-2Y_i^T \Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_S^{-1} \boldsymbol{\mu} \\
+&\qquad \qquad \qquad + \boldsymbol{\mu}^T (\Sigma_S^{-1} - \Sigma_S^{-1}(\Sigma_\varepsilon^{-1}
++\Sigma_S^{-1})^{-1}\Sigma_S^{-1}) \boldsymbol{\mu}\big]\Big) \\
+&= \exp\Big(-\frac{1}{2}\big((Y_i-\boldsymbol{\mu})^T(\Sigma_\varepsilon+\Sigma_S)^{-1}
+(Y_i-\boldsymbol{\mu}) \big)\Big)
 \end{aligned}
 $$
 
-With the last equality resulting from the use of the Sherman–Morrison–Woodbury formula, yielding $\big(\Sigma_\varepsilon^{-1} - \Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_\varepsilon^{-1} = (\Sigma_S^{-1} - \Sigma_S^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_S^{-1}) = (\Sigma_\varepsilon+\Sigma_S)^{-1}$. We also use the fact that $\Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_S^{-1} = (\Sigma_\varepsilon + \Sigma_S)^{-1}$, which holds since it can be shown that $[\Sigma_S(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})\Sigma_\varepsilon](\Sigma_\varepsilon+\Sigma_S)=(\Sigma_\varepsilon+\Sigma_S)(\Sigma_\varepsilon+\Sigma_S)$.
+With the last equality resulting from the use of the Sherman–Morrison–Woodbury formula, 
+yielding $\big(\Sigma_\varepsilon^{-1} - \Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+
+\Sigma_S^{-1})^{-1}\Sigma_\varepsilon^{-1} = (\Sigma_S^{-1} - \Sigma_S^{-1}
+(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}\Sigma_S^{-1}) = (\Sigma_\varepsilon+\Sigma_S)^{-1}$. 
+We also use the fact that $\Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+
+\Sigma_S^{-1})^{-1}\Sigma_S^{-1} = (\Sigma_\varepsilon + \Sigma_S)^{-1}$, 
+which holds since it can be shown that 
+$[\Sigma_S(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})\Sigma_\varepsilon](\Sigma_\varepsilon+\Sigma_S)
+=(\Sigma_\varepsilon+\Sigma_S)(\Sigma_\varepsilon+\Sigma_S)$.
 
-Therefore, we have that $Y_i|W \sim N\big(m, \Sigma_S(w,w')+\Sigma_\varepsilon(w,w')\big)$.
+Therefore, we have that $Y_i|W \sim N\big(\boldsymbol{\mu}, \Sigma_S(w,w')+\Sigma_\varepsilon(w,w')\big)$.
+
+\section{Conditional Distribution of Power Spectrum, Given Weighted Average}
+\label{sec:apdx_SgivenY}
+
+From our model specification, we have the following:
+
+\[
+S \sim \mathcal{N}(\boldsymbol{\mu}, \Sigma_S)
+\]
+\[
+\bar{Y} \mid S \sim \mathcal{N}(S, \Sigma_\epsilon)
+\]
+
+Then, to find the distribution of $S|\bar{Y}$, we apply Bayes' Theorem below, 
+where $\propto$ indicates proportionality:
+\[
+P(S \mid \bar{Y}) \propto P(\bar{Y} \mid S) P(S)
+\]
+
+\[
+\propto \exp\left(-\tfrac{1}{2} (\bar{Y} - S)^T \Sigma_\epsilon^{-1} (\bar{Y} - S) \right) 
+\cdot \exp\left(-\tfrac{1}{2} (S - \boldsymbol{\mu})^T \Sigma_S^{-1} (S - \boldsymbol{\mu})\right)
+\]
+
+\[
+\propto \exp\left(-\tfrac{1}{2} \left[ \bar{Y}^T \Sigma_\epsilon^{-1} \bar{Y} 
+- 2 S^T \Sigma_\epsilon^{-1} \bar{Y} + S^T \Sigma_\epsilon^{-1} S + S^T \Sigma_S^{-1} S 
+- 2 S^T \Sigma_S^{-1} \boldsymbol{\mu} + \boldsymbol{\mu}^T \Sigma_S^{-1} \boldsymbol{\mu} \right] \right)
+\]
+
+\[
+\propto \exp\left( -\tfrac{1}{2} \left[ S^T (\Sigma_\epsilon^{-1} + \Sigma_S^{-1}) S 
+- 2 S^T (\Sigma_\epsilon^{-1} \bar{Y} + \Sigma_S^{-1} \boldsymbol{\mu}) \right] \right)
+\]
+
+From properties of the multivariate normal distribution \citep[e.g., Equation 7.1 of][]{hoff2009first},
+we can establish that the mean and covariance of $S|\bar{Y}$ will be $\boldsymbol{m}$
+and $C$ respectively, where we can solve for these values with:
+
+\[
+C^{-1} = \Sigma_\epsilon^{-1} + \Sigma_S^{-1}
+\]
+\[
+C^{-1} \boldsymbol{m} = \Sigma_\epsilon^{-1} \bar{Y} + \Sigma_S^{-1} \boldsymbol{\mu}
+\]
+
+Then,
+\[
+C = (\Sigma_\epsilon^{-1} + \Sigma_S^{-1})^{-1}
+\]
+\[
+\boldsymbol{m} = \left( \Sigma_S^{-1} + \Sigma_\epsilon^{-1} \right)^{-1} 
+\left( \Sigma_\epsilon^{-1} \bar{Y} + \Sigma_S^{-1} \boldsymbol{\mu} \right)
+= C \cdot \left( \Sigma_\epsilon^{-1} \bar{Y} + \Sigma_S^{-1} \boldsymbol{\mu} \right)
+\]
+
+Therefore, we have the result that $S|\bar{Y} \sim \mathcal{N}(\boldsymbol{m}, C)$.
+
 
 \section{Mira-Titan Predictive Plots}
 \label{sec:apdx_mira_plots}
