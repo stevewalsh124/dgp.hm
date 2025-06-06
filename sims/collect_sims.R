@@ -20,7 +20,7 @@ MSE5_range <- MSE20_range <- logS5_range <- logS20_range <- c()
 
 r=5
 for (func in 1:2) {
-  for (setting in 4:6) {
+  for (setting in 4:7) {
     filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
     # Compare MSEs
     results <- read.csv(filename)[, c(3,6,5,4)]
