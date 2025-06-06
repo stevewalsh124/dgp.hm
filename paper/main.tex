@@ -429,7 +429,7 @@ a vector of values $s$ so that $\Sigma_5 = s M s^T$ is nonstationary; here $M$ i
 a Mat\'ern covariance matrix with parameters $\tau^2$ and $\theta$.
 
 For each simulated function and variance specification, we generate 20 values of 
-$m_1, m_2, f_1, f_2$, and conditional on these values, we sample either 5 or 20 
+$m_1, m_2, f_1, f_2$, and conditional on these values, we sample either 5 or 15 
 functional observations and estimate the underlying true function based on the observations.
 
 \begin{figure}[t]
@@ -439,7 +439,7 @@ functional observations and estimate the underlying true function based on the o
              settings (lower is better). For each case, the boxplot is constructed 
              from 20 random batches were simulated. Each column represents a function/variance 
              specification pair, and each row shows results for batch sizes of either 
-             5 (top) or 20 (bottom).}
+             5 (top) or 15 (bottom).}
     \label{fig:sims_logS}
 \end{figure}
 
@@ -465,7 +465,7 @@ is much faster than both of these.}
              (lower is better). For each case, the boxplot is constructed from 20 
              random batches were simulated. Each column represents a function/variance 
              specification pair, and each row shows results for batch sizes of 
-             either 5 (top) or 20 (bottom).}    
+             either 5 (top) or 15 (bottom).}    
     \label{fig:sims_MSE}
 \end{figure}
 
