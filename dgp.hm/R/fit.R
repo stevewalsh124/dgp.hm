@@ -98,8 +98,8 @@ gibbs_one_layer_hm <- function(x, y, nmcmc, verb, initial, settings, v,
     # Sample lengthscale (theta), also get MLE estimate of tau2
     samp <- sample_theta_hm(y, dx, theta[j - 1], alpha = settings$alpha$theta, 
                             beta = settings$beta$theta, l = settings$l, 
-                            u = settings$u, outer = TRUE, ll_prev = ll, v = v, 
-                            calc_tau2 = TRUE, Sigma_hat = Sigma_hat)
+                            u = settings$u, outer = FALSE, ll_prev = ll, v = v, 
+                            calc_tau2 = FALSE, Sigma_hat = Sigma_hat)
     theta[j] <- samp$theta
     ll <- samp$ll
     ll_store[j] <- ll
@@ -134,8 +134,8 @@ gibbs_two_layer_hm <- function(x, y, nmcmc, D, verb, initial, settings, v,
     samp <- sample_theta_hm(y, dw, theta_y[j - 1], 
                             alpha = settings$alpha$theta_y, 
                             beta = settings$beta$theta_y, l = settings$l, 
-                            u = settings$u, outer = TRUE, ll_prev = ll_outer, 
-                            v = v, calc_tau2 = TRUE, Sigma_hat = Sigma_hat)
+                            u = settings$u, outer = FALSE, ll_prev = ll_outer, 
+                            v = v, calc_tau2 = FALSE, Sigma_hat = Sigma_hat)
     theta_y[j] <- samp$theta
     ll_outer <- samp$ll
     if (is.null(samp$tau2)) tau2[j] <- tau2[j - 1] else tau2[j] <- samp$tau2
