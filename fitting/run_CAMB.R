@@ -108,16 +108,16 @@ for(model in 1:32){ # integer 1-32
   # Get indices for where each data product is deemed unbiased
   lo_ind <- which(x < log10(x_ub) & x >= min(x_lo))
   hi_ind <- which(x < log10(x_ub) & x >= min(x_lo))
-  camb_ind <- which(x < min(x_lo))
+  camb_ind <- which(x <= min(x_lo))
   hi_only <- hi_ind[which(!(hi_ind %in% lo_ind))]
   
   # Smooth the precision information (to remove steps)
-  prec_lo = rollmean(ifelse(1:length(x) %in% lo_ind, prec, 0),
-                     k = 2, fill = "extend")
-  prec_hi = rollmean(ifelse(1:length(x) %in% hi_ind, prec, 0) * prec_adj,
-                     k = 2, fill = "extend")
-  prec_camb = rollmean(ifelse(1:length(x) %in% camb_ind, 1e6, 0),
-                       k = 2, fill = "extend")
+  prec_lo = smooth.spline(rollmean(ifelse(1:length(x) %in% lo_ind, prec, 0),
+                     k = 3, fill = "extend"))$y
+  prec_hi = smooth.spline(rollmean(ifelse(1:length(x) %in% hi_ind, prec, 0) * prec_adj,
+                     k = 3, fill = "extend"))$y
+  prec_camb = smooth.spline(rollmean(ifelse(1:length(x) %in% camb_ind, 1e6, 0),
+                       k = 3, fill = "extend"))$y
   prec_avg = (prec_lo*n_lo+prec_hi+prec_camb)
   
   # Scale inputs ----------------------------------------------------------------
