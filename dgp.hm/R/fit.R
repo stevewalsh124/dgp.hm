@@ -64,7 +64,7 @@ fit_two_layer_hm <- function (x, y, Sigma_hat, nmcmc = 10000, verb = TRUE,
   test <- deepgp:::check_inputs(x, y, 0) # do not need to check nugget
   settings <- deepgp:::check_settings(settings, layers = 2, noisy = TRUE) # TRUE/FALSE??
   initial <- list(w = w_0, theta_y = theta_y_0, theta_w = theta_w_0) # force tau2 = 1
-  initial <- deepgp:::check_initialization(initial, layers = 2, x = x, D = D)
+  initial <- deepgp:::check_initialization(initial, layers = 2, x = x, D = 1)
   if (is.null(x_grid)) 
     x_grid <- matrix(seq(0, 1, length = 50), ncol = 1)
   if (!(v %in% c(0.5, 1.5, 2.5))) 
@@ -223,7 +223,7 @@ logl_hm <- function(y, dx, theta, v, Sigma_hat) {
   n <- length(y)
   K <- deepgp:::Matern(dx, 1, theta, 1e-8, v) + Sigma_hat
   id <- deepgp:::invdet(K)
-  quadterm <- t(out_vec) %*% id$Mi %*% out_vec
+  quadterm <- t(y) %*% id$Mi %*% y
   ll <- (-0.5)*id$ldet - 0.5*quadterm
   return(ll)
 }

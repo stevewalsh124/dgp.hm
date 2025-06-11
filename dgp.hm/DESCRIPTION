@@ -6,10 +6,12 @@ Date: 02-06-2023
 Author: Steve Walsh and Annie S. Booth
 Maintainer: Annie S. Booth <annie_booth@ncsu.edu>
 Depends: R (>= 3.6)
-Description: TBD
+Description: Performs model fitting for multiple one-dimensional correlated 
+             functional outputs using a deep Gaussian process.
 License: LGPL
 Encoding: UTF-8
 NeedsCompilation: yes
 Imports:
-    deepgp
-RoxygenNote: 7.3.1
+    deepgp,
+    mvtnorm
+RoxygenNote: 7.3.2

@@ -7,6 +7,13 @@
 #   nl_matern
 #   moore_penrose
 
+# Imported Functions ----------------------------------------------------------
+#' @importFrom mvtnorm rmvnorm
+#' @importFrom deepgp sq_dist
+#' @importFrom stats quantile dgamma optim runif
+#' @importFrom grDevices heat.colors
+#' @importFrom graphics lines par
+
 # Optimize Matern -------------------------------------------------------------
 #' @export
 
@@ -104,7 +111,7 @@ monowarp_ref <- function(x, xg, wg, index) {
     r_new <- range(wg[, i])
     wg[, i] <- (wg[, i] - r_new[1])/(r_new[2] - r_new[1]) # first scale to [0, 1]
     wg[, i] <- wg[, i]*(r_orig[2] - r_orig[1]) + r_orig[1] # then scale to original range
-    w[, i] <- fo_approx(xg[, i], wg[, i], x[, i], index[, i])
+    w[, i] <- deepgp:::fo_approx(xg[, i], wg[, i], x[, i], index[, i])
   }
   return(w)
 }

@@ -43,7 +43,7 @@ est_true <- function(fit, tolpower = -10, return_all = FALSE) {
     # cov mtx of [S]; based on a matern covariance function
     if (deep) {
       w <- monowarp_ref(fit$x, fit$x_grid, fit$w_grid[, i], grid_index)
-      d2 <- deepgp:::sq_dist(w)
+      d2 <- deepgp::sq_dist(w)
       theta <- fit$theta_y[i]
     } else theta <- fit$theta[i]
     S <- deepgp:::Matern(d2, 1, theta, 1e-8, fit$v)
