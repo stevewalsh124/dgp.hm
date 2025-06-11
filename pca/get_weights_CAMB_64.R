@@ -47,7 +47,7 @@ plot(log10(k_c), scrP(pk_c, k_c), type="l",
      main = "held-out CAMB runs (adjusted by h)")
 
 # create k values of CAMB for interpolation
-k_ci <- 10^(seq(-1.7, 0.7, by=0.015))
+k_ci <- 10^read.csv("../fitting/results/CAMB/xcamb_int.csv")$x
 
 # interpolate to common k grid (k_ci)
 pk_ci <- approx(k_c, scrP(pk_c, k_c), k_ci)$y
