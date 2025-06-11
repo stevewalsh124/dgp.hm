@@ -12,9 +12,11 @@
 #
 # Updates from deepgp ---------------------------------------------------------
 #   Sigma_hat is added to Sigma(X) in outer likelihood
+#   one dimension only
+#   Matern kernel only
+#   scale tau2 is fixed at 1
 #   No longer a nugget option (g = 1e-8 used for numerical stability)
 #   No longer a prior_mean of x option
-#   Matern kernel only
 
 # fit_one_layer_hm ------------------------------------------------------------
 #' @export

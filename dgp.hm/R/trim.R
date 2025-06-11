@@ -49,8 +49,8 @@ trim.dgp2hm <- function(object, burn, thin = 1) {
   
   object$nmcmc <- length(indx)
   object$theta_y <- object$theta_y[indx, drop = FALSE]
-  object$theta_w <- object$theta_w[indx, , drop = FALSE]
-  object$w <- as.list(object$w[indx])
+  object$theta_w <- object$theta_w[indx, drop = FALSE]
+  object$w <- object$w[, indx, drop = FALSE]
   object$ll <- object$ll[indx, drop = FALSE]
   
   toc <- proc.time()[[3]]
