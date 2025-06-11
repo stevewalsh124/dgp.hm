@@ -101,8 +101,8 @@ for(model in 1:32){ # integer 1-32
   var_lo <- apply(y_lo, 1, var)
   lm_var <- lm(log(var_lo) ~ x_lo)# + I(x_lo^2))
 
-  # Combine 1e6 prec (for camb) with log-log precs for lo and hi
-  prec = c(rep(1e6, n_camb_only), as.numeric(1/exp(lm_var$fitted.values)))
+  # Combine 1e8 prec (for camb) with log-log precs for lo and hi
+  prec = c(rep(1e8, n_camb_only), as.numeric(1/exp(lm_var$fitted.values)))
   prec_adj = 3.725626
   
   # Get indices for where each data product is deemed unbiased
@@ -112,13 +112,13 @@ for(model in 1:32){ # integer 1-32
   hi_only <- hi_ind[which(!(hi_ind %in% lo_ind))]
   
   # Smooth the precision information (to remove steps)
-  prec_lo = smooth.spline(rollmean(ifelse(1:length(x) %in% lo_ind, prec, 0),
-                     k = 3, fill = "extend"))$y
-  prec_hi = smooth.spline(rollmean(ifelse(1:length(x) %in% hi_ind, prec, 0) * prec_adj,
-                     k = 3, fill = "extend"))$y
-  prec_camb = smooth.spline(rollmean(ifelse(1:length(x) %in% camb_ind, 1e6, 0),
-                       k = 3, fill = "extend"))$y
-  prec_avg = (prec_lo*n_lo+prec_hi+prec_camb)
+  prec_lo = pmax(0, smooth.spline(rollmean(ifelse(1:length(x) %in% lo_ind, prec, 0),
+                                           k = 3, fill = "extend"))$y)
+  prec_hi = pmax(0, smooth.spline(rollmean(ifelse(1:length(x) %in% hi_ind, prec, 0) * prec_adj,
+                                           k = 3, fill = "extend"))$y)
+  prec_camb = pmax(0, smooth.spline(rollmean(ifelse(1:length(x) %in% camb_ind, 1e8, 0),
+                                             k = 3, fill = "extend"))$y)
+  prec_avg = (prec_lo*n_lo + prec_hi + prec_camb)
   
   # Scale inputs ----------------------------------------------------------------
   
@@ -167,7 +167,7 @@ for(model in 1:32){ # integer 1-32
   #                               params$theta_hat, 1e-8, 2.5)
   # 
   # # Create precision block matrices (blocks correspond to camb, lo, high)
-  # # block1 <- diag(rep(1e6, length(camb_ind)) * sd_y^2)
+  # # block1 <- diag(rep(1e8, length(camb_ind)) * sd_y^2)
   # # Create a precision matrix for the low-res portion only
   # block2lo <- solve(diag(sd_lo_sz[lo_ind]) %*% Matern_hat %*% diag(sd_lo_sz[lo_ind]))
   # # Pad the camb and hi-res portions with zeros
