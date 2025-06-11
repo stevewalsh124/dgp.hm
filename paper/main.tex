@@ -310,8 +310,11 @@ essential to account for the smoothly varying spatial dependence of the
 low resolution runs (as visualized in Figure \ref{fig:plot_data}).  For
 this, we embrace variations of the Mat\'ern kernel \citep{stein1999interpolation},
 tailored to each scenario (more on this in later subsections).
-We consider $\Sigma_\epsilon$ as known, given domain-matter expertise. (right)?
-\textcolor{red}{(Do we actually tailor this?  I thought it was consistent across the board.)}
+We consider $\Sigma_\varepsilon$ as known, given domain-matter expertise.
+\textcolor{red}{(Here, we are fixing $\Sigma_\varepsilon$ upon estimating the Matern 
+parameters and utilizing the precision estimates (domain-matter expertise from 
+log-log regression model)?  The estimate of $\Sigma_\varepsilon$ is tailored for
+each cosmology, as the Matern estimates are computed uniquely for each.)}
 
 We next place a Gaussian process prior on $S$, i.e.,
 $S\sim \mathrm{GP}\left(\boldsymbol{\mu}_S, \Sigma_S(\cdot)\right)$, again with a 
@@ -400,11 +403,12 @@ m^{(t)}&=C^{(t)}\left(\Sigma_\varepsilon^{-1}\bar{Y}+\Sigma_S(W^{(t)})^{-1}\bold
 
 These results come from Bayes' Theorem, with details of this derivation provided 
 in \ref{sec:apdx_SgivenY}. With all posterior draws $S^{(t)}$, we compute
-the average of these to obtain our posterior mean for a particular cosmology.
+the average of these to obtain our posterior mean for a particular cosmology. Additionally,
+we quantify uncertainty by finding the 2.5th and 97.5th percentiles of the posterior 
+draws at each index to obtain a 95\% credible interval.
 We denote our inference procedure for the hierarchical model of Eq.~\ref{eq:dgphm} as
 ``DGP.HM'' given its deep Gaussian process foundation with additional hierarchical modeling (HM)
 structure to incorporate multiple functional outputs.
-\textcolor{red}{(How do you get UQ though?)}
 
 \subsection{Simulation Study}
 \label{subsec:sim}
@@ -623,18 +627,18 @@ which will influence predictions and sensitivity analyses based on $\boldsymbol\
 In alignment with \cite{heitmann2009coyote} and \cite{higdon2010estcosmo}, we use 
 GPs to model the principal components' weights. For direct comparison alongside
 \cite{moran2023mira}, we employ a Python implementation of this approach called 
-SEPIA \citep{gattiker2020sepia}. \textcolor{red}{Please note: currently show GPfit 
-predictions for Mira-Titan Data, NOT SEPIA. The CAMB results are based on SEPIA.}
-That is, the $i$th vector of PC weights $w_i(\psi)$, 
-$i \in \{1,\ldots,p_\eta\}$, will be modeled as a zero mean GP: 
-$w_i(\psi) \sim GP(0, \sigma^2R)$, with
+SEPIA \citep{gattiker2020sepia}. That is, the $i$th vector of PC weights $w_i(\psi)$, 
+$i \in \{1,\ldots,p_\eta\}$, is modeled as a zero-mean Gaussian process with a 
+squared exponential (i.e., Gaussian) covariance function:
+\[
+w_i(\psi) \sim GP\left(0,\ \frac{1}{\lambda_{z_i}} R^{(i)} + \frac{1}{\lambda_{s_i}} I \right),
+\]
+with covariance function
+\[
+R^{(i)}_{uv} = \exp\left(-\sum_{k=1}^{p_\psi} \beta_{ik} (x_{uk} - x_{vk})^2 \right),
+\]
+where $\beta_{ik}$ is the inverse squared lengthscale for the $k$th input dimension, $\lambda_{z_i}$ is the marginal precision for $w_i(\psi)$, and $\lambda_{s_i}$ is the nugget precision (set to zero if no nugget is used).
 
-\begin{equation*}
-    R_{ij} = \prod_{k=1}^{p_\psi}\exp\left\{-10^{\beta_k}|x_{ik}-x_{jk}|^\alpha\right\}
-\end{equation*}
-
-\textcolor{red}{We fix $\alpha=1.95$ and estimate each $\beta_k$ with $k \in \{1,...,p_\psi\}$. 
-The above with $R_{ij}$ is based on GPfit; will update this to reflect SEPIA settings later.}
 Using these trained GPs from the PCs, we predict the spectra for unobserved cosmologies.
 
 \subsection{Predicting Spectra for CAMB Data}
