@@ -10,8 +10,7 @@
 # Optimize Matern -------------------------------------------------------------
 #' @export
 
-opt_matern <- function (dx, y, sdd, init = c(0.1, 0.1), n_multi = 100) 
-{
+opt_matern <- function (dx, y, sdd, init = c(0.1, 0.1), n_multi = 100) {
   out <- optim(init, nl_matern, dx = dx, y = y, sdd = sdd)
   best_par <- out$par
   best_ll <- out$value
@@ -83,4 +82,29 @@ moore_penrose <- function(H, tolpower = -10) {
   inverse.values[i] <- 1 / H.eigen$values[i]
   H.MP <- H.eigen$vectors %*% diag(inverse.values) %*% t(H.eigen$vectors)
   return(H.MP)
+}
+
+# monowarp_ref ----------------------------------------------------------------
+
+monowarp_ref <- function(x, xg, wg, index) {
+  # x: matrix of input locations for returned w
+  # xg: matrix of grid locations
+  # wg: UNWARPED w values at xg locations
+  # Returns warped values of w at x locations
+  if (!is.matrix(x)) x <- matrix(x, ncol = 1)
+  if (!is.matrix(xg)) xg <- matrix(xg, ncol = 1)
+  if (!is.matrix(wg)) wg <- matrix(wg, ncol = 1)
+  if (!is.matrix(index)) index <- matrix(index, ncol = 1)
+  
+  w <- matrix(nrow = nrow(x), ncol = ncol(wg))
+  for (i in 1:ncol(wg)) {
+    r_orig <- range(wg[, i])
+    wg[, i] <- exp(wg[, i])
+    wg[, i] <- cumsum(wg[, i])
+    r_new <- range(wg[, i])
+    wg[, i] <- (wg[, i] - r_new[1])/(r_new[2] - r_new[1]) # first scale to [0, 1]
+    wg[, i] <- wg[, i]*(r_orig[2] - r_orig[1]) + r_orig[1] # then scale to original range
+    w[, i] <- fo_approx(xg[, i], wg[, i], x[, i], index[, i])
+  }
+  return(w)
 }
