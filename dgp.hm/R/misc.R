@@ -104,14 +104,13 @@ monowarp_ref <- function(x, xg, wg, index) {
   if (!is.matrix(index)) index <- matrix(index, ncol = 1)
   
   w <- matrix(nrow = nrow(x), ncol = ncol(wg))
-  for (i in 1:ncol(wg)) {
-    r_orig <- range(wg[, i])
-    wg[, i] <- exp(wg[, i])
-    wg[, i] <- cumsum(wg[, i])
-    r_new <- range(wg[, i])
-    wg[, i] <- (wg[, i] - r_new[1])/(r_new[2] - r_new[1]) # first scale to [0, 1]
-    wg[, i] <- wg[, i]*(r_orig[2] - r_orig[1]) + r_orig[1] # then scale to original range
-    w[, i] <- deepgp:::fo_approx(xg[, i], wg[, i], x[, i], index[, i])
-  }
+  r_orig <- range(wg)
+  wg <- exp(wg)
+  wg <- cumsum(wg)
+  r_new <- range(wg)
+  wg <- (wg - r_new[1])/(r_new[2] - r_new[1]) # first scale to [0, 1]
+  wg <- wg*(r_orig[2] - r_orig[1]) + r_orig[1] # then scale to original range
+  w <- deepgp:::fo_approx(xg, wg, x, index)
+
   return(w)
 }

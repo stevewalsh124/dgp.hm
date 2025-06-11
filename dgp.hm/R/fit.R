@@ -152,7 +152,7 @@ gibbs_two_layer_hm <- function(x, y, x_grid, nmcmc, verb, initial, settings, v,
     theta_w[j] <- samp$theta
     
     # Sample hidden Gaussian layer (w)
-    samp <- sample_w_hm(y, w_grid[, j - 1], dw, x, x_grid, dx_grid,
+    samp <- sample_w_hm(y, w_grid[, j - 1], dw, x, x_grid, dx_grid, grid_index,
                         theta_y[j], theta_w[j], ll_prev = ll_outer, v = v, 
                         Sigma_hat = Sigma_hat)
     w_grid[, j] <- samp$w_grid

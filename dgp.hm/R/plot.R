@@ -41,16 +41,19 @@ plot.dgp2hm <- function(x, ...) {
          main = paste0('Trace Plot of theta_w'))
   
   # Hidden layer plot
+  grid_index <- deepgp:::fo_approx_init(x$x_grid, x$x)
   indx <- floor(seq(from = 1, to = x$nmcmc, length = 100))
   if (indx[1] == 0) indx[1] <- 1
   col <- heat.colors(100 + 10) # add ten to avoid using colors that are too light
   par(mfrow = c(1, 1), mar = c(4, 4, 2, 2))
   o <- order(x$x)
-  plot(x$x[o], x$w[o, indx[1]] - mean(x$w[, indx[1]]), type = 'l', xlab = 'X', 
+  w <- monowarp_ref(x$x, x$x_grid, x$w_grid[, indx[1]], grid_index)
+  plot(x$x[o], w[o] - mean(w), type = 'l', xlab = 'X', 
        ylab = 'W', col = col[1], main = paste0('MCMC samples of X to W'), 
        ylim = c(min(x$w[, indx]), max(x$w[, indx])))
   for (j in 2:length(indx)) {
-    lines(x$x[o], x$w[o, indx[j]] - mean(x$w[, indx[j]]), col = col[j])
+    w <- monowarp_ref(x$x, x$x_grid, x$w_grid[, indx[j]], grid_index)
+    lines(x$x[o], w[o] - mean(w), col = col[j])
   }
 
 }
