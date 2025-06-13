@@ -308,13 +308,11 @@ $\bar{Y}\mid S \sim \mathrm{GP}(S, \Sigma_\varepsilon)$.  While previous works
 have considered diagonal $\Sigma_\varepsilon$ \citep{moran2024dpc}, we find it
 essential to account for the smoothly varying spatial dependence of the
 low resolution runs (as visualized in Figure \ref{fig:plot_data}).  For
-this, we embrace variations of the Mat\'ern kernel \citep{stein1999interpolation},
-tailored to each scenario (more on this in later subsections).
-We consider $\Sigma_\varepsilon$ as known, given domain-matter expertise.
-\textcolor{red}{(Here, we are fixing $\Sigma_\varepsilon$ upon estimating the Matern 
-parameters and utilizing the precision estimates (domain-matter expertise from 
-log-log regression model)?  The estimate of $\Sigma_\varepsilon$ is tailored for
-each cosmology, as the Matern estimates are computed uniquely for each.)}
+this, we specify a dense covariance matrix $\Sigma_\varepsilon$ that simulataneously
+allows us to model the correlated errors, as well as build domain-matter expertise
+into the prior. To this end, we embrace variations of the Mat\'ern kernel 
+\citep{stein1999interpolation}, tailored to each cosmology (more on this in later 
+subsections). 
 
 We next place a Gaussian process prior on $S$, i.e.,
 $S\sim \mathrm{GP}\left(\boldsymbol{\mu}_S, \Sigma_S(\cdot)\right)$, again with a 
@@ -341,22 +339,25 @@ The functional composition of GPs in the latter two lines forms a ``deep Gaussia
 \citep{damianou2013deep,dunlop2018deep}. Additional latent layers could be considered, 
 although we find one is sufficient.
 
-We use the Mat\`ern kernels,
+We use the Mat\`ern kernel \textcolor{red}{@Annie, might need to add/remove $\tau^2$ 
+in one or both of these kernels},
 \[
 \begin{aligned}
 &\Sigma_S(W)^{i,j} = \tau^2 \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_S}} + 
   \frac{5d^2}{3\theta_S}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_S}}\right)
 \quad\textrm{for}\quad 
-d=||w_i-w_j||^2, \;\;\textrm{and} \\
-&\Sigma_W(X)^{i,j} = \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_W}} + 
-  \frac{5d^2}{3\theta_W}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_W}}\right)
-\quad\textrm{for}\quad 
-d=||x_i-x_j||^2.
+d=||w_i-w_j||^2. 
+% \;\;\textrm{and} \\
+% &\Sigma_W(X)^{i,j} = \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_W}} + 
+%   \frac{5d^2}{3\theta_W}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_W}}\right)
+% \quad\textrm{for}\quad 
+% d=||x_i-x_j||^2,
 \end{aligned}
 \]
-In the $S$ layer, hyperparameters $\tau^2$ and $\theta_S$ govern the 
-correlation scale and lengthscale respectively.  In the $W$ layer, we allow for a
-unique lengthscale $\theta_W$ but enforce unit scale following \citet{sauer2023active}.
+In the $S$ layer, hyperparameters $\tau^2$ and $\theta_S$ govern the correlation 
+scale and lengthscale respectively.  In the $W$ layer, $\Sigma_W(X)^{i,j}$ is defined 
+analogously for squared distances $d=||x_i-x_j||^2$ and we allow for a unique 
+lengthscale $\theta_W$ but enforce unit scale following \citet{sauer2023active}.
 
 \subsection{Bayesian Inference}
 
@@ -397,25 +398,27 @@ S^{(t)}\mid\bar{Y}, \Sigma_\varepsilon \sim \mathcal{N}_n(m^{(t)}, C^{(t)})
 \quad\textrm{where}\quad
 \begin{array}{rl}
 C^{(t)}&=\left(\Sigma_S(W^{(t)})^{-1}+\Sigma_\varepsilon^{-1}\right)^{-1} \\
-m^{(t)}&=C^{(t)}\left(\Sigma_\varepsilon^{-1}\bar{Y}+\Sigma_S(W^{(t)})^{-1}\boldsymbol{\mu}\right).
+m^{(t)}&=C^{(t)}\left(\Sigma_\varepsilon^{-1}\bar{Y}\right).
+% "+\Sigma_S(W^{(t)})^{-1}\boldsymbol{\mu}" removed from m^t when mu=0
 \end{array}
 \] 
 
-These results come from Bayes' Theorem, with details of this derivation provided 
-in \ref{sec:apdx_SgivenY}. With all posterior draws $S^{(t)}$, we compute
+These results come from Bayes' Theorem and reflect that $\boldsymbol{\mu}_S=\boldsymbol{0}$. 
+These results will generalize to any value for $\boldsymbol{\mu}_S$, with details of this 
+general derivation provided in \ref{sec:apdx_SgivenY}. With all posterior draws $S^{(t)}$, we compute
 the average of these to obtain our posterior mean for a particular cosmology. Additionally,
 we quantify uncertainty by finding the 2.5th and 97.5th percentiles of the posterior 
 draws at each index to obtain a 95\% credible interval.
 We denote our inference procedure for the hierarchical model of Eq.~\ref{eq:dgphm} as
-``DGP.HM'' given its deep Gaussian process foundation with additional hierarchical modeling (HM)
-structure to incorporate multiple functional outputs.
+``DGP.FCO'' given its deep Gaussian process foundation with additional hierarchical modeling
+structure to incorporate multiple functional correlated outputs (FCO).
 
 \subsection{Simulation Study}
 \label{subsec:sim}
 
-We compare DGP.HM to competing models with a simulation study where the underlying 
+We compare DGP.FCO to competing models with a simulation study where the underlying 
 true curve is known. Following \cite{moran2024dpc}, we consider two functions 
-($f_1$ and $f_2$) each with two variance specifications (settings ``4" and ``5", 
+($f_1$ and $f_2$) each with two variance specifications (settings ``A" and ``B", 
 \textcolor{magenta}{we can consider additional homoskedastic cases in the appendix if necessary}). 
 
 Here, $f_1$ and $f_2$ are defined as follows:
@@ -429,11 +432,11 @@ For additional variation, the values of $m_1, m_2, u_1,$ and $u_2$ are random wh
 $m_1 \sim \text{Uniform}(0.5,1.5)$, $u_1 \sim \text{Uniform}(1.5,2.5)$, and $m_2,u_2 
 \sim \text{Uniform}(0.6,1.4)$. 
       
-For the two variance settings, we consider matrices $\Sigma_4$ and $\Sigma_5$ to 
+For the two variance settings, we consider matrices $\Sigma_A$ and $\Sigma_B$ to 
 have a Mat\'ern covariance function with a nugget of $10^{-8}$ and smoothness of 2.5. 
-For setting ``4", we have $\tau^2=0.0225$ and $\theta=0.01$. For setting ``5", we have 
-$\tau^2=0.01$ and $\theta=0.05$, and additionally scale this covariance matrix by 
-a vector of values $s$ so that $\Sigma_5 = s M s^T$ is nonstationary; here $M$ is 
+For setting ``A", we have $\tau^2=0.0225$ and $\theta=0.01$. For setting ``B", we have 
+$\tau^2=0.1$ and $\theta=0.05$, and additionally scale this covariance matrix by 
+a vector of precision values $s$ so that $\Sigma_B = s M s^T$ is nonstationary; here $M$ is 
 a Mat\'ern covariance matrix with parameters $\tau^2$ and $\theta$.
 
 For each simulated function and variance specification, we generate 20 values of 
@@ -460,22 +463,13 @@ Emu \citep{moran2023mira}.
 The metrics we use to evaluate performance are mean squared error (MSE) and the 
 log score, a proper scoring rule which takes both prediction and intervals into 
 consideration \citep{gneiting2007strictly}. For both metrics, a lower value indicates 
-better performance. Log score and MSE results are shown in Figures \ref{fig:sims_logS} 
-and \ref{fig:sims_MSE} respectively; our DGP.HM model performs favorably against 
-these current benchmark methods. \textcolor{magenta}{If we mention that DGP.HM timings 
-speed up compared to \texttt{deepgp}, we would also need to mention that \texttt{hetGP} 
-is much faster than both of these.}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=6in]{sims_MSE.png}
-    \caption{Boxplot of MSEs across two different functions and covariance settings 
-             (lower is better). For each case, the boxplot is constructed from 20 
-             random batches were simulated. Each column represents a function/variance 
-             specification pair, and each row shows results for batch sizes of 
-             either 5 (top) or 15 (bottom).}    
-    \label{fig:sims_MSE}
-\end{figure}
+better performance. Log score are shown in Figure \ref{fig:sims_logS}; our DGP.FCO 
+model performs favorably against each of these current benchmark methods by
+accounting for spatial dependence within our model, resulting in more accurate UQ.
+MSE results, which do not address UQ, were comparable across competing methods; these results
+can be found in Figure \ref{fig:sims_MSE}. \textcolor{magenta}{If we mention that DGP.FCO timings 
+speed up compared to \texttt{deepgp} and DPC, we would also need to mention that \texttt{hetGP} 
+is much faster than all of these.}
 
 \subsection{CAMB Data}
 \label{subsec:camb}
@@ -492,22 +486,36 @@ allowing us to accurately assess posterior mean estimates and credible intervals
 \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{CAMB_fit_model1.png}
-    \caption{Example of DGP.HM model fit for the first batch of model runs from the CAMB data, 
+    \caption{Example of DGP.FCO model fit for the first batch of model runs from the CAMB data, 
              with LOESS mean term subtracted. We can compare the orange lines 
              (posterior mean and dotted 95\% credible interval) to the light blue line,
              representing the infinite-resolution ``true" spectrum.}   
     \label{fig:fit_camb}
 \end{figure}
 
-We use 32 CAMB batches to train the DGP.HM model and reserve the other 32 as a test set.
+We use 32 CAMB batches to train the DGP.FCO model and reserve the other 32 as a test set.
 To imitate the role of the perturbation theory output of Mira-Titan, we anchor estimates of the CAMB
 power spectrum at the infinite-resolution for $\log_{10}(k) < -1.7$, and then rely 
 strictly on the low- and high-resolution runs for $k$ above this. We take a weighted
-average of the CAMB runs and assume heteroskedastic errors in a similar fashion. For the CAMB
-data, lengthscale estimates are consistently around $3\times 10^{-7}$, evidence that we
-can simplify our covariance structure to contain no spatial dependence 
-(compare low-resolution runs of Figure \ref{fig:fit_camb} 
-with Figure \ref{fig:plot_data}).
+average of the CAMB runs and assume heteroskedastic errors in a similar fashion. 
+
+We use a log-log regression model to obtain precision estimates $\Lambda_\ell$ and $\Lambda_h$
+for the low- and high-resolution runs respectively, as outlined in Section \ref{sec:data}. 
+Similarly, we set $\Lambda_i=10^8$ to illustrate high confidence in the infinite-resolution 
+run for low $k$ values and incorporate these estimates within $\Sigma_\varepsilon$. 
+With the precision information, we then estimate the Mat\'ern parameters for 
+$\Sigma_\varepsilon$. For the CAMB data, lengthscale estimates are consistently 
+around $3\times 10^{-7}$, evidence that we can simplify our covariance structure 
+to contain no spatial dependence (compare low-resolution runs of Figure \ref{fig:fit_camb} 
+with Figure \ref{fig:plot_data}). We therefore specify $\Sigma_\varepsilon = 
+(15\Lambda_\ell+\Lambda_h+\Lambda_i)^{-1}$ for the CAMB data.  
+
+After fitting the DGP.FCO model, an illustration of the posterior mean and its UQ can
+be seen in Figure \ref{fig:fit_camb}. Notice that there are peaks where both the high-resolution
+run and the weighted average are biased, but our posterior mean adjusts appropriately 
+and has a more reliable estimate for the infinite-resolution run (the ``truth" in this setting). 
+UQ is handled well, as precision increases with increasing $k$, which is captured in our
+95\% credible intervals.
 
 \subsection{Estimating Spectra with Mira-Titan Data}
 \label{subsec:mira_fit}
@@ -515,18 +523,19 @@ with Figure \ref{fig:plot_data}).
 From plots of the multiple low-resolution spectra (e.g., Figure \ref{fig:plot_data}), 
 we find they vary smoothly about some mean $S$, suggesting that a dense covariance 
 matrix $\Sigma_\varepsilon$ (accounting for spatial dependence) may outperform a 
-diagonal covariance $\Lambda_\ell^{-1}$ for $\bar Y$. In previous work, we have 
-modeled multiple candidates for $\Sigma_\varepsilon$ \citep{walsh2023bayesian} and 
-found that a Mat\'ern covariance $\Sigma_\ell$ trained on the low-resolution runs 
-(pre-scaled by the precision values and subtracting a LOESS-smoothed average) performs 
-the best. We specify this structure within $\Sigma_\varepsilon$ and refer readers 
+diagonal covariance $\Lambda_\ell^{-1}$ for $\bar Y$. From Section \ref{sec:data},
+we can incorporate domain knowledge from $\Lambda_p, \Lambda_\ell,$ and $\Lambda_h$ 
+within our model. In previous work, we have modeled multiple candidates for 
+$\Sigma_\varepsilon$ \citep{walsh2023bayesian} and found that a Mat\'ern covariance 
+$\Sigma_\ell$ trained on the low-resolution runs (pre-scaled by the precision 
+values and subtracting a LOESS-smoothed average) performs the best. 
+We specify this structure within $\Sigma_\varepsilon$ and refer readers 
 to \cite{walsh2023bayesian} for a more detailed exposition. This yields 
 $\Sigma_\varepsilon=\left(\Lambda_p^{-1} + \Sigma_\ell + \Lambda_h^{-1}\right)^{-1}$, 
 where $\Lambda_p, \Sigma_\ell^{-1}, \text{ and } \Lambda_h$ are all $n\times n$ 
-and are 0 wherever the corresponding data type is biased.
-
-From here, we estimate $\tau_\ell, \theta_\ell$ with maximum 
-likelihood, and conditional on $\Sigma_\varepsilon$,
+and are 0 wherever the corresponding data type is biased. From here, we estimate 
+$\tau_\ell, \theta_\ell$ with maximum likelihood, and input these within 
+$\Sigma_\varepsilon$, which we use as an input to our model.
 
 To train our hierarchical model, we initialize our hyperparameter estimates across 
 all cosmologies by modeling the first (M001) with 50,000 MCMC runs, and use these 
@@ -565,11 +574,8 @@ average warping. Some departure from stationarity is estimated in the higher $X$
 \section{Prediction for Unobserved Cosmologies}
 \label{sec:pred}
 
-For simplicity, we will denote these eight parameters as $\psi \in \mathbb{R}^8$.
-
-
 Upon obtaining the posterior means from each of the 111 training cosmologies, this 
-section details our second contribution - the use of the Bayesian DGP.HM model 
+section details our second contribution - the use of the Bayesian DGP.FCO model 
 to predict the curve for held-out cosmologies. This is achieved with modeling the 
 weights of different basis functions as GPs.
 
@@ -599,6 +605,9 @@ result in an approximation where
     \boldsymbol\eta= UDV^T = U_1\Sigma V_1^T \approx BW^T.
 \end{equation}
 
+Our goal is to predict the power spectrum for a held-out cosmology. 
+For simplicity, we will denote these eight parameters for a given cosmology (see 
+Section \ref{sec:data}) as $\psi \in \mathbb{R}^8$. 
 Figure \ref{fig:mean_PCs_oneW} illustrates this decomposition with the estimated 
 mean trend, the principal components contained in $B$, and one example of how the 
 weight for the first PC will vary dependent on the first of $p_\psi=8$ cosmological 
@@ -644,15 +653,15 @@ Using these trained GPs from the PCs, we predict the spectra for unobserved cosm
 \subsection{Predicting Spectra for CAMB Data}
 \label{subsec:camb_pred}
 
-From our 32 posterior means using DGP.HM, these are input into SEPIA in order to predict power spectra
+From our 32 posterior means using DGP.FCO, these are input into SEPIA in order to predict power spectra
 for the 32 test cosmologies. With the infinite-resolution output, we have a sense of the ``best-case" 
 predictions we can have (i.e., if we trained with the 32 true power spectra, as opposed to our 
 estimated posterior means). In Figure \ref{fig:pca_preds_v_camb}, we see comparisons of the heldout 
-infinite resolution alongside two predictions: one based on DGP.HM and the ``best-case" scenario using the
+infinite resolution alongside two predictions: one based on DGP.FCO and the ``best-case" scenario using the
 infinite-resolution spectra of the training set. There is a high level of agreement between the pairs
 of predictions across cosmologies. Upon comparing MSEs for each of these prediction scenarios 
 (Figure \ref{fig:mse_camb}, most are very similar across the two groups (with the two most difficult 
-predictions being the exceptions), suggesting that overall DGP.HM is estimating the true spectra 
+predictions being the exceptions), suggesting that overall DGP.FCO is estimating the true spectra 
 for each batch well.
 
 \begin{figure}
@@ -661,14 +670,14 @@ for each batch well.
     \caption{Predictions for 16 of the 32 test cosmologies after centering and scaling. 
              The interpolated infinite resolution run is shown in black, the prediction 
              (trained on the infinite resolution) is in blue and the prediction from 
-             the DGP.HM posterior mean is in red.}   
+             the DGP.FCO posterior mean is in red.}   
     \label{fig:pca_preds_v_camb}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[width=3in]{mse_dot.jpg}
-    \caption{Comparison of MSE for CAMB predictions, when training with DGP.HM posterior 
+    \caption{Comparison of MSE for CAMB predictions, when training with DGP.FCO posterior 
              means (left), and training with the ``true" infinite-resolution spectra (right).}   
     \label{fig:mse_camb}
 \end{figure}
@@ -684,12 +693,12 @@ Nonstationarity is permitted through modeling the bandwidth parameter with a pro
 convolution as well; this composition is referred to as a deep process convolution 
 \citep{moran2024dpc}.
 
-Both Cosmic Emu and DGP.HM are capable of modeling a true underlying functions based 
+Both Cosmic Emu and DGP.FCO are capable of modeling a true underlying functions based 
 upon multiple functional realizations, but our approach utilizes DGPs within a 
 hierarchical model in lieu of deep process convolutions. After obtaining the estimated 
 smooth spectra from the training cosmologies, each method utilizes GPs in order to 
 estimate the weights of the PCs from the estimated spectra. Below, we compare prediction 
-performance between Cosmic Emu and DGP.HM for the 6 held-out cosmologies. 
+performance between Cosmic Emu and DGP.FCO for the 6 held-out cosmologies. 
 \textcolor{magenta}{In addition, we can also predict over a large uniform or full 
 factorial design to obtain estimated main effects for each cosmological parameter in 
 $\psi$, interactions amongst the $p_\psi=8$ parameters, and decompose the overall 
@@ -698,10 +707,10 @@ variation by main effects, two-way interactions, and so on. Should this be inclu
 Plots for the average root mean squared error (RMSE) for each prediction method over the 
 6 cosmologies and each $k$ value are shown in Figure \ref{fig:plot_rmse_k}. Comparisons 
 of the spectrum estimation for training cosmologies are shown as well (using RMSE against 
-the weighted average of observations). For predictions, DGP.HM achieves the greatest 
+the weighted average of observations). For predictions, DGP.FCO achieves the greatest 
 reduction in RMSE in the region where perturbation theory and the low-resolution runs 
 are deemed unbiased. For the region where only the high-resolution run is unbiased, 
-Cosmic Emu has a lower average RMSE. Over all $k$ values and predictions, DGP.HM has 
+Cosmic Emu has a lower average RMSE. Over all $k$ values and predictions, DGP.FCO has 
 an average RMSE of 0.0089 and Cosmic Emu has an average RMSE of 0.0106. Our RMSE is 
 lower at 56\% of $k$ values considered. The individual predictions for each method and 
 cosmology are shown in Figure \ref{fig:plot_pred_1to6}.
@@ -744,10 +753,24 @@ sensitivity analyses for the cosmological parameters can be explored to gain ins
 into how each of these parameters interact, and which are most significant. From a 
 modeling perspective, changes to the model could include modeling the latent layer 
 $W$ jointly across different cosmologies, as well as considering different redshift 
-values other than $z=0$. Leveraging a hybrid model between DGP.HM and Cosmic Emu 
+values other than $z=0$. Leveraging a hybrid model between DGP.FCO and Cosmic Emu 
 may also help to obtain accurate estimates on the lower and higher ends of $k$ values, 
 respectively. Additionally, Bayesian smoothing spline ANOVA (BSS-ANOVA) or other methods 
 could be compared in addition to DGPs. 
+
+\section{Acknowledgments}
+\label{sec:ack}
+
+\textcolor{red}{This work was in part supported by the U.S. Department
+of Energy, Office of Science, Office of Advanced Scientific Computing Research, 
+Scientific Discovery through Advanced Computing (SciDAC) program through 
+Grant 420453 "Enabling Cosmic Discoveries in the Exascale Era."}
+
+The authors are pleased to acknowledge Advanced Research Computing at Virginia Tech 
+(\url{https://arc.vt.edu/}) as well as the Shared Computing Cluster (SCC) administered
+by Boston University's Research Computing Services (\url{www.bu.edu/tech/support/research/})
+for providing computational resources and technical support that have contributed 
+to the results reported within this paper.
 
 \appendix
 \renewcommand{\thesection}{Appendix \Alph{section}}
@@ -891,9 +914,23 @@ Can also put details of dataset in supplementary material.}
     \centering
     \includegraphics[width=6in]{pred_1to6.png}
     \caption{Results of all six predictions for both methods on the held-out 
-    cosmologies (weighted average subtracted). CosmicEMU is dashed, DGP.HM is dotted, 
+    cosmologies (weighted average subtracted). CosmicEMU is dashed, DGP.FCO is dotted, 
     and solid gray lines show results of held-out computer model runs.}
     \label{fig:plot_pred_1to6}
+\end{figure}
+
+\section{Simulation Study Additional Results}
+\label{sec:apdx_sims}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=6in]{sims_MSE.png}
+    \caption{Boxplot of MSEs across two different functions and covariance settings 
+             (lower is better). For each case, the boxplot is constructed from 20 
+             random batches were simulated. Each column represents a function/variance 
+             specification pair, and each row shows results for batch sizes of 
+             either 5 (top) or 15 (bottom).}    
+    \label{fig:sims_MSE}
 \end{figure}
 
 \bibliographystyle{jasa}
