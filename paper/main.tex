@@ -355,8 +355,8 @@ unique lengthscales,
 k(d, \theta) = \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta}} + 
   \frac{5d^2}{3\theta}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta}}\right).
 \]
-In our one-dimensional setting, we embrace unit scale on $S$ to preserve identifiability
-with $\theta_S$ \textcolor{red}{(@Steve - can you cite that paper here?)}.
+In our one-dimensional setting, we embrace unit scale on $S$ to preserve parsimony 
+and identifiability with $\theta_S$ \textcolor{red}{(@Steve - can you cite that paper here?)}.
 Unit scale on latent $W$ was recommended by \citet{sauer2023active} for similar reasons.
 
 \subsection{Bayesian Inference}
@@ -368,9 +368,10 @@ We first integrate over $S$ to condense our hierarchical model of Eq.~(\ref{eq:d
 \label{eq:likelihood}
 \bar{Y} \mid W, \Sigma_\varepsilon &\sim \textrm{GP}(\mathbf{0}, \Sigma_S(W) + \Sigma_\varepsilon) \\
 \label{eq:prior}
-W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_W(X)\right)
+W &\sim \mathrm{monoGP}\left(\mathbf{0}, \Sigma_W(X)\right)
 \end{align}
-Details are provided in \ref{sec:apdx_int_lik}. The incorporation of $\Sigma_\epsilon$ in the
+Details, including generalizations for $\boldsymbol{\mu}_S\neq\mathbf{0}$, are provided in \ref{sec:apdx_int_lik}. 
+The incorporation of $\Sigma_\epsilon$ in the
 Gaussian likelihood of this outer layer is an essential upgrade to previous DGP inferential schemes.
 This covariance incorporates knowledge of the smoothly varying dynamics from which $\bar{Y}$ was
 generated.
@@ -379,12 +380,6 @@ We embrace fully-Bayesian inference of latent $W$ and kernel hyperparameters $\{
 Specifically, we use elliptical slice sampling \citep[ESS;][]{murray2010elliptical} to 
 generate posterior samples of $W$, using Eq.~(\ref{eq:prior}) for proposal generation and 
 Eq.~(\ref{eq:likelihood}) for likelihood-based acceptance.  
-Under a reference prior $\pi(\tau^2)\propto\frac{1}{\tau^2}$,
-we integrate $\tau^2$ from the likelihood of Eq.~(\ref{eq:likelihood}).  The resulting marginal 
-posterior is equivalent to that with the plug-in estimator 
-$\hat{\tau}^2 = \dots$ \citep[][Chapter 5]{gramacy2020surrogates}.
-\textcolor{red}{(With $\Sigma_\epsilon$ on there, we can't actually do this.. unless we divide
-$\Sigma_\epsilon$ by $\tau^2$...)}.
 For $\theta_S$ and $\theta_W$, after pre-scaling, we adopt the default prior specifications 
 provided in the {\tt deepgp} {\sf R}-package \citep{deepgp}.
 We then integrate Metropolis-Hastings sampling of these parameters in a Gibbs framework 
