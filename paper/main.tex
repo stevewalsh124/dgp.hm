@@ -294,11 +294,13 @@ to estimate the underlying spectra and quantify uncertainty for a particular cos
 Let input $X$ represent the vector with elements $x_i = \log_{10}(k_i)$ for $i=1,\dots,n$.
 In the previous section, we used lowercase $\bar{y}$ to denote 
 the observed weighted average; now, we use $\bar{Y}$ to indicate the corresponding 
-random variable within the statistical model.  Together, $X$ and $\bar{Y}$ comprise the 
-training data for a particular cosmology. $\bar{Y}$ is typically pre-processed
-based on domain expertise, such as that defined in Section \ref{sec:data}.
-We will reserve details of domain-specific pre-processing for the CAMB and Mira-Titan suites
-for Sections \ref{subsec:camb} and \ref{subsec:mira_fit}, respectively.
+random variable within the statistical model.  
+%Together, $X$ and $\bar{Y}$ comprise the 
+%training data for a particular cosmology. 
+$\bar{Y}$ is typically pre-processed
+based on domain expertise.  Pre-processing for Mira-Titan was described in Section 
+\ref{sec:data}; we will detail domain-specific pre-processing 
+for the CAMB suite in Section \ref{subsec:camb}.
 
 \subsection{Model Specification}
 
@@ -308,10 +310,10 @@ Specifically, we assume $\bar{Y}$ is a random realization of a Gaussian
 process centered at $S$ with some covariance, i.e., 
 $\bar{Y}\mid S \sim \mathrm{GP}(S, \Sigma_\varepsilon)$.  While previous works
 have considered diagonal $\Sigma_\varepsilon$ \citep{moran2024dpc}, we find it
-essential to account for the smoothly varying spatial dependence of the
-low resolution runs (as visualized in Figure \ref{fig:plot_data}).  For
-this, we specify a dense covariance matrix $\Sigma_\varepsilon$ that simulataneously
-allows us to model the correlated errors, as well as build domain-matter expertise
+essential to account for the smoothly varying spatial dependence
+(as visualized in Figure \ref{fig:plot_data}).  We thus specify a dense 
+covariance matrix $\Sigma_\varepsilon$ that simulataneously
+allows us to model the correlated errors and build domain-matter expertise
 into the prior. To this end, we embrace variations of the Mat\'ern kernel 
 \citep{stein1999interpolation}, tailored to each cosmology (more on this in later 
 subsections). 
@@ -324,8 +326,9 @@ use locations $X$ as the inputs to kernel $\Sigma_S(\cdot)$, yet we have found t
 prior to lack sufficient flexibility for our motivating
 application.  In the Mira-Titan setting, some nonstationarity is expected due to 
 baryonic acoustic oscillations when $-2 \leq \log_{10}(k) \leq -1$. To account 
-for this, we incorporate an additional latent Gaussian process, $W$, which accommodates
-nonstationarity by warping $X$ via $W \sim \mathrm{GP}\left(\boldsymbol{\mu}_W, \Sigma_W(X)\right)$.
+for this, we incorporate a latent monotonic Gaussian process \citep[monoGP;][]{barnett2025monotonic},
+which accommodates nonstationarity by warping $X$ via 
+$W \sim \mathrm{monoGP}\left(\boldsymbol{\mu}_W, \Sigma_W(X)\right)$.
 $W$ is also an $n$-vector whose entries $w_i$ correspond to warped versions of each $x_i$.
 Again, we set $\boldsymbol{\mu}_W = \mathbf{0}$ without loss of generatlity (we have
 found $\boldsymbol{\mu}_W = X$ works similarly).
@@ -334,32 +337,27 @@ Ultimately, this yields the following hierarchical model:
 \begin{aligned}
 \bar{Y}\mid S,\Sigma_\varepsilon &\sim \mathrm{GP}(S,\Sigma_\varepsilon) \\
 S\mid W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_S(W)\right) \\
-W &\sim \mathrm{GP}\left(\mathbf{0}, \Sigma_W(X)\right).
+W &\sim \mathrm{monoGP}\left(\mathbf{0}, \Sigma_W(X)\right).
 \end{aligned}
 \end{equation}
 The functional composition of GPs in the latter two lines forms a ``deep Gaussian process'' 
 \citep{damianou2013deep,dunlop2018deep}. Additional latent layers could be considered, 
 although we find one is sufficient.
 
-We use the Mat\`ern kernel \textcolor{red}{@Annie, might need to add/remove $\tau^2$ 
-in one or both of these kernels},
+For both $\Sigma_S$ and $\Sigma_W$, we use Mat\`ern kernels with unit scale and
+unique lengthscales,
 \[
-\begin{aligned}
-&\Sigma_S(W)^{i,j} = \tau^2 \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_S}} + 
-  \frac{5d^2}{3\theta_S}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_S}}\right)
-\quad\textrm{for}\quad 
-d=||w_i-w_j||^2. 
-% \;\;\textrm{and} \\
-% &\Sigma_W(X)^{i,j} = \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta_W}} + 
-%   \frac{5d^2}{3\theta_W}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta_W}}\right)
-% \quad\textrm{for}\quad 
-% d=||x_i-x_j||^2,
-\end{aligned}
+\begin{array}{l}
+\Sigma_S(W)^{i,j} = k\left(||w_i - w_j||^2, \theta_S\right) \\[7pt]
+\Sigma_W(X)^{i,j} = k\left(||x_i - x_j||^2, \theta_W\right)
+\end{array}
+\quad\textrm{where}\quad
+k(d, \theta) = \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta}} + 
+  \frac{5d^2}{3\theta}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta}}\right).
 \]
-In the $S$ layer, hyperparameters $\tau^2$ and $\theta_S$ govern the correlation 
-scale and lengthscale respectively.  In the $W$ layer, $\Sigma_W(X)^{i,j}$ is defined 
-analogously for squared distances $d=||x_i-x_j||^2$ and we allow for a unique 
-lengthscale $\theta_W$ but enforce unit scale following \citet{sauer2023active}.
+In our one-dimensional setting, we embrace unit scale on $S$ to preserve identifiability
+with $\theta_S$ \textcolor{red}{(@Steve - can you cite that paper here?)}.
+Unit scale on latent $W$ was recommended by \citet{sauer2023active} for similar reasons.
 
 \subsection{Bayesian Inference}
 
@@ -377,7 +375,7 @@ Gaussian likelihood of this outer layer is an essential upgrade to previous DGP 
 This covariance incorporates knowledge of the smoothly varying dynamics from which $\bar{Y}$ was
 generated.
 
-We embrace fully-Bayesian inference of latent $W$ and kernel hyperparameters $\{\tau^2, \theta_S, \theta_W\}$.
+We embrace fully-Bayesian inference of latent $W$ and kernel hyperparameters $\{\theta_S, \theta_W\}$.
 Specifically, we use elliptical slice sampling \citep[ESS;][]{murray2010elliptical} to 
 generate posterior samples of $W$, using Eq.~(\ref{eq:prior}) for proposal generation and 
 Eq.~(\ref{eq:likelihood}) for likelihood-based acceptance.  
