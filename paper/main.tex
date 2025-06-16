@@ -290,7 +290,7 @@ effectively inferring the true spectrum.
 \label{sec:hm_fit}
 
 Here we describe our first contribution: the use of a Bayesian hierarchical model 
-to estimate the underlying spectra and quantify uncertainty for a particular cosmology.
+to estimate the underlying spectrum and quantify uncertainty for a particular cosmology.
 Let input $X$ represent the vector with elements $x_i = \log_{10}(k_i)$ for $i=1,\dots,n$.
 In the previous section, we used lowercase $\bar{y}$ to denote 
 the observed weighted average; now, we use $\bar{Y}$ to indicate the corresponding 
@@ -299,7 +299,7 @@ random variable within the statistical model.
 %training data for a particular cosmology. 
 $\bar{Y}$ is typically pre-processed
 based on domain expertise.  Pre-processing for Mira-Titan was described in Section 
-\ref{sec:data}; we will detail domain-specific pre-processing 
+\ref{sec:data}; we will detail pre-processing 
 for the CAMB suite in Section \ref{subsec:camb}.
 
 \subsection{Model Specification}
@@ -330,7 +330,7 @@ for this, we incorporate a latent monotonic Gaussian process \citep[monoGP;][]{b
 which accommodates nonstationarity by warping $X$ via 
 $W \sim \mathrm{monoGP}\left(\boldsymbol{\mu}_W, \Sigma_W(X)\right)$.
 $W$ is also an $n$-vector whose entries $w_i$ correspond to warped versions of each $x_i$.
-Again, we set $\boldsymbol{\mu}_W = \mathbf{0}$ without loss of generatlity (we have
+Again, we set $\boldsymbol{\mu}_W = \mathbf{0}$ without loss of generality (we have
 found $\boldsymbol{\mu}_W = X$ works similarly).
 Ultimately, this yields the following hierarchical model:
 \begin{equation}\label{eq:dgphm}
@@ -362,7 +362,7 @@ Unit scale on latent $W$ was recommended by \citet{sauer2023active} for similar 
 \subsection{Bayesian Inference}
 
 Our inferential goal is to obtain the posterior distribution of 
-$S\mid\bar{Y},\Sigma_\varepsilon$, but this requires inferring latent quantity $W$.  
+$S\mid\bar{Y},\Sigma_\varepsilon$, but this requires inferring latent $W$.  
 We first integrate over $S$ to condense our hierarchical model of Eq.~(\ref{eq:dgphm}) into
 \begin{align}
 \label{eq:likelihood}
@@ -370,7 +370,8 @@ We first integrate over $S$ to condense our hierarchical model of Eq.~(\ref{eq:d
 \label{eq:prior}
 W &\sim \mathrm{monoGP}\left(\mathbf{0}, \Sigma_W(X)\right)
 \end{align}
-Details, including generalizations for $\boldsymbol{\mu}_S\neq\mathbf{0}$, are provided in \ref{sec:apdx_int_lik}. 
+A detailed derivation, including generalizations for 
+$\boldsymbol{\mu}_S\neq\mathbf{0}$, is provided in \ref{sec:apdx_int_lik}. 
 The incorporation of $\Sigma_\epsilon$ in the
 Gaussian likelihood of this outer layer is an essential upgrade to previous DGP inferential schemes.
 This covariance incorporates knowledge of the smoothly varying dynamics from which $\bar{Y}$ was
@@ -385,9 +386,10 @@ provided in the {\tt deepgp} {\sf R}-package \citep{deepgp}.
 We then integrate Metropolis-Hastings sampling of these parameters in a Gibbs framework 
 with the ESS sampling of $W$ \citep{sauer2023active}.
 
-Given burned-in posterior samples $\{W^{(t)}, \tau^{2(t)}, \theta_S^{(t)}, \theta_W^{(t)}\}$
-for $t\in\mathcal{T}$, we may obtain the
-posterior distribution of the true power matter spectra for a particular cosmology as
+Given burned-in posterior samples $\{W^{(t)}$ and $\theta_S^{(t)}\}$
+for $t\in\mathcal{T}$ ($\theta_W^{(t)}$ is only used to sample $W^{(t)}$), 
+we may leverage Bayes' Theorem to obtain the
+posterior distribution of the true power matter spectrum for a particular cosmology as
 \[
 S^{(t)}\mid\bar{Y}, \Sigma_\varepsilon \sim \mathcal{N}_n(m^{(t)}, C^{(t)})
 \quad\textrm{where}\quad
@@ -397,16 +399,15 @@ m^{(t)}&=C^{(t)}\left(\Sigma_\varepsilon^{-1}\bar{Y}\right).
 % "+\Sigma_S(W^{(t)})^{-1}\boldsymbol{\mu}" removed from m^t when mu=0
 \end{array}
 \] 
-
-These results come from Bayes' Theorem and reflect that $\boldsymbol{\mu}_S=\boldsymbol{0}$. 
-These results will generalize to any value for $\boldsymbol{\mu}_S$, with details of this 
-general derivation provided in \ref{sec:apdx_SgivenY}. With all posterior draws $S^{(t)}$, we compute
-the average of these to obtain our posterior mean for a particular cosmology. Additionally,
-we quantify uncertainty by finding the 2.5th and 97.5th percentiles of the posterior 
-draws at each index to obtain a 95\% credible interval.
-We denote our inference procedure for the hierarchical model of Eq.~\ref{eq:dgphm} as
-``DGP.FCO'' given its deep Gaussian process foundation with additional hierarchical modeling
-structure to incorporate multiple functional correlated outputs (FCO).
+This form is simplified for $\boldsymbol{\mu}_S=\mathbf{0}$; a general derivation 
+is provided in \ref{sec:apdx_SgivenY}.  This closed-form enables direct posterior
+sampling of $S^{(t)}$.  We draw samples accordingly and compute their average 
+to obtain our posterior mean for a particular cosmology. 
+Additionally, we quantify uncertainty by finding the 2.5th and 97.5th percentiles 
+of the posterior draws at each index to obtain a 95\% credible interval.
+We denote our inference procedure for the hierarchical model of Eq.~(\ref{eq:dgphm}) as
+``DGP.FCO'' given its deep Gaussian process foundation with additional hierarchical
+structure to incorporate functional correlated outputs (FCO).
 
 \subsection{Simulation Study}
 \label{subsec:sim}
