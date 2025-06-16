@@ -14,9 +14,6 @@
 \usepackage{bbm} % for indicator function
 \usepackage{xcolor} % only for coloring text while revising
 
-\usepackage{tikz} % for pretty diagonal matrix
-\usetikzlibrary{matrix,decorations.pathreplacing,calc}
-
 \hypersetup{
     colorlinks=true,
     linkcolor=blue, 
@@ -65,7 +62,7 @@ quantification (UQ), from all of the provided curves.  To this end, we propose a
 novel Bayesian deep Gaussian process (DGP) hierarchical model which synthesizes 
 all the simulation information to estimate the underlying matter power spectra
 while providing effective UQ.  Our model extends previous work on Bayesian DGPs 
-from scalar responses to functional ones.  Second, we leverage our predicted 
+from scalar responses to correlated functional outputs.  Second, we leverage our predicted 
 power spectra from various cosmologies in order to accurately predict the entire 
 matter power spectra for an 
 unobserved cosmology.  For this task, we use basis function representations 
@@ -111,24 +108,25 @@ cosmological parameterizations.
 
 The Mira-Titan simulation suite \citep{moran2023mira}
 defines ``cosmologies'' according to eight cosmological parameters (more on this
-in Section \ref{sec:data}).  For a particular cosmology, the simulation of the power matter spectra 
-is rather complex.  Although we presume there exists some true matter spectra as a function
+in Section \ref{sec:data}).  For a particular cosmology, the simulation of the power matter spectrum 
+is rather complex.  Although we presume there exists some true matter spectrum as a function
 of wavenumber, we are not able to directly observe it.  Rather, the simulation returns
 a convoluted patchwork of potential spectra, which vary in fidelity and are only trusted
 over particular wavenumber ranges.  Our first objective is to synthesize expert knowledge
 and all available simulation information into an effective estimate of the true underlying
 matter spectrum.  
 
-There are several challenges to estimating the underlying spectra.  Our model
+There are several challenges to estimating the underlying spectrum.  Our model
 must: handle multiple correlated functional observations, offer enough 
 flexibility to accommodate the nonstationarity present in power matter spectra 
-(which vary in smoothenss across wavenumbers), provide effective uncertainty
+(which vary in smoothness across wavenumbers), provide effective uncertainty
 quantification (UQ), and allow for the incorporation of expert knowledge 
 regarding the wavenumbers over which various outputs are trusted.  To this end, 
 we propose a Bayesian hierarchical model which treats functional simulation 
-outputs as realizations of a deep Gaussian process \citep[DGP;][]{damianou2013deep} 
-centered on the true underlying spectra.  The hierarchical structure naturally
-accommodates the correlated observations.  The depth of the DGP offers nonstationary
+outputs as realizations of a Gaussian process (GP) 
+centered on the true underlying spectrum, which itself is a realization of a deep Gaussian process 
+\citep[DGP;][]{damianou2013deep}.  The GP accommodates correlated observations
+through its covariance structure.  The depth of the DGP offers nonstationary
 flexibility.  The Bayesian framework facilitates UQ and the incorporation of prior
 knowledge.  While Bayesian DGPs have been previously deployed for computer experiments 
 with scalar responses \citep[e.g.,][]{sauer2023active,sauer2023vecchia,ming2023deep}, 
@@ -137,8 +135,8 @@ To demonstrate the profiency of our Bayesian hierarchical DGP,
 we benchmark its performance in two unique settings: with synthetic data 
 mimicing the Mira-Titan data and with real-world data from 
 the Code for Anisotropies in the Microwave Background \citep[CAMB;][]{lewis2011CAMB}.
-The CAMB model also exhibits similar behavior to Mira-Titan, but crucially
-provides a ``true" power spectrum corresponding to each cosmology.
+The CAMB model exhibits similar behavior to Mira-Titan but crucially
+provides a ``true" power spectrum for each cosmology.
 
 Our second objective is to leverage simulation data from a limited set of
 cosmologies in order to predict power matter spectra for unobserved cosmologies.
@@ -153,7 +151,7 @@ predictions of power matter spectra for any cosmological parameterization.
 simulation suite, which was trained on 117 simulations, and is termed 
 the ``Cosmic Emu.''\footnote{\url{https://github.com/lanl/CosmicEmu}}
 We leverage the same training data, in conjunction with our Bayesian hierarchical
-DGP model and basis function representations, to train a Gaussian process surrogate 
+DGP model and basis function representations, to train a GP surrogate 
 on principal component weights in order to predict spectra for unobserved
 cosmologies \citep{higdon2008computer, higdon2010estcosmo}. 
 Our method compares favorably to Cosmic Emu on held-out cosmologies.
@@ -168,8 +166,8 @@ state-of-the-art competitors on the CAMB and Mira-Titan simulations.
 Section \ref{sec:disc} concludes with a discussion of our contributions and avenues for 
 future research.  We provide reproducible code and an {\sf R} package for our 
 Bayesian DGP model in a public git repository.\footnote{\url{https://github.com/stevewalsh124/dgp.hm}}
-\textcolor{cyan}{Please note: this repository is currently private until we 
-hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
+%\textcolor{cyan}{Please note: this repository is currently private until we 
+%hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
 
 %Leveraging these simulations allows for emulation and prediction of the matter power 
 %spectrum under varying specifications for eight different cosmological parameters 
@@ -190,8 +188,8 @@ hear back regarding permissions for sharing the Mira-Titan data alongside our co
 \section{Mira-Titan}
 \label{sec:data}
 
-The Mira-Titan simulation suite is a dataset consisting of simulated power spectra for 
-117 different cosmologies. Each of these cosmologies is specified by eight cosmological 
+The Mira-Titan simulation dataset consists of simulated power spectra for 
+117 unique cosmologies. Each of these cosmologies is specified by eight cosmological 
 parameters: matter density, baryon density, amplitude of density fluctuations, 
 dimensionless Hubble parameter, spectral index of scalar perturbations,
 dark energy equation of state parameters, and neutrino density. For more details 
@@ -208,17 +206,18 @@ There is an optional ninth parameter, the redshift, which we fix at 0.
     \includegraphics[width=\linewidth]{plot_data.png}
     \caption{{\it Left:} The perturbation theory (solid green), low resolution runs (solid grey), 
     and high resolution run  (solid pink) for a particular cosmology. 
-    The weighted average of these is shown in dashed orange. Dotted lines at the bottom 
+    The weighted average of these is shown in dashed orange. Dotted lines at the bottom
     indicate where each data type is deemed approximately unbiased. 
     {\it Middle:} Same as left, but restricted to wavenumber ($k$) values where the low resolution 
     runs are approximately unbiased.
-    {\it Right:} Same as middle, but with estimated posterior mean subtracted.}
+    {\it Right:} Same as middle, but with estimated posterior mean subtracted.
+    \textcolor{red}{(@Steve - please fix the legend so it is not going over the lines)}}
     \label{fig:plot_data}
 \end{figure}
 
 For each cosmology, Mira-Titan contains a batch of 18 simulated spectra: an inexpensive 
 spectrum estimated from linear perturbation theory ($y_p$), 16 spectra estimated from 
-lower resolutions simulations ($y_{\ell_r}, r \in \{1,\dots,16\}$), and one spectrum from 
+low resolution simulations ($y_{\ell_r}, r \in \{1,\dots,16\}$), and one spectrum from 
 a high resolution simulation ($y_h$). 
 These spectra are represented as a function of wavenumber $k$.  Following 
 \cite{moran2023mira}, we model on the emulation space 
@@ -229,10 +228,8 @@ where it is deemed approximately unbiased. For $k<0.04$, only $y_p$ provides a r
 estimate of the true spectra. $y_{\ell_r}$ are valid for $0.04 \leq k \leq 0.25$, and 
 $y_h$ is valid for $0.04 \leq k \leq 5$.  Figure \ref{fig:plot_data} shows an example 
 of the output for a particular cosmology. When we focus on $k$ values where $y_{\ell_r}$ 
-is valid (center panel), we see both low-resolution and high-resolution runs oscillate around 
-a mean term, which is relatively smooth compared to these realizations. When this
-mean term is subtracted, we will obtain a plot like the right panel in 
-Figure \ref{fig:plot_data}.
+is valid (center panel), the spatially correlated errors of the low-resolution and high-resolution runs 
+becomes apparent.
 
 Notice, in the center/right panels of Figure \ref{fig:plot_data}, the precision of each
 low/high resolution spectra increases as $k$ increases.  The curves get progressively 
@@ -242,7 +239,9 @@ used the multiple low- and high-resolution spectra across all cosmologies to
 obtain precision estimates, $p_1,\dots, p_n$, across the $n$ 
 wavenumber values using a log-log regression model. A multiplier $c$ for 
 the increase in precision from the low- to high- resolution output is also 
-estimated with this regression model. We use these estimates to define three 
+estimated with this regression model. 
+\textcolor{red}{(What is the c value?  Can we report it?)}
+We use these estimates to define three 
 diagonal precision matrices, one for each data type (perturbation theory, 
 low resolution average, and high resolution). Specifically, denote $\Lambda_p$, 
 $\Lambda_\ell$, and $\Lambda_h$ as the $n\times n$ diagonal matrices with elements
@@ -271,10 +270,13 @@ $\bar y = \Lambda^{-1}(\Lambda_p y_p + \Lambda_{\ell} \bar{y}_\ell + \Lambda_h y
 where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ and 
 $\bar{y}_\ell = \frac{1}{16}\sum_{r=1}^{16} y_{\ell_r}$. In Figure \ref{fig:plot_data},
 the weighted average is shown in dashed orange.  As an estimate of the true
-underlying spectrum, the weighted average fluctuates too drastically due 
-to the limited amount of data.  It fails to account for the
-spatial dependence inherent in the smooth but stochastic spectra,
-which is pivotal to effectively inferring the true spectrum.
+underlying spectrum, the weighted average fluctuates too drastically.  
+This is especially apparent after centering (right panel).
+\textcolor{red}{(@Steve - how are we centering?)}
+Although the weighted average incorporates all available observatons and 
+expert knowledge regarding the precisions, it fails to account for the spatial 
+dependence inherent in the smooth but stochastic spectra, which is pivotal to 
+effectively inferring the true spectrum.
 
 %We consider a training-testing split with 111 cosmologies used for estimation and 6 
 %cosmologies held out for testing.  Our ultimate objective is to effectively predict
