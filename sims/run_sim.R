@@ -6,15 +6,15 @@
 # Important Arguments:
 #   seed: random seed (must be set before sourcing functions.R)
 #   func: 1 or 2
-#   setting: 1, 2, 3, or 4 (indicates noise settings A-D from DPC paper)
+#   setting: 1, 2, 3, 4, or 5 (1:3 indicates noise settings from DPC paper, and 
+#                           4:5 indicates settings A & B for the DGP-FCO paper)
 #
 # Output:
 #   data frame of MSE and CRPS values for each model is either written to 
 #   ".csv" in the "results" folder or appended to existing file
 #   
 # Included Models:
-#   dgp: the Bayesian hierarchical DGP model 
-#   dgp_r: the dgp model, but use Sigma_hat/sqrt(r)
+#   dgp: the Bayesian hierarchical DGP-FCO model 
 #   deepgp: original DGP from "deepgp" package
 #   hetgp: heteroskedastic GP from "hetGP" package 
 
@@ -36,7 +36,7 @@ if(length(args) > 0)
   for(i in 1:length(args))
     eval(parse(text=args[[i]]))
 if(!(func %in% 1:2)) stop("func should be 1 or 2")
-if(!(setting %in% 1:7)) stop("setting should be 1, 2, 3, 4, 5, 6, or 7")
+if(!(setting %in% 1:5)) stop("setting should be 1, 2, 3, 4, or 5")
 
 set.seed(seed)
 source("functions.R") # generates random model parameters upon sourcing
@@ -48,8 +48,8 @@ vis <- FALSE # should plots be generated
 
 x <- seq(0, 4, by = 0.1)
 n <- length(x)
-if(setting==5) sddtrue <- 1/exp(seq(0,2,length=length(x)))
-if(setting %in% 6:7) sddtrue <- 1/1.5^(seq(0,2,length=length(x)))
+if(setting == 4) sddtrue <- rep(1,n)
+if(setting == 5) sddtrue <- 1/1.5^(seq(0,2,length=length(x)))
 Sigma_true <- get_Sigma_true(x, n, func, setting)
 if(vis) image(Sigma_true) # make sure sd plot looks right
 
@@ -77,13 +77,13 @@ for(i in 1:r) {
 }
 if(vis) plot(x_all, y_all)
 
-# dgp.hm model ----------------------------------------------------------------
+# dgp.fco model ---------------------------------------------------------------
 
 tic <- proc.time()[3]
 if(setting %in% 1:3) {
   var_y <- mean(apply(Y, 2, var))
   Sigma_hat <- diag(var_y, n)
-} else if(setting==4) {
+} else if(setting %in% 4:5) {
   # Get initial tau2 estimate
   tau2hat_0 <- mean(apply(Yzm, 2, var))
   
@@ -108,37 +108,7 @@ if(setting %in% 1:3) {
   thetahat_0 <- mean(apply(t(Yzm), 2, estimate_theta))
   
   dx <- sq_dist(x)
-  # Optimize parameter estimates on transformed scale
-  params_hat <- opt_matern(dx, t(Yzm), sdd = rep(1,n), 
-                           init = c(log(tau2hat_0/thetahat_0), 
-                                    log(tau2hat_0)))
-  Sigma_hat <- deepgp:::Matern(dx, params_hat$tau2_hat, params_hat$theta_hat,
-                               g = 1e-8, v = 2.5)
-} else if(setting %in% 5:7) {
-  # Get initial tau2 estimate
-  tau2hat_0 <- mean(apply(Yzm, 2, var))
-  
-  estimate_theta <- function(x, max = TRUE) {
-    # count the number of peaks (local maxima)
-    if (max == FALSE) x <- x * (-1)
-    res <- rep(FALSE, length(x))
-    if (x[1] > x[2]) res[1] <- TRUE
-    if (x[length(x)-1] < x[length(x)]) res[length(res)] <- TRUE
-    for (i in (2:(length(x)-1))) {
-      if ((x[i-1] < x[i]) & (x[i+1] < x[i])) res[i] <- TRUE
-    }
-    n_peaks <- sum(res)
-    # from n_peaks, estimate theta
-    theta_hat <- exp(3.649 - 2.695*log(n_peaks))
-    if(log(n_peaks) < 1) theta_hat <- exp(1.22)
-    if(log(n_peaks) > 5) theta_hat <- exp(-10)
-    return(theta_hat)
-  }
-  
-  # Get initial theta estimate
-  thetahat_0 <- mean(apply(t(Yzm), 2, estimate_theta))
-  
-  dx <- sq_dist(x)
+
   # Optimize parameter estimates on transformed scale
   params_hat <- opt_matern(dx, t(Yzm), sdd = sddtrue, 
                            init = c(log(tau2hat_0/thetahat_0), 
@@ -146,9 +116,10 @@ if(setting %in% 1:3) {
   Sigma_hat <- diag(sddtrue) %*% 
     deepgp:::Matern(dx, params_hat$tau2_hat, 
                     params_hat$theta_hat, g = 1e-8, v = 2.5) %*% diag(sddtrue)
+  
 }
 
-fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat, nmcmc = 15000)
+fit <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat/r, nmcmc = 15000)
 fit <- dgp.hm::trim(fit, 5000, 1)
 if(vis) plot(fit)
 fit <- dgp.hm::est_true(fit, return_all = TRUE)
@@ -170,31 +141,6 @@ dgp_logs <- sum(logs.numeric(drop(y_true), family = "normal", mean = fit$m,
                              sd = apply(fit$Ss, 1, sd)))
 toc <- proc.time()[3]
 dgp_time <- toc - tic
-
-# dgp_r model --------------------------------------------------------------
-
-tic <- proc.time()[3]
-fit1a <- dgp.hm::fit_two_layer_hm(x, y_avg, Sigma_hat = Sigma_hat/r, 
-                                  nmcmc = 15000)
-if(vis) plot(fit1a)
-fit1a <- dgp.hm::trim(fit1a, 5000, 1)
-fit1a <- dgp.hm::est_true(fit1a, return_all = TRUE)
-
-if (vis) {
-  matplot(x, t(Y), type="l", col="gray")
-  lines(x, y_true)
-  lines(x, y_avg, col="red", lty=2)
-  lines(x, fit1a$m, col="blue")
-  lines(x, fit1a$ub, col="blue")
-  lines(x, fit1a$lb, col="blue")
-  legend(x = "topright", legend = c("data","truth", "wt avg", "95% UQ"),
-         col = c("gray","black","red","blue"), lty = c(1,1,2,1))
-}
-dgp_r_mse <- mean((fit1a$m - y_true)^2)
-dgp_r_logs <- sum(logs.numeric(drop(y_true), family = "normal", mean = fit1a$m, 
-                               sd = apply(fit1a$Ss, 1, sd)))
-toc <- proc.time()[3]
-dgp_r_time <- toc - tic
 
 # deepgp model ----------------------------------------------------------------
 
@@ -276,18 +222,16 @@ filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
 if (file.exists(filename)) {
   results <- read.csv(filename)
   results <- rbind(results, 
-                   c(seed, dgp_mse, dgp_r_mse, deepgp_mse, hetgp_mse, dpc_mse,
-                     dgp_logs, dgp_r_logs, deepgp_logs, hetgp_logs, dpc_logs,
-                     dgp_time, dgp_r_time, deepgp_time, hetgp_time, dpc_time))
+                   c(seed, dgp_mse, deepgp_mse, hetgp_mse, dpc_mse,
+                     dgp_logs, deepgp_logs, hetgp_logs, dpc_logs,
+                     dgp_time, deepgp_time, hetgp_time, dpc_time))
 } else {
-  results <- data.frame(seed = seed, dgp_mse = dgp_mse, dgp_r_mse = dgp_r_mse,
-                        deepgp_mse = deepgp_mse, hetgp_mse = hetgp_mse, 
-                        dpc_mse = dpc_mse, dgp_logs = dgp_logs, 
-                        dgp_r_logs = dgp_r_logs, deepgp_logs = deepgp_logs, 
+  results <- data.frame(seed = seed, dgp_mse = dgp_mse, deepgp_mse = deepgp_mse, 
+                        hetgp_mse = hetgp_mse, dpc_mse = dpc_mse, 
+                        dgp_logs = dgp_logs, deepgp_logs = deepgp_logs, 
                         hetgp_logs = hetgp_logs, dpc_logs = dpc_logs,
-                        dgp_time = dgp_time, dgp_r_time = dgp_r_time,
-                        deepgp_time = deepgp_time, hetgp_time = hetgp_time, 
-                        dpc_time = dpc_time)
+                        dgp_time = dgp_time, deepgp_time = deepgp_time, 
+                        hetgp_time = hetgp_time, dpc_time = dpc_time)
 }
 
 write.csv(results, filename, row.names = FALSE)

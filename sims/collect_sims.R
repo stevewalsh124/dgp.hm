@@ -20,14 +20,14 @@ MSE5_range <- MSE20_range <- logS5_range <- logS20_range <- c()
 
 r=5
 for (func in 1:2) {
-  for (setting in 4:7) {
+  for (setting in 4:5) {
     filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
     # Compare MSEs
-    results <- read.csv(filename)[, c(3,6,5,4)]
+    results <- read.csv(filename)[, c(2,5,4,3)]
     # NOTE: removed one outlier to not skew the ylim
     if(func==1&setting==4) results <- results[-which.max(results[,3]),]
     MSE5_range <- range(MSE5_range, results)
-    results <- read.csv(filename)[, c(8,11,10,9)]
+    results <- read.csv(filename)[, c(6,9,8,7)]
     # Note: removes three outliers from setting==5, r==5
     logS5_range <- range(logS5_range, results[results <= 150])
   }
@@ -35,12 +35,12 @@ for (func in 1:2) {
 
 r=15
 for (func in 1:2) {
-  for (setting in 4:7) {
+  for (setting in 4:5) {
     filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
     # Compare MSEs
-    results <- read.csv(filename)[, c(3,6,5,4)]
+    results <- read.csv(filename)[, c(2,5,4,3)]
     MSE20_range <- range(MSE20_range, results)
-    results <- read.csv(filename)[, c(8,11,10,9)]
+    results <- read.csv(filename)[, c(6,9,8,7)]
     logS20_range <- range(logS20_range, results)
   }
 }
@@ -49,16 +49,17 @@ for (func in 1:2) {
 # Boxplots of MSEs #
 ####################
 
-par(mfrow=c(4,4), oma=c(4,4,1.5,1), mar=c(0,0,0,0))
+par(mfrow=c(2,4), oma=c(4,4,1.5,1), mar=c(0,0,0,0))
 
 # Step 1: Precompute y-limits for each setting (row)
 row_ylims <- list()
-for (setting in 4:7) {
+for (setting in 4:5) {
   all_mses <- NULL
   for (r in c(5,15)) {
+    print(r)
     for (func in 1:2) {
       filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
-      results <- read.csv(filename)[, c(3,6,5,4)]
+      results <- read.csv(filename)[, c(2,5,4,3)]
       all_mses <- c(all_mses, unlist(results))
     }
   }
@@ -66,12 +67,12 @@ for (setting in 4:7) {
 }
 
 # Step 2: Plot with per-row ylim
-for (setting in 4:7) {
+for (setting in 4:5) {
   row_ylim <- row_ylims[[as.character(setting)]]
   for (r in c(5,15)) {
     for (func in 1:2) {
       filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
-      results <- read.csv(filename)[, c(3,6,5,4)]
+      results <- read.csv(filename)[, c(2,5,4,3)]
       boxplot(results, ylab = "MSE", axes=F,
               names = c("dgp.hm","dpc","hetGP","deepGP"), col = cbcols[c(4,5,7,9)],
               ylim = row_ylim)
@@ -88,16 +89,16 @@ for (setting in 4:7) {
 # Boxplots of log scores #
 ##########################
 
-par(mfrow=c(4,4), oma=c(4,4,1.5,1), mar=c(0,0,0,0))
+par(mfrow=c(2,4), oma=c(4,4,1.5,1), mar=c(0,0,0,0))
 
 # Step 1: Precompute y-limits for each setting (row)
 row_ylims_logs <- list()
-for (setting in 4:7) {
+for (setting in 4:5) {
   all_logs <- NULL
   for (r in c(5,15)) {
     for (func in 1:2) {
       filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
-      results <- read.csv(filename)[, c(8,11,10,9)]
+      results <- read.csv(filename)[, c(6,9,8,7)]
       all_logs <- c(all_logs, unlist(results))
     }
   }
@@ -105,12 +106,12 @@ for (setting in 4:7) {
 }
 
 # Step 2: Plot with per-row ylim
-for (setting in 4:7) {
+for (setting in 4:5) {
   row_ylim <- row_ylims_logs[[as.character(setting)]]
   for (r in c(5,15)) {
     for (func in 1:2) {
       filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
-      results <- read.csv(filename)[, c(8,11,10,9)]
+      results <- read.csv(filename)[, c(6,9,8,7)]
       boxplot(results, ylab = "MSE", axes=F,
               names = c("dgp.hm","dpc","hetGP","deepGP"), col = cbcols[c(4,5,7,9)],
               ylim = row_ylim)
@@ -123,3 +124,4 @@ for (setting in 4:7) {
 }
 
 if(PDF) dev.off()
+
