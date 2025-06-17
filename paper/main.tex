@@ -540,7 +540,7 @@ to see from this comparison.)}). We therefore specify $\Sigma_\varepsilon =
 
 \textcolor{red}{(We need to fix the entire previous paragraph. How about we keep it short
 and sweet and say we considered a Matern kernel, but found that the spatial correlation
-decayed so quickly ($\theta\rightarrow 0$) that spatial dependence was not necessary.)}
+decayed so quickly ($\theta\approx 0$) that spatial dependence was not necessary.)}
 
 After fitting the DGP.FCO model, an illustration of the posterior mean and its UQ can
 be seen in Figure \ref{fig:fit_camb}. Notice that there are peaks where both the high-resolution
@@ -599,9 +599,7 @@ average warping. Some departure from stationarity is estimated in the higher $X$
     \includegraphics[width=6in]{plot_fit.png}
     \caption{95\% credible intervals for the power spectrum of model 1 (posterior mean 
              subtracted). Plots of the perturbation theory, low-resolution and high-resolution 
-             runs are also shown, alongside the weighted average.
-             \textcolor{red}{(This plot needs to be made fresh (not using the package
-             function.  Adjust y-axis.  We don't need the yellow/red coloring.)}}
+             runs are also shown, alongside the weighted average.}
     \label{fig:plot_fit}
 \end{figure}
 
@@ -610,7 +608,9 @@ average warping. Some departure from stationarity is estimated in the higher $X$
    \includegraphics[width=6in]{plot_warp_M001.png}
    \caption{Left: MCMC samples of $W$ for model M001 after burnin and thinning. 
             Right: Corresponding 95\% credible intervals for $W$, where departure 
-            from the identity line represents nonstationary behavior.}
+            from the identity line represents nonstationary behavior.
+            \textcolor{red}{(This plot needs to be made fresh (not using the package
+             function.  Adjust y-axis.  We don't need the yellow/red coloring.)}}
    \label{fig:plot_warp}
 \end{figure}
 
