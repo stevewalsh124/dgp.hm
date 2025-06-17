@@ -49,7 +49,7 @@ vis <- FALSE # should plots be generated
 x <- seq(0, 4, by = 0.1)
 n <- length(x)
 if(setting == 4) sddtrue <- rep(1,n)
-if(setting == 5) sddtrue <- 1/1.5^(seq(0,2,length=length(x)))
+if(setting == 5) sddtrue <- 1/1.5^(seq(0, 2, length=n))
 Sigma_true <- get_Sigma_true(x, n, func, setting)
 if(vis) image(Sigma_true) # make sure sd plot looks right
 
@@ -59,7 +59,7 @@ if(func == 1) {
 } else {
   for (i in 1:r) Y[i,] <- f2(x, m2 = m2, u2 = u2, Sigma = Sigma_true)
 }
-if(vis) matplot(x, t(Y), ylab = "f(x)", type = "l")
+if(vis) matplot(x, t(Y), ylab = "f(x)", type = "l", col = "#999999", lwd=2)
 
 if(func == 1) y_true <- f1(x, m1 = m1, u1 = u1, Sigma = diag(1e-300,n,n))
 if(func == 2) y_true <- f2(x, m2 = m2, u2 = u2, Sigma = diag(1e-300,n,n))
@@ -75,7 +75,8 @@ for(i in 1:r) {
   x_all <- c(x_all, x)
   y_all <- c(y_all, Y[i, ])
 }
-if(vis) plot(x_all, y_all)
+if(vis) points(x_all, y_all, col = rgb(0, 0, 0, alpha = 75, maxColorValue = 255))
+if(vis) lines(x, y_true, lwd=2, col = "#009E73")
 
 # dgp.fco model ---------------------------------------------------------------
 

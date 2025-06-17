@@ -237,10 +237,9 @@ tighter from left to right.  We would like to conveniently wrap this domain-spec
 knowledge inside our Bayesian framework later.  To this end, \cite{moran2023mira} 
 used the multiple low- and high-resolution spectra across all cosmologies to
 obtain precision estimates, $p_1,\dots, p_n$, across the $n$ 
-wavenumber values using a log-log regression model. A multiplier $c$ for 
+wavenumber values using a log-log regression model. A multiplier $c\approx 3.73$ for 
 the increase in precision from the low- to high- resolution output is also 
 estimated with this regression model. 
-\textcolor{red}{(What is the c value?  Can we report it?)}
 We use these estimates to define three 
 diagonal precision matrices, one for each data type (perturbation theory, 
 low resolution average, and high resolution). Specifically, denote $\Lambda_p$, 
@@ -303,6 +302,7 @@ based on domain expertise.  Pre-processing for Mira-Titan was described in Secti
 for the CAMB suite in Section \ref{subsec:camb}.
 
 \subsection{Model Specification}
+\label{sec:mod_spec}
 
 Let $S$ represent the true (but unknown) underlying power matter spectrum for
 a particular cosmology.  We consider $\bar{Y}$ a noisy realization of $S$.
@@ -356,7 +356,7 @@ k(d, \theta) = \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta}} +
   \frac{5d^2}{3\theta}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta}}\right).
 \]
 In our one-dimensional setting, we embrace unit scale on $S$ to preserve parsimony 
-and identifiability with $\theta_S$ \textcolor{red}{(@Steve - can you cite that paper here?)}.
+and identifiability with $\theta_S$ \citep{zhang2004inconsistent}.
 Unit scale on latent $W$ was recommended by \citet{sauer2023active} for similar reasons.
 
 \subsection{Bayesian Inference}
@@ -417,40 +417,49 @@ true curve is known. Following \cite{moran2024dpc}, we consider two test functio
 defined as
 \[
 \begin{aligned}
-  f_1(x) &= m_1 \exp\left(-\frac{u_1x}{2}\right) * \cos\left(x\sqrt{25-\left(\frac{u_1}{2}\right)^2}\right) - \frac{m_1x}{5}\\
-  f_2(x) &= \exp\left(-m_2(x-3)^2\right)+\exp\left(-u_2(x-1)^2\right)-0.05\sin\left(8(x-1.9)\right.
+  f_1(x) &= m_1 \exp\left(-\frac{u_1x}{2}\right) * 
+  \cos\left(x\sqrt{25-\left(\frac{u_1}{2}\right)^2}\right) - \frac{m_1x}{5}\\
+  f_2(x) &= \exp\left(-m_2(x-3)^2\right) + 
+  \exp\left(-u_2(x-1)^2\right)-0.05\sin\left(8(x-1.9))\right.
 \end{aligned}
 \]
-We consider $x\in[0, 4]$.  For additional variation, the values of $m_1, m_2, u_1,$ and 
-$u_2$ are randomly selected from
+For additional variation, the values of $m_1, m_2, u_1,$ and $u_2$ are randomly selected from
 $m_1 \sim \text{Uniform}(0.5,1.5)$, $u_1 \sim \text{Uniform}(1.5,2.5)$, and $m_2,u_2 
-\sim \text{Uniform}(0.6,1.4)$. 
+\sim \text{Uniform}(0.6,1.4)$. The outputs of $f_1$ and $f_2$ (conditional on $m_1,u_1$ and 
+$m_2,u_2$), determine the true function values for each simulation.
       
-For the two variance settings, we consider matrices $\Sigma_A$ and $\Sigma_B$ to 
-have a Mat\'ern covariance function with a nugget of $10^{-8}$ and smoothness of 2.5. 
-For setting ``A", we have $\tau^2=0.0225$ and $\theta=0.01$. For setting ``B", we have 
-$\tau^2=0.1$ and $\theta=0.05$, and additionally scale this covariance matrix by 
-a vector of precision values $s$ so that $\Sigma_B = s M s^T$ is nonstationary; here $M$ is 
-a Mat\'ern covariance matrix with parameters $\tau^2$ and $\theta$.
-\textcolor{red}{(@Steve - this whole paragraph needs re-write.  Need to start saying
-how you draw $r$-many realizations from a GP with some mean (?) and some spatially varying
-covariance.  Then use something like this:
+For each of the two true functions, we consider two variance settings $A$ and $B$, where 
+matrices $\Sigma_A$ and $\Sigma_B$ have a Mat\'ern covariance function with a nugget of 
+$10^{-8}$ and smoothness of 2.5. We obtain function realizations at $x=\{0, 0.1, \dots, 
+3.9, 4.0\}$, so that each function draw contains $n=41$ observations. We draw $r$-many 
+realizations from a GP with some mean ($f_1$ or $f_2$) and some spatially varying covariance
+($\Sigma_A$ or $\Sigma_B$), where:  
+
 \[
 \begin{aligned}
-\Sigma_A &= 0.0225 * k(||x_i - x_j||^2, 0.01) \\
+\Sigma_A &= 0.0225 * k(||x_i - x_j||^2, 0.01), \\
 \Sigma_B &= s^\top Ms \quad\textrm{where}\quad M = 0.1 * k(||x_i - x_j||^2, 0.05)
-\quad\textrm{and}\quad s = ???
+\quad\textrm{and}\quad s = 1.5^{-x/2},
 \end{aligned}
 \]
-where you say $k$ is defined according to the previous equation.  Also, what is s?}
+
+where $k(\cdot,\cdot)$ is defined in Section \ref{sec:mod_spec}.  Within $\Sigma_B$, $s$ introduces
+nonstationarity into the function realizations, more accurately matching the behavior of the 
+CAMB and Mira-Titan motivating datasets.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{run_sim_f1A_f2B.png}
+    \caption{Illustration of simulation output, each with $r=5$ function realizations. The true function
+             is shown in solid green, while the gray lines and points indicate the realizations. 
+             Left panel: function $f_1$, variance setting $A$. 
+             Right panel: function $f_2$, variance setting $B$.}   
+    \label{fig:run_sim_f1A_f2B}
+\end{figure}
 
 For each simulated function and variance specification, we consider 20 Monte Carlo repetitions
-with re-randomized $m_1, m_2, u_1, u_2$.  We consider $r = 5$ and $r = 15$.
-\textcolor{red}{@Steve - what is $n$?  How dense is the grid?  I think we need a visual
-of this scenario.  Perhaps two panels, one with an $f_1$ and one with an $f_2$.
-Show the true function.  Then show $r = 5$ realizations.  Use points to highlight
-the training observations.  That way for the other methods, you can comment on how
-they treat the points as all the same, not coming from 5 smooth curves.}
+with re-randomized $m_1, m_2, u_1, u_2$.  We consider $r = 5$ and $r = 15$. Examples of such
+simulation output are shown in Figure \ref{fig:run_sim_f1A_f2B}.
 
 \begin{figure}[t]
     \centering
@@ -466,21 +475,19 @@ The competing methods we consider are an out-of-the-box DGP fit using the
 \texttt{deepgp} package \citep{sauer2023active}, a heteroskedastic GP fit using 
 the \texttt{hetGP} package \citep{binois2018practical, binois2021hetgp}, as well 
 as a deep process convolution (DPC) approach, which is utilized within Cosmic 
-Emu \citep{moran2023mira}. \textcolor{red}{(@Steve - given the new figure, comment
-on how these methods view the points as iid noise/heteroskedastic noise/etc.
-Also need to comment on how $\Sigma_\epsilon$ is estimated for our method.  And
-that there is no pre-processing of the weighted average, right?)}
+Emu \citep{moran2023mira}. These competing methods view the inputs as noisy observations
+(i.e., the points in Figure \ref{fig:run_sim_f1A_f2B}) with no spatial dependence. In
+contrast, our method uses the $r$ functional realizations to estimate parameters
+within $\Sigma_\epsilon$ that account for the spatial dependence.
 
-The metrics we use to evaluate performance are mean squared error (MSE) and the 
+The metric we highlight to evaluate performance of each method is the
 log score, a proper scoring rule which takes both prediction and intervals into 
-consideration \citep{gneiting2007strictly}. For both metrics, a lower value indicates 
+consideration \citep{gneiting2007strictly}. A lower value indicates 
 better performance. Log score are shown in Figure \ref{fig:sims_logS}; our DGP.FCO 
 model performs favorably against each of these current benchmark methods by
 accounting for spatial dependence within our model, resulting in more accurate UQ.
-MSE results, which do not address UQ, were comparable across competing methods; these results
-can be found in Figure \ref{fig:sims_MSE}.
-\textcolor{red}{(@Steve - this paragraph needs revising now that the figure is moved
-to the appendix.)}
+Mean squared error (MSE) results, which do not address UQ, were comparable across 
+competing methods; these results can be found in Figure \ref{fig:sims_MSE}.
 
 \subsection{CAMB Data}
 \label{subsec:camb}
@@ -488,59 +495,50 @@ to the appendix.)}
 We next investigate model fits to several cosmological 
 datasets from CAMB \citep{lewis2011CAMB}. These datasets contain power spectra based
 on six-dimensional cosmological parameter settings. Similar to the Mira-Titan suite, the
-CAMB dataset has multiple (sixty-four) batches of power spectra for each cosmology, with each batch 
-containing multiple (fifteen) low-resolution spectra, and one high-resolution sprectum
-\textcolor{red}{(@Steve - do you mean there are 64 cosmologies?)} 
-Unlike the Mira-Titan suite, this dataset contains an infinite-resolution 
+CAMB dataset contains data for sixty-four cosmologies, with each containing multiple 
+(fifteen) low-resolution spectra, and one high-resolution spectrum. 
+Unlike the Mira-Titan suite, this dataset additionally contains an infinite-resolution 
 spectrum, which can be treated as the true spectrum for each cosmology,
 allowing us to assess the accuracy of posterior mean estimates and effectiveness
-of credible intervals. \textcolor{red}{(@Steve - refer to Figure 3 as a visual.  Comment on the
-true power spectrum and the low/high res runs.)}
+of credible intervals. An illustration of the first cosmology from CAMB is shown
+in Figure \ref{fig:fit_camb}, where the infinite-resolution spectrum is generally
+much smoother than the low- and high-resolution counterparts.
 
 \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{CAMB_fit_model1.png}
     \caption{Example of DGP.FCO model fit for the first batch of model runs from the CAMB data, 
-             with LOESS mean term subtracted. \textcolor{red}{(LOESS mean of what?  We need
-             to officially say how things are centered.)} We can compare the orange lines 
-             (posterior mean and dotted 95\% credible interval) to the light blue line,
-             representing the infinite-resolution ``true" spectrum.}   
+             with a LOESS mean of the weighted average subtracted to emphasize details. We can 
+             compare the orange lines (posterior mean and dotted 95\% credible interval) to the 
+             light blue line, representing the infinite-resolution ``true" spectrum.}   
     \label{fig:fit_camb}
 \end{figure}
 
-We use 32 CAMB batches to train the DGP.FCO model and reserve the other 32 as a test set.
-\textcolor{red}{(@Steve - I'm so confused.  We are not talking about PCA here.  Each
-cosmology stands on its own.  We use the low/high res runs for training, and the true
-spectrum for testing.)}
-To imitate the role of the perturbation theory output of Mira-Titan, we anchor estimates of the CAMB
-power spectrum at the infinite-resolution for $\log_{10}(k) < -1.7$, and then rely 
-strictly on the low- and high-resolution runs for $k$ above this. 
-\textcolor{red}{(Refer to the figure here as well to help explain?)}
-We take a weighted
-average of the CAMB runs and assume heteroskedastic errors in a similar fashion. 
-\textcolor{red}{(Need details on how the weighted average is calculated.  Can
-refer to previous section, but need to be specific.)}
-
-To estimate $\Sigma_\epsilon$, we first use a log-log regression model to obtain 
-precision estimates $\Lambda_\ell$ and $\Lambda_h$
+Our goal here is to train the DGP.FCO model and accurately estimate the true spectrum for each
+cosmology. To imitate the role of the perturbation theory output of Mira-Titan, we anchor 
+estimates of the CAMB power spectrum at the infinite-resolution for $\log_{10}(k) < -1.7$, and 
+then rely strictly on the low- and high-resolution runs for $k$ above this (note the transition
+area in Figure \ref{fig:fit_camb} around the transformed $k$ value of 0.2). We first use a log-log 
+regression model to obtain precision estimates $\Lambda_\ell$ and $\Lambda_h$
 for the low- and high-resolution runs respectively, as outlined in Section \ref{sec:data}. 
-Similarly, we set $\Lambda_i=10^8$ \textcolor{red}{(this notation is no longer right.
-Also why switch from $10^5$ to $10^8$?)} 
-to illustrate high confidence in the infinite-resolution 
-run for low $k$ values and incorporate these estimates within $\Sigma_\varepsilon$. 
-With the precision information, we then estimate the Mat\'ern parameters for 
-$\Sigma_\varepsilon$. \textcolor{red}{(Need more specifics.  Are we using a $\tau^2$ now?
-5/2 still?  Maximum likelihood estimation?)}
-For the CAMB data, lengthscale estimates are consistently 
-around $3\times 10^{-7}$, evidence that we can simplify our covariance structure 
-to contain no spatial dependence (compare low-resolution runs of Figure \ref{fig:fit_camb} 
-with Figure \ref{fig:plot_data} \textcolor{red}{ - I don't understand what we are supposed
-to see from this comparison.)}). We therefore specify $\Sigma_\varepsilon = 
-(15\Lambda_\ell+\Lambda_h+\Lambda_i)^{-1}$ for the CAMB data.  
+Similarly, we set $\Lambda_c^{(ii)}=10^8$ when $\log_{10}(k_i) < -1.7$ ($0$ otherwise) for $i = 1,\dots,n$.
+\textcolor{red}{(why switch from $10^5$ to $10^8$?)} 
+to illustrate high confidence in the infinite-resolution run for low $k$ values.
+We then take a weighted average of the CAMB runs in a similar fashion
+to Mira-Titan data as described in Section \ref{sec:data}: $\bar y = \Lambda^{-1}(\Lambda_c y_c + 
+\Lambda_{\ell} \bar{y}_\ell + \Lambda_h y_h)$, where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ 
+and $\bar{y}_\ell = \frac{1}{15}\sum_{r=1}^{15} y_{\ell_r}$.
 
-\textcolor{red}{(We need to fix the entire previous paragraph. How about we keep it short
-and sweet and say we considered a Matern kernel, but found that the spatial correlation
-decayed so quickly ($\theta\approx 0$) that spatial dependence was not necessary.)}
+With weighted average and precision information, we considered a Mat\'ern kernel for 
+$\Sigma_\varepsilon$. 
+\textcolor{red}{(Yes, using maximum likelihood estimation with smoothness set to $5/2$, 
+and we use $\tau^2$ and $\theta$ estimates here, in the sims, and for Mira-Titan; 
+these estimates are coming out of the ``opt\_matern" function we created.)}
+For the CAMB data, spatial correlation decays very quickly
+($\theta\approx 0$ for CAMB, compare the smoothly varying low-resolution runs of 
+Figure \ref{fig:fit_camb} with the jagged low-resolution CAMB runs in Figure \ref{fig:plot_data}). 
+We therefore assume no spatial dependence for CAMB and specify $\Sigma_\varepsilon = 
+(\Lambda_c+\Lambda_\ell+\Lambda_h)^{-1}$.  
 
 After fitting the DGP.FCO model, an illustration of the posterior mean and its UQ can
 be seen in Figure \ref{fig:fit_camb}. Notice that there are peaks where both the high-resolution
@@ -549,24 +547,23 @@ and has a more reliable estimate for the infinite-resolution run (the ``truth" i
 UQ is handled well, as precision increases with increasing $k$, which is captured in our
 95\% credible intervals.
 
-\textcolor{red}{(Where is the MSE/logscore across the 64 batches????  Are we comparing
-to other methods?  As it stands, this is barely a "benchmark".  It is more of a "proof
-of concept".)}
+\textcolor{red}{As of now, we are not comparing to DPC/hetGP/deepgp here, so no
+MSE or log scores. We do have MSEs of CAMB predictions when training on these posterior means
+vs training on the infinite-resolution runs; this comes up in Figures \ref{fig:pca_preds_v_camb} 
+and \ref{fig:mse_camb} later.}
 
 \subsection{Estimating Spectra with Mira-Titan Data}
 \label{subsec:mira_fit}
 
-\textcolor{red}{(@Steve - we've done a lot of edits up to this point.  Can
-you revise this text now to fit in with the rest?  Need to refer to how the 
-weighted average is calculated.
-And the purpose of $\Sigma_\epsilon$.  But this is the first time Mira-Titan
-specific details of $\Sigma_\epsilon$ will be mentioned.)}
 From plots of the multiple low-resolution spectra (e.g., Figure \ref{fig:plot_data}), 
 we find they vary smoothly about some mean $S$, suggesting that a dense covariance 
-matrix $\Sigma_\varepsilon$ (accounting for spatial dependence) may outperform a 
-diagonal covariance $\Lambda_\ell^{-1}$ for $\bar Y$. From Section \ref{sec:data},
-we can incorporate domain knowledge from $\Lambda_p, \Lambda_\ell,$ and $\Lambda_h$ 
-within our model. In previous work, we have modeled multiple candidates for 
+matrix $\Sigma_\varepsilon$ (accounting for domain knowledge and spatial dependence) 
+may outperform a diagonal covariance $\Lambda_\ell^{-1}$ for $\bar Y$. From Section 
+\ref{sec:data}, we can incorporate domain knowledge from $\Lambda_p, \Lambda_\ell,$ 
+and $\Lambda_h$ within our model, and calculate the weighted average for each cosmology: 
+$\bar y = \Lambda^{-1}(\Lambda_p y_p + \Lambda_{\ell} \bar{y}_\ell + \Lambda_h y_h)$, 
+where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$. 
+In previous work, we have modeled multiple candidates for 
 $\Sigma_\varepsilon$ \citep{walsh2023bayesian} and found that a Mat\'ern covariance 
 $\Sigma_\ell$ trained on the low-resolution runs (pre-scaled by the precision 
 values and subtracting a LOESS-smoothed average) performs the best. 
@@ -590,9 +587,11 @@ From these samples, we can estimate and quantify the uncertainty within each
 cosmology's average and latent layer $W$. Figure \ref{fig:plot_fit} shows an 
 example of the uncertainty for our posterior mean for the first (of 111) training 
 cosmologies; the posterior mean is subtracted in order to visualize this uncertainty. 
+The UQ from the DGP.FCO model accounts for varying precisions across differing $k$ 
+values, as well as the spatial correlation within the functional realizations.
 Figure \ref{fig:plot_warp} provides elliptical slice samples of $W$ along with the 
-average warping. Some departure from stationarity is estimated in the higher $X$ 
-(i.e., scaled $k$) values.
+average warping. From these samples, we see some departure from stationarity 
+estimated in the higher $X$ (i.e., scaled $k$) values.
 
 \begin{figure}[ht]
     \centering
@@ -613,10 +612,6 @@ average warping. Some departure from stationarity is estimated in the higher $X$
              function.  Adjust y-axis.  We don't need the yellow/red coloring.)}}
    \label{fig:plot_warp}
 \end{figure}
-
-\textcolor{red}{(This whole subsection is missing a point.  What is the point?
-We don't know the truth, but what can we glean from this?  What does the warping
-tell us?  Talk about the UQ...)}
 
 \section{Prediction for Unobserved Cosmologies}
 \label{sec:pred}
@@ -693,7 +688,9 @@ with covariance function
 \[
 R^{(i)}_{uv} = \exp\left(-\sum_{k=1}^{p_\psi} \beta_{ik} (x_{uk} - x_{vk})^2 \right),
 \]
-where $\beta_{ik}$ is the inverse squared lengthscale for the $k$th input dimension, $\lambda_{z_i}$ is the marginal precision for $w_i(\psi)$, and $\lambda_{s_i}$ is the nugget precision (set to zero if no nugget is used).
+where $\beta_{ik}$ is the inverse squared lengthscale for the $k$th input dimension, 
+$\lambda_{z_i}$ is the marginal precision for $w_i(\psi)$, and $\lambda_{s_i}$ is the nugget 
+precision (set to zero if no nugget is used).
 
 Using these trained GPs from the PCs, we predict the spectra for unobserved cosmologies.
 
