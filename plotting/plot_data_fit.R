@@ -98,14 +98,16 @@ legend(x = "topleft", legend = c("pert","low res","hi res", "wt avg"),
        inset = 0.01, bty="n"  # nudges legend inward
 )
 
-# same as first plot, but posterior mean subtracted
-matplot(log10(k), y_lo - fit$m, col = cbcols[9], xlim = c(log10(0.04),log10(0.25)),
+loess_fit <- loess(y_avg ~ x, span = 0.15)
+
+# same as first plot, but LOESS-smoothed weighted average subtracted
+matplot(log10(k), y_lo - loess_fit$fitted, col = cbcols[9], xlim = c(log10(0.04),log10(0.25)),
         type = "l", lty = 1, ylim = c(-.02, .02), lwd=0.5,
         xlab=expression(log[10](k)), cex.axis=1.75, cex.lab=1.75,
         ylab=expression(paste("\U1D4AB","  (k)", ", centered")))
-lines(log10(k), y_pt-fit$m, col = cbcols[4])
-lines(log10(k), y_hi-fit$m, col = cbcols[8], lwd=2)
-lines(log10(k), y_avg-fit$m, 
+lines(log10(k), y_pt-loess_fit$fitted, col = cbcols[4])
+lines(log10(k), y_hi-loess_fit$fitted, col = cbcols[8], lwd=2)
+lines(log10(k), y_avg-loess_fit$fitted, 
       col = cbcols[2], lty = 2, lwd = 3)
 if(JPG) dev.off()
 
