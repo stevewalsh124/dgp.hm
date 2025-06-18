@@ -344,17 +344,17 @@ The functional composition of GPs in the latter two lines forms a ``deep Gaussia
 \citep{damianou2013deep,dunlop2018deep}. Additional latent layers could be considered, 
 although we find one is sufficient.
 
-For both $\Sigma_S$ and $\Sigma_W$, we use Mat\`ern kernels with unit scale and
-unique lengthscales,
-\[
+For both $\Sigma_S$ and $\Sigma_W$, we use Mat\`ern kernels with smoothness of $2.5$,
+unit scale, and unique lengthscales:
+\begin{equation}\label{eq:cov}
 \begin{array}{l}
-\Sigma_S(W)^{i,j} = k\left(||w_i - w_j||^2, \theta_S\right) \\[7pt]
-\Sigma_W(X)^{i,j} = k\left(||x_i - x_j||^2, \theta_W\right)
+\Sigma_S(W)^{i,j} = K\left(||w_i - w_j||^2, \theta_S\right) \\[7pt]
+\Sigma_W(X)^{i,j} = K\left(||x_i - x_j||^2, \theta_W\right)
 \end{array}
 \quad\textrm{where}\quad
-k(d, \theta) = \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta}} + 
+K(d, \theta) = \left( 1 + \frac{\sqrt{5}d}{\sqrt{\theta}} + 
   \frac{5d^2}{3\theta}\right) \exp\left(-\frac{\sqrt{5}d}{\sqrt{\theta}}\right).
-\]
+\end{equation}
 In our one-dimensional setting, we embrace unit scale on $S$ to preserve parsimony 
 and identifiability with $\theta_S$ \citep{zhang2004inconsistent}.
 Unit scale on latent $W$ was recommended by \citet{sauer2023active} for similar reasons.
@@ -386,12 +386,12 @@ provided in the {\tt deepgp} {\sf R}-package \citep{deepgp}.
 We then integrate Metropolis-Hastings sampling of these parameters in a Gibbs framework 
 with the ESS sampling of $W$ \citep{sauer2023active}.
 
-Given burned-in posterior samples $\{W^{(t)}$ and $\theta_S^{(t)}\}$
+Given burned-in posterior samples $W^{(t)}$ and $\theta_S^{(t)}$
 for $t\in\mathcal{T}$ ($\theta_W^{(t)}$ is only used to sample $W^{(t)}$), 
 we may leverage Bayes' Theorem to obtain the
 posterior distribution of the true power matter spectrum for a particular cosmology as
 \[
-S^{(t)}\mid\bar{Y}, \Sigma_\varepsilon \sim \mathcal{N}_n(m^{(t)}, C^{(t)})
+S^{(t)}\mid\bar{Y}, \Sigma_\varepsilon \sim \mathrm{GP}(m^{(t)}, C^{(t)})
 \quad\textrm{where}\quad
 \begin{array}{rl}
 C^{(t)}&=\left(\Sigma_S(W^{(t)})^{-1}+\Sigma_\varepsilon^{-1}\right)^{-1} \\
@@ -401,7 +401,8 @@ m^{(t)}&=C^{(t)}\left(\Sigma_\varepsilon^{-1}\bar{Y}\right).
 \] 
 This form is simplified for $\boldsymbol{\mu}_S=\mathbf{0}$; a general derivation 
 is provided in \ref{sec:apdx_SgivenY}.  This closed-form enables direct posterior
-sampling of $S^{(t)}$.  We draw samples accordingly and compute their average 
+sampling of $S^{(t)}$ at discrete locations $x_i$ for $i=1,\dots, n$.  
+We draw samples accordingly and compute their average 
 to obtain our posterior mean for a particular cosmology. 
 Additionally, we quantify uncertainty by finding the 2.5th and 97.5th percentiles 
 of the posterior draws at each index to obtain a 95\% credible interval.
@@ -420,74 +421,78 @@ defined as
   f_1(x) &= m_1 \exp\left(-\frac{u_1x}{2}\right) * 
   \cos\left(x\sqrt{25-\left(\frac{u_1}{2}\right)^2}\right) - \frac{m_1x}{5}\\
   f_2(x) &= \exp\left(-m_2(x-3)^2\right) + 
-  \exp\left(-u_2(x-1)^2\right)-0.05\sin\left(8(x-1.9))\right.
+  \exp\left(-u_2(x-1)^2\right)-0.05\sin\left(8(x-1.9)\right).
 \end{aligned}
 \]
 For additional variation, the values of $m_1, m_2, u_1,$ and $u_2$ are randomly selected from
 $m_1 \sim \text{Uniform}(0.5,1.5)$, $u_1 \sim \text{Uniform}(1.5,2.5)$, and $m_2,u_2 
-\sim \text{Uniform}(0.6,1.4)$. The outputs of $f_1$ and $f_2$ (conditional on $m_1,u_1$ and 
+\sim \text{Uniform}(0.6,1.4)$. The outputs of $f_1$ and $f_2$ (conditional on $m_1/u_1$ and 
 $m_2,u_2$), determine the true function values for each simulation.
       
 For each of the two true functions, we consider two variance settings $A$ and $B$, where 
-matrices $\Sigma_A$ and $\Sigma_B$ have a Mat\'ern covariance function with a nugget of 
-$10^{-8}$ and smoothness of 2.5. We obtain function realizations at $x=\{0, 0.1, \dots, 
+matrices $\Sigma_A$ and $\Sigma_B$ have a Mat\'ern kernel with smoothness of 2.5,
+as defined in Eq.~(\ref{eq:cov}). 
+We obtain function realizations at $x=\{0, 0.1, \dots, 
 3.9, 4.0\}$, so that each function draw contains $n=41$ observations. We draw $r$-many 
-realizations from a GP with some mean ($f_1$ or $f_2$) and some spatially varying covariance
-($\Sigma_A$ or $\Sigma_B$), where:  
+realizations from a GP with mean $f_1$ or $f_2$ and spatially varying covariance
+$\Sigma_A$ or $\Sigma_B$, where:  
 
 \[
 \begin{aligned}
-\Sigma_A &= 0.0225 * k(||x_i - x_j||^2, 0.01), \\
-\Sigma_B &= s^\top Ms \quad\textrm{where}\quad M = 0.1 * k(||x_i - x_j||^2, 0.05)
-\quad\textrm{and}\quad s = 1.5^{-x/2},
+\Sigma_A &= 0.0225 * K(||x_i - x_j||^2, 0.01), \\
+\Sigma_B &= s^\top Ms \quad\textrm{where}\quad M = 0.1 * K(||x_i - x_j||^2, 0.05)
+\quad\textrm{and}\quad s = 1.5^{-x/2}.
 \end{aligned}
 \]
-
-where $k(\cdot,\cdot)$ is defined in Section \ref{sec:mod_spec}.  Within $\Sigma_B$, $s$ introduces
-nonstationarity into the function realizations, more accurately matching the behavior of the 
-CAMB and Mira-Titan motivating datasets.
+Observations are kept noise-free, but we do add a jitter of $10^{-8}$ to the diagonal of $\Sigma_A$ 
+and $\Sigma_B$ for numerical stability.  Within $\Sigma_B$, $s$ introduces a degree of
+nonstationarity, more effectively mimicing the behavior of the 
+CAMB and Mira-Titan datasets.  Examples of simulation output are showin in 
+Figure \ref{fig:run_sim_f1A_f2B}.
 
 \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{run_sim_f1A_f2B.png}
     \caption{Illustration of simulation output, each with $r=5$ function realizations. The true function
              is shown in solid green, while the gray lines and points indicate the realizations. 
-             Left panel: function $f_1$, variance setting $A$. 
-             Right panel: function $f_2$, variance setting $B$.}   
+             {\it Left:} $f_1$ with variance setting $A$. 
+             {\it Right:} $f_2$ with variance setting $B$.}   
     \label{fig:run_sim_f1A_f2B}
 \end{figure}
-
-For each simulated function and variance specification, we consider 20 Monte Carlo repetitions
-with re-randomized $m_1, m_2, u_1, u_2$.  We consider $r = 5$ and $r = 15$. Examples of such
-simulation output are shown in Figure \ref{fig:run_sim_f1A_f2B}.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=6in]{sims_logS.png}
     \caption{Boxplot of log scores (20 repetitions, lower is better) for each 
              simulated scenario.  Each column represents a function/covariance 
-             pair, and each row shows results for batch sizes of either 
-             5 (top) or 15 (bottom) realizations. \textcolor{red}{(This figure needs udpating.)}}
+             pair, and each row shows results for $r=5$ (top) or $r=15$ (bottom). 
+             \textcolor{red}{(This figure needs udpating.)}}
     \label{fig:sims_logS}
 \end{figure}
 
-The competing methods we consider are an out-of-the-box DGP fit using the 
-\texttt{deepgp} package \citep{sauer2023active}, a heteroskedastic GP fit using 
-the \texttt{hetGP} package \citep{binois2018practical, binois2021hetgp}, as well 
-as a deep process convolution (DPC) approach, which is utilized within Cosmic 
-Emu \citep{moran2023mira}. These competing methods view the inputs as noisy observations
-(i.e., the points in Figure \ref{fig:run_sim_f1A_f2B}) with no spatial dependence. In
-contrast, our method uses the $r$ functional realizations to estimate parameters
+For each simulated function and variance specification, we conduct 20 Monte Carlo repetitions
+with re-randomized $m_1, u_1, m_2, u_2$.  We consider $r = 5$ and $r = 15$.
+We compare to an out-of-the-box DGP from the 
+\texttt{deepgp} package \citep{sauer2023active}, a heteroskedastic GP from
+the \texttt{hetGP} package \citep{binois2018practical, binois2021hetgp}, and
+a deep process convolution (DPC) approach, which is utilized within Cosmic 
+Emu \citep{moran2023mira}.  These competing methods view the training data as 
+noisy observations with no spatial dependence (i.e., they view the gray dots of
+Figure \ref{fig:run_sim_f1A_f2B} without the lines). In
+contrast, our method leverages the fact that the observations represent $r$-many
+smooth functional realizations in order to estimate parameters
 within $\Sigma_\epsilon$ that account for the spatial dependence.
+\textcolor{red}{(@Steve - we have not provided any details on 
+the estimation of $\Sigma_\epsilon$ here.  Can you add some?)}
 
-The metric we highlight to evaluate performance of each method is the
-log score, a proper scoring rule which takes both prediction and intervals into 
-consideration \citep{gneiting2007strictly}. A lower value indicates 
-better performance. Log score are shown in Figure \ref{fig:sims_logS}; our DGP.FCO 
-model performs favorably against each of these current benchmark methods by
-accounting for spatial dependence within our model, resulting in more accurate UQ.
-Mean squared error (MSE) results, which do not address UQ, were comparable across 
-competing methods; these results can be found in Figure \ref{fig:sims_MSE}.
+We evaluate performance of each method using log score, a proper scoring 
+rule which takes both accuracy and UQ into 
+consideration \citep[][lower is better]{gneiting2007strictly}.
+Results are shown in Figure \ref{fig:sims_logS}.  Our DGP.FCO 
+model performs favorably across the board; accounting for the spatial 
+dependence between the observations results in more effective UQ.
+We relegate mean squared error (MSE) results to \ref{sec:apdx_sims}, because
+MSE neglects UQ and was comparable across competing methods.
 
 \subsection{CAMB Data}
 \label{subsec:camb}
