@@ -11,6 +11,8 @@
 library(dgp.hm)
 library(zoo)
 
+JPG = FALSE
+
 # Get model data
 model <- 1
 if (model <= 111) {
@@ -65,6 +67,7 @@ cbcols <- palette.colors(palette = "Okabe-Ito")
 #6 blue, 7 vermillion,  8 reddishpurple, 9 gray 
 
 # plot_data.png
+if(JPG) jpeg("../paper/plot_data.jpeg", width = 12, height = 4, units = "in", res = 300)
 par(mfrow=c(1,3), mar=c( 5.6, 4.6, 4.6, 2.1))
 matplot(log10(k), y_lo, col = cbcols[9], 
         type = "l", lty = 1, ylim = range(y_avg), lwd=0.5,
@@ -104,7 +107,7 @@ lines(log10(k), y_pt-fit$m, col = cbcols[4])
 lines(log10(k), y_hi-fit$m, col = cbcols[8], lwd=2)
 lines(log10(k), y_avg-fit$m, 
       col = cbcols[2], lty = 2, lwd = 3)
-
+if(JPG) dev.off()
 
 ######################
 # Plot fitted values #
@@ -126,6 +129,7 @@ legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
        lwd = c(2,1,2,2,2))
 
 # plot_fit.png
+if(JPG) jpeg("../paper/plot_fit.jpeg", width = 12, height = 4, units = "in", res = 300)
 # Plot model fit alongside data (posterior mean removed)
 matplot(log10(k), y_lo - fit$m, type="l", lty=3,
         col=cbcols[9], ylim = c(-.02,.02), xlab=expression(log[10](k)), 
@@ -138,7 +142,8 @@ lines(log10(k), fit$ub - fit$m, col=cbcols[1],lty=2,lwd=2)
 lines(log10(k), fit$lb - fit$m, col=cbcols[1],lty=2,lwd=2)
 legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
        col = cbcols[c(4,9,8,2,1)], lty = c(4,3,2,1,2), 
-       lwd = c(2,1,2,2,2), cex=0.67, bty="n")
+       lwd = c(2,1,2,2,2), cex=0.9, bty="n")
+if(JPG) dev.off()
 
 # plot samples and average warping
 plot.warp <- function(fit, wl = 1, wh = length(fit$x), ref.scale = 1, ...){
