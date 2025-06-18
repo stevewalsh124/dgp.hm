@@ -17,6 +17,8 @@ library(zoo) # rollmean
 library(Matrix) # bdiag
 library(pracma) #interp1
 
+JPG = FALSE
+
 load(file = "../fitting/results/CAMB/fit_1camb_image.rda")
 
 # # Plot the first batch of model runs for CAMB
@@ -45,23 +47,24 @@ cbcols <- palette.colors(palette = "Okabe-Ito")
 # Plot showing dgp.hm fit compared with camb
 # Plot with all of [-2.5, -2.2] camb
 # CAMB_fit_model1
-png("../paper/CAMB_fit_model1.png", width = 11, height = 4.5, 
+if(JPG) jpeg("../paper/CAMB_fit_model1.jpeg", width = 11, height = 4.5, 
     units = "in", res=300)
 par(mar=c(4.5, 4.5, 1.5, 1.5) + 0.1)
-plot(x, y_cambi - loess_fit$fitted, type="l", col=cbcols[3],
+plot(x*(b-a)+a, y_cambi - loess_fit$fitted, type="l", col=cbcols[3],
      ylim = range(y_cambi - loess_fit$fitted)+c(-.025,.025),
-     xlab=expression(paste(log[10](k),", transformed to [0,1]")), 
+     xlab=expression(paste(log[10](k))), 
      ylab=expression(paste("\U1D4AB","  (k), centered")), cex.lab = 1.35)
      # main = paste(model, "cover", coverages[model]))
 abline(h=0, col="black", lty=2)
-for (i in 1:n_lo) lines(x, y_loi[,i] - loess_fit$fitted, col=cbcols[9], lwd=0.4)
-lines(x, y_hii - loess_fit$fitted, col=cbcols[8], lwd=1.5)
-lines(x, y_avg - loess_fit$fitted, col=cbcols[4], lwd=2, lty=2)
-lines(x, fit$m - loess_fit$fitted , col=cbcols[2], lwd=2)
-lines(x, fit$ub - loess_fit$fitted, col=cbcols[2], lwd=2, lty=3)
-lines(x, fit$lb - loess_fit$fitted, col=cbcols[2], lwd=2, lty=3)
-lines(x, y_cambi - loess_fit$fitted, col=cbcols[3], lwd=2)
+for (i in 1:n_lo) lines(x*(b-a)+a, y_loi[,i] - loess_fit$fitted, col=cbcols[9], lwd=0.4)
+lines(x*(b-a)+a, y_hii - loess_fit$fitted, col=cbcols[8], lwd=1.5)
+lines(x*(b-a)+a, y_avg - loess_fit$fitted, col=cbcols[4], lwd=2, lty=2)
+lines(x*(b-a)+a, fit$m - loess_fit$fitted , col=cbcols[2], lwd=2)
+lines(x*(b-a)+a, fit$ub - loess_fit$fitted, col=cbcols[2], lwd=2, lty=3)
+lines(x*(b-a)+a, fit$lb - loess_fit$fitted, col=cbcols[2], lwd=2, lty=3)
+lines(x*(b-a)+a, y_cambi - loess_fit$fitted, col=cbcols[3], lwd=2)
 legend("topright", c("inf-res","low-res","hi-res","wt avg","dgp.hm"), 
        lty=c(1,1,1,2,1), cex=1, bty="n",
        col=c(cbcols[3],cbcols[9],cbcols[8],cbcols[4],cbcols[2]), lwd=c(2,0.5,1.5,2,2))
-dev.off()
+if(JPG) dev.off()
+
