@@ -494,20 +494,18 @@ dependence between the observations results in more effective UQ.
 We relegate mean squared error (MSE) results to \ref{sec:apdx_sims}, because
 MSE neglects UQ and was comparable across competing methods.
 
-\subsection{CAMB Data}
+\subsection{CAMB Estimation}
 \label{subsec:camb}
 
-We next investigate model fits to several cosmological 
-datasets from CAMB \citep{lewis2011CAMB}. These datasets contain power spectra based
-on six-dimensional cosmological parameter settings. Similar to the Mira-Titan suite, the
-CAMB dataset contains data for sixty-four cosmologies, with each containing multiple 
-(fifteen) low-resolution spectra, and one high-resolution spectrum. 
-Unlike the Mira-Titan suite, this dataset additionally contains an infinite-resolution 
-spectrum, which can be treated as the true spectrum for each cosmology,
-allowing us to assess the accuracy of posterior mean estimates and effectiveness
-of credible intervals. An illustration of the first cosmology from CAMB is shown
-in Figure \ref{fig:fit_camb}, where the infinite-resolution spectrum is generally
-much smoother than the low- and high-resolution counterparts.
+The CAMB \citep{lewis2011CAMB} dataset contains power spectra based
+on six cosmological parameter settings. It includes sixty-four cosmologies,
+each containing fifteen low-resolution spectra ($y_{l_r}$) and one high-resolution spectrum ($y_h$).
+Each spectrum is observed along the same grid of wavenumbers ($k_i$ for $i=1,\dots,n$). 
+Unlike the Mira-Titan suite, this dataset includes an infinite-resolution 
+spectrum ($y_c)$ which can be treated as the true spectrum for each cosmology,
+allowing us to assess model performance. An illustration of the first cosmology 
+from CAMB is shown in Figure \ref{fig:fit_camb}.  The ``true'' infinite-resolution 
+spectrum is notably smoother than its low- and high-resolution counterparts.
 
 \begin{figure}
     \centering
@@ -515,49 +513,43 @@ much smoother than the low- and high-resolution counterparts.
     \caption{Example of DGP.FCO model fit for the first batch of model runs from the CAMB data, 
              with a LOESS mean of the weighted average subtracted to emphasize details. We can 
              compare the orange lines (posterior mean and dotted 95\% credible interval) to the 
-             light blue line, representing the infinite-resolution ``true" spectrum.}   
+             light blue line, representing the infinite-resolution ``true" spectrum.
+             \textcolor{red}{(@Steve - can you leave the x-axis on the usual scale?
+             So -1.7 is directly visible.)}}   
     \label{fig:fit_camb}
 \end{figure}
 
-Our goal here is to train the DGP.FCO model and accurately estimate the true spectrum for each
-cosmology. To imitate the role of the perturbation theory output of Mira-Titan, we anchor 
-estimates of the CAMB power spectrum at the infinite-resolution for $\log_{10}(k) < -1.7$, and 
-then rely strictly on the low- and high-resolution runs for $k$ above this (note the transition
-area in Figure \ref{fig:fit_camb} around the transformed $k$ value of 0.2). We first use a log-log 
-regression model to obtain precision estimates $\Lambda_\ell$ and $\Lambda_h$
+To imitate the role of the perturbation theory output of Mira-Titan, we anchor 
+estimates of the CAMB power spectrum at the infinite-resolution for 
+$\log_{10}(k) < -1.7$, and then rely strictly on the low- and high-resolution 
+runs for $k$ above this (note the transition
+in Figure \ref{fig:fit_camb} at $\log_{10}(k) = -1.7$). To compute $\bar{y}$ and $\Sigma_\epsilon$,
+we first use a log-log regression model to obtain precision estimates $\Lambda_\ell$ and $\Lambda_h$
 for the low- and high-resolution runs respectively, as outlined in Section \ref{sec:data}. 
-Similarly, we set $\Lambda_c^{(ii)}=10^8$ when $\log_{10}(k_i) < -1.7$ ($0$ otherwise) for $i = 1,\dots,n$.
-\textcolor{red}{(why switch from $10^5$ to $10^8$?)} 
-to illustrate high confidence in the infinite-resolution run for low $k$ values.
-We then take a weighted average of the CAMB runs in a similar fashion
-to Mira-Titan data as described in Section \ref{sec:data}: $\bar y = \Lambda^{-1}(\Lambda_c y_c + 
-\Lambda_{\ell} \bar{y}_\ell + \Lambda_h y_h)$, where $\Lambda = \Lambda_p + \Lambda_\ell + \Lambda_h$ 
+To anchor estimates at low resolutions, we define the diagonal matrix $\Lambda_c$ with 
+$\Lambda_c^{(ii)}=10^8$ for $\log_{10}(k_i) < -1.7$ ($0$ otherwise).
+We then compute the weighted average as: $\bar y = \Lambda^{-1}(\Lambda_c y_c + 
+\Lambda_{\ell} \bar{y}_\ell + \Lambda_h y_h)$, where $\Lambda = \Lambda_c + \Lambda_\ell + \Lambda_h$ 
 and $\bar{y}_\ell = \frac{1}{15}\sum_{r=1}^{15} y_{\ell_r}$.
-
-With weighted average and precision information, we considered a Mat\'ern kernel for 
-$\Sigma_\varepsilon$. 
-\textcolor{red}{(Yes, using maximum likelihood estimation with smoothness set to $5/2$, 
-and we use $\tau^2$ and $\theta$ estimates here, in the sims, and for Mira-Titan; 
-these estimates are coming out of the ``opt\_matern" function we created.)}
 For the CAMB data, spatial correlation decays very quickly
-($\theta\approx 0$ for CAMB, compare the smoothly varying low-resolution runs of 
-Figure \ref{fig:fit_camb} with the jagged low-resolution CAMB runs in Figure \ref{fig:plot_data}). 
-We therefore assume no spatial dependence for CAMB and specify $\Sigma_\varepsilon = 
+(compare the smoothly varying low-resolution runs of Mira-Titan in Figure \ref{fig:plot_data} 
+with the jagged low-resolution runs of CAMB in Figure \ref{fig:fit_camb}). 
+Although we considered a Mat\'ern kernel for $\Sigma_\epsilon$ here, we found the covariance
+to decay so quickly ($\theta\approx 0$) that a diagonal covariance would suffice.
+Therefore, we drop spatial dependence and specify $\Sigma_\varepsilon = 
 (\Lambda_c+\Lambda_\ell+\Lambda_h)^{-1}$.  
 
-After fitting the DGP.FCO model, an illustration of the posterior mean and its UQ can
-be seen in Figure \ref{fig:fit_camb}. Notice that there are peaks where both the high-resolution
-run and the weighted average are biased, but our posterior mean adjusts appropriately 
-and has a more reliable estimate for the infinite-resolution run (the ``truth" in this setting). 
-UQ is handled well, as precision increases with increasing $k$, which is captured in our
-95\% credible intervals.
+We fit our DGP.FCO model to the low- and high-resolution runs of each CAMB cosmology for
+later use in Section \ref{sec:pred}.  For now, we provide an illustration of the DGP.FCO
+prediction (solid yellow) and credible intervals (dashed yellow) for a single 
+CAMB cosmology in Figure \ref{fig:fit_camb}.  Our posterior mean provides an effective estimate
+of the ``true'' infinite-resolution run.  It aptly smooths over the peaks where 
+both the high-resolution run and the weighted average significantly deviate from the truth
+($\log_{10}(k)\approx 0.4,0.7$ - \textcolor{red}{@Steve - please adjust these numbers after 
+changing the x-axis of the figure}). Our model also provides effective UQ, appropriately shrinking
+credible intervals as precision increases for larger $k$.
 
-\textcolor{red}{As of now, we are not comparing to DPC/hetGP/deepgp here, so no
-MSE or log scores. We do have MSEs of CAMB predictions when training on these posterior means
-vs training on the infinite-resolution runs; this comes up in Figures \ref{fig:pca_preds_v_camb} 
-and \ref{fig:mse_camb} later.}
-
-\subsection{Estimating Spectra with Mira-Titan Data}
+\subsection{Mira-Titan Estimation}
 \label{subsec:mira_fit}
 
 From plots of the multiple low-resolution spectra (e.g., Figure \ref{fig:plot_data}), 
