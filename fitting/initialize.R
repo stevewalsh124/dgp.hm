@@ -34,7 +34,7 @@ load("../Mira-Titan-IV-Data/precision_and_indexes.Rdata")
 # Get precision info for each data type (low-res, hi-res, pert theory)
 precs_lo <- ifelse(1:n %in% index_list$lowres.ix, prec_lowres, 0) * nrun
 precs_hi <- ifelse(1:n %in% index_list$highres.ix, prec_highres, 0)
-precs_pt <- ifelse(1:n %in% index_list$pert.ix, 100000, 0)
+precs_pt <- ifelse(1:n %in% index_list$pert.ix, 10^8, 0)
 
 # Smooth the precision information (to remove steps)
 Lam_lo <- rollmean(precs_lo, k = 10, fill = "extend")
