@@ -1,11 +1,10 @@
 ###############################################################################
 # This script compares results for the "bake-off" of various surrogate models 
-# under 2 different test functions (f1 and f2) and 4 different noise settings 
+# under 2 different test functions (f1 and f2) and 2 different noise settings 
 # for a specified random seed. All models are tasked with estimating the noise.
 ###############################################################################
 
-PDF <- F
-if(PDF) pdf("collect_sims.pdf")
+JPG <- F
 
 # color-blind friendly color palette
 cbcols <- palette.colors(palette = "Okabe-Ito")
@@ -49,6 +48,8 @@ for (func in 1:2) {
 # Boxplots of MSEs #
 ####################
 
+if(JPG) jpeg("../paper/sims_MSE.jpeg", width = 10, height = 4, units = "in", res = 300)
+
 par(mfrow=c(2,4), oma=c(4,4,1.5,1), mar=c(0,0,0,0))
 
 # Step 1: Precompute y-limits for each setting (row)
@@ -74,20 +75,23 @@ for (setting in 4:5) {
       filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
       results <- read.csv(filename)[, c(2,5,4,3)]
       boxplot(results, ylab = "MSE", axes=F,
-              names = c("dgp.hm","dpc","hetGP","deepGP"), col = cbcols[c(4,5,7,9)],
+              names = c("DGP.FCO","DPC","hetGP","deepgp"), col = cbcols[c(4,5,7,9)],
               ylim = row_ylim)
       mtext(paste0("Fn ", func, " Stg ", setting, " r=", r), line=-1.5)
       box()
       if(func == 1 & r == 5) {axis(2); mtext(side=2, line=2, "MSE")}      
-      if(func==7) axis(1, at=1:4, labels = c("dgp.hm","dpc","hetGP","deepGP"))
+      if(setting==5) axis(1, at=1:4, labels = c("DGP.FCO","DPC","hetGP","deepgp"))
     }
   }
 }
 
+if(JPG) dev.off()
 
 ##########################
 # Boxplots of log scores #
 ##########################
+
+if(JPG) jpeg("../paper/sims_logS.jpeg", width = 10, height = 4, units = "in", res = 300)
 
 par(mfrow=c(2,4), oma=c(4,4,1.5,1), mar=c(0,0,0,0))
 
@@ -113,15 +117,15 @@ for (setting in 4:5) {
       filename <- paste0("results/sims_", func, "_", setting, "_", r, ".csv")
       results <- read.csv(filename)[, c(6,9,8,7)]
       boxplot(results, ylab = "MSE", axes=F,
-              names = c("dgp.hm","dpc","hetGP","deepGP"), col = cbcols[c(4,5,7,9)],
+              names = c("DGP.FCO","DPC","hetGP","deepgp"), col = cbcols[c(4,5,7,9)],
               ylim = row_ylim)
       mtext(paste0("Fn ", func, " Stg ", setting, " r=", r), line=-1.5)
       box()
       if(func == 1 & r == 5) {axis(2); mtext(side=2, line=2, "log score")}      
-      if(func==7) axis(1, at=1:4, labels = c("dgp.hm","dpc","hetGP","deepGP"))
+      if(setting==5) axis(1, at=1:4, labels = c("DGP.FCO","DPC","hetGP","deepgp"))
     }
   }
 }
 
-if(PDF) dev.off()
+if(JPG) dev.off()
 

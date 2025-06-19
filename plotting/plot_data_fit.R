@@ -34,7 +34,7 @@ x <- log10(k)
 # Get precision info 
 precs_lo <- ifelse(1:n %in% index_list$lowres.ix, prec_lowres, 0) * nrun
 precs_hi <- ifelse(1:n %in% index_list$highres.ix, prec_highres, 0)
-precs_pt <- ifelse(1:n %in% index_list$pert.ix, 10000, 0)
+precs_pt <- ifelse(1:n %in% index_list$pert.ix, 10^8, 0)
 Lam_lo <- rollmean(precs_lo, k = 10, fill = "extend")
 Lam_hi <- rollmean(precs_hi, k = 10, fill = "extend")
 Lam_pt <- rollmean(precs_pt, k = 10, fill = "extend")
@@ -132,6 +132,13 @@ legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
 
 # plot_fit.png
 if(JPG) jpeg("../paper/plot_fit.jpeg", width = 12, height = 4, units = "in", res = 300)
+
+# Set layout: 2 columns, relative widths 2:1
+layout(matrix(1:2, nrow = 1), widths = c(2, 1))
+
+# Left plot (2/3 width)
+par(mar = c(4, 4, 2, 1))  # set margins: bottom, left, top, right
+
 # Plot model fit alongside data (posterior mean removed)
 matplot(log10(k), y_lo - fit$m, type="l", lty=3,
         col=cbcols[9], ylim = c(-.02,.02), xlab=expression(log[10](k)), 
@@ -145,63 +152,21 @@ lines(log10(k), fit$lb - fit$m, col=cbcols[1],lty=2,lwd=2)
 legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
        col = cbcols[c(4,9,8,2,1)], lty = c(4,3,2,1,2), 
        lwd = c(2,1,2,2,2), cex=0.9, bty="n")
-if(JPG) dev.off()
 
-# plot samples and average warping
-plot.warp <- function(fit, wl = 1, wh = length(fit$x), ref.scale = 1, ...){
-  Dx <- ncol(fit$x)
-  D <- ncol(fit$w[[1]])
-  indx <- floor(seq(from = 1, to = fit$nmcmc, length = 100))
-  if (indx[1] == 0) 
-    indx[1] <- 1
-  col <- heat.colors(100 + 10)
-  # par(mfrow = c(1, 1), mar = c(4, 4, 2, 2))
-  o <- order(fit$x)
-  plot(fit$x[o], fit$w[[indx[1]]][o] - mean(fit$w[[indx[1]]]), type = "l", 
-       xlab = "X", ylab = "W", col = col[1], #main = paste0("MCMC samples of X to W"), 
-       ylim = c(min(unlist(fit$w[indx])), max(unlist(fit$w[indx]))))
-  for (j in 2:length(indx)) {
-    lines(fit$x[o], fit$w[[indx[j]]][o] - mean(fit$w[[indx[j]]]), 
-          col = col[j])
-  }
-  
-  x <- fit$x
-  
-  for (j in 1:fit$nmcmc) {
-    y <- c(fit$w[[j]])
-    
-    # Second: undo scale
-    # find the length of the deformed reference vector
-    y.ref <- y[wl] - y[wh]
-    scale.y <- sqrt(t(y.ref)%*%y.ref)
-    # numerator comes from length of vector with points zz, zo
-    scale.back =  c(ref.scale/scale.y)#1/sqrt(sum(y.translate[,2]^2))
-    y.rot.scale = y * scale.back
-    
-    # Third: Translate back
-    translation <- y.rot.scale[wl] - x[wl]
-    y.rot.scale.tran <- y.rot.scale - translation
-    wstar <- y.rot.scale.tran
-    
-    # flip the graph if necessary in either direction
-    # remove the reflections
-    if(wstar[wl]>wstar[wh]) {wstar <- (wstar-wstar[wl])/(wstar[wh]-wstar[wl])}
-    fit$w[[j]] <- wstar
-  }
-  
-  ws <- do.call(rbind, fit$w)
-  w_avg <- colMeans(ws)
-  w_lb <- apply(ws, 2, function(x) quantile(x, 0.025))
-  w_ub <- apply(ws, 2, function(x) quantile(x, 0.975))
-  
-  # par(mfrow=c(1,1))
-  plot(x, w_avg, type="l", col="blue", ...)
-  lines(x, w_lb, col="blue", lty=2)
-  lines(x, w_ub, col="blue", lty=2)
-  abline(0, 1, col="red")
-}
 
+# Right plot (1/3 width) - keep square aspect
+
+par(mar = c(4, 4, 2, 1))
 # load results from burned in fit for M001
 load("../fitting/results/fit_M001.rda")
-par(mfrow=c(1,2))
-plot.warp(fit, xlab="X", ylab="W")
+
+indx <- floor(seq(from = 1, to = fit$nmcmc, length = 100))
+if (indx[1] == 0) indx[1] <- 1
+o <- order(fit$x)
+w <- fit$w[o, indx]
+for (i in 1:length(indx)) w[, i] <- w[, i] - mean(w[, i])
+matplot(log10(k), w, type = "l", xlab = "X", ylab = "W", col = "grey", 
+        ylim = c(min(w), max(w)))
+if(JPG) dev.off()
+
+
