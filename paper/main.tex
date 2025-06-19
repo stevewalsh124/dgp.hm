@@ -584,9 +584,10 @@ stretching inputs where dynamics are shifting more rapidly for larger $k$ values
 \begin{figure}[ht]
     \centering
     \includegraphics[width=6in]{plot_fit.jpeg}
-    \caption{95\% credible intervals for the power spectrum of the first Mira-Titan
+    \caption{{\it Left:} 95\% credible intervals for the power spectrum of the first Mira-Titan
     cosmology (centered by the predicted posterior mean). Perturbation theory, 
-    low-resolution, and high-resolution runs are shown for context.}
+    low-resolution, and high-resolution runs are shown for context. {\it Right:} Posterior draws
+    of $W$, illustrating some nonstationary behavior.}
     \label{fig:plot_fit}
 \end{figure}
 
@@ -600,52 +601,25 @@ from training cosmologies to predict the matter power spectra for held-out cosmo
 \subsection{Functional Prediction Model}
 \label{subsec:pca}
 
-Here, we begin with a $n \times m$ matrix composed of $m=111$ posterior means, 
-each of length $n$, denoted by $\boldsymbol\eta$. To facilitate more efficient estimation, 
-we use singular value decomposition \citep[SVD; e.g.,][]{banerjee2014linear}, 
-where $\boldsymbol\eta = UDV^T$; $U$ and $V$ are orthogonal matrices of size $n \times n$ 
-and $m\times m$, respectively. $D$ is a diagonal matrix containing the singular values. 
-For this application, $\boldsymbol\eta$ has rank $r=\text{min}\{m,n\}=111$, which 
-determines the number of non-zero elements in $D$. We find an alternative decomposition 
-where $\Sigma$ is a diagonal matrix with the non-zero singular values of $\boldsymbol\eta$, 
-and $U_1$ and $V_1$ are matrices with orthonormal columns of size $n_\eta \times r$ 
-and $m \times r$, respectively. 
-
-Following \cite{higdon2008computer, higdon2010estcosmo}, we equivalently decompose 
-$\boldsymbol\eta$ into a principal component (PC) basis matrix 
-$B^* = \frac{1}{\sqrt{m}}U_1\Sigma$ along with its corresponding weights 
-$W^* = \sqrt{m}V_1$. Without loss of generality, we can perform this decomposition 
-after an overall mean trend is removed. If we use $p_\eta < r$ PCs, this will reduce 
-$B$ and $W$ to be the first $p_\eta$ columns of $B^*$ and $W^*$ respectively and 
-result in an approximation where 
-
-\begin{equation}
-    \boldsymbol\eta= UDV^T = U_1\Sigma V_1^T \approx BW^T.
-\end{equation}
-
 Our goal is to predict the power spectrum for a held-out cosmology. 
 For simplicity, we will denote these eight parameters for a given cosmology (see 
-Section \ref{sec:data}) as $\psi \in \mathbb{R}^8$. 
+Section \ref{sec:data}) as $\psi \in \mathbb{R}^{p_\psi}$. With our estimated posterior means
+from DGP.FCO for each training cosmology, we now predict $S$ for unobserved cosmologies
+as a function of $\psi$.
+
+We have $m$-many training observations ($j = 1,\dots,m$) which each contain the $p_\psi$-dimensional
+input $\psi_j$ and DGP.FCO estimates $\hat{S}_j$ for the $j$th cosmology. 
+We combine all $\hat{S}_j$ estimates into a $n\times m$ matrix $\boldsymbol\eta$.
+Due to the fact that each column of $\boldsymbol\eta$ represents functional output, 
+we choose to reformulate the problem using principal components (PCs). Details of this can be found in 
+\ref{sec:apdx_basis}. Here we will use the first $p_\eta$ PCs. 
+
 Figure \ref{fig:mean_PCs_oneW} illustrates this decomposition with the estimated 
-mean trend, the principal components contained in $B$, and one example of how the 
-weight for the first PC will vary dependent on the first of $p_\psi=8$ cosmological 
-parameters contained in $\psi$.
-
-In the following subsections, we consider different modeling strategies for $W$, 
-which will influence predictions and sensitivity analyses based on $\boldsymbol\eta$.
-
-\begin{figure}
-    \centering
-    \includegraphics[width=\textwidth]{mean_PCs_oneW.png}
-    \caption{The estimated mean trend of the 111 posterior means (left), the principal 
-    components contained in $B$ (middle), and an illustration of how the weights 
-    for the first PC will change as the first cosmological parameter varies (right) 
-    \textcolor{red}{This last plot is wonky because it was made with only the 6 test 
-    cosmologies, not a large uniform or FF design, Steve can update this}.}
-    \label{fig:mean_PCs_oneW}
-\end{figure}
-
-
+mean trend for the Mira-Titan dataset, the $p_\eta$ basis functions, and one 
+example of how the weight for the first PC will vary dependent on the first of 
+$p_\psi=8$ cosmological parameters contained in $\psi$. As a result, our goal becomes 
+estimating the weights $\Gamma$ corresponding to each of the $p_\eta$ PCs, 
+as a function of $\psi$.
 
 % This is old: switched to SEPIA
 % We assume a powered exponential kernel for the Gaussian process and employ 
@@ -668,18 +642,20 @@ where $\beta_{ik}$ is the inverse squared lengthscale for the $k$th input dimens
 $\lambda_{z_i}$ is the marginal precision for $w_i(\psi)$, and $\lambda_{s_i}$ is the nugget 
 precision (set to zero if no nugget is used).
 
-Using these trained GPs from the PCs, we predict the spectra for unobserved cosmologies.
+Using these trained GPs from the PCs, we predict the spectra for each of the $N$ held-out 
+cosmologies for both the CAMB and Mira-Titan datasets.
 
 \subsection{Predicting Spectra for CAMB Data}
 \label{subsec:camb_pred}
 
-From our 32 posterior means using DGP.FCO, these are input into SEPIA in order to predict power spectra
-for the 32 test cosmologies. With the infinite-resolution output, we have a sense of the ``best-case" 
-predictions we can have (i.e., if we trained with the 32 true power spectra, as opposed to our 
-estimated posterior means). In Figure \ref{fig:pca_preds_v_camb}, we see comparisons of the heldout 
-infinite resolution alongside two predictions: one based on DGP.FCO and the ``best-case" scenario using the
-infinite-resolution spectra of the training set. There is a high level of agreement between the pairs
-of predictions across cosmologies. Upon comparing MSEs for each of these prediction scenarios 
+From our $m=32$ posterior means using DGP.FCO, these are input into SEPIA in order to predict power spectra
+for the $N=32$ test cosmologies. In the CAMB dataset, $p_\psi=6$. With the infinite-resolution spectra, we 
+have a sense of the ``best-case" predictions we can have (i.e., if we trained with the 32 true 
+infinite-resolution spectra, as opposed to our estimated posterior means). In Figure \ref{fig:pca_preds_v_camb}, 
+we see comparisons of the heldout infinite resolution alongside two predictions: one 
+based on DGP.FCO and the ``best-case" scenario using the infinite-resolution spectra of 
+the training set. There is a high level of agreement between the pairs of predictions 
+across cosmologies. Upon comparing MSEs for each of these prediction scenarios 
 (Figure \ref{fig:mse_camb}, most are very similar across the two groups (with the two most difficult 
 predictions being the exceptions), suggesting that overall DGP.FCO is estimating the true spectra 
 for each batch well.
@@ -687,7 +663,7 @@ for each batch well.
 \begin{figure}
     \centering
     \includegraphics[width=4in]{preds_diff1_4_8.jpg}
-    \caption{Predictions for 16 of the 32 test cosmologies after centering and scaling. 
+    \caption{Predictions for 16 of the $N=32$ test cosmologies after centering and scaling. 
              The interpolated infinite resolution run is shown in black, the prediction 
              (trained on the infinite resolution) is in blue and the prediction from 
              the DGP.FCO posterior mean is in red.}   
@@ -705,9 +681,23 @@ for each batch well.
 \subsection{Predicting Spectra from Mira-Titan Data}
 \label{subsec:mira_pred}
 
-Here we show prediction results for 6 held-out cosmologies. We compare our method 
-with Cosmic Emu \citep{moran2023mira}, the emulator constructed using the full suite 
-of 111 Mira-Titan model runs. Cosmic Emu uses a Bayesian approach where the smooth 
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{mean_PCs_oneW.png}
+    \caption{{\it Left:} The estimated mean trend of the $m=111$ posterior means from 
+    the Mira-Titan dataset. {\it Middle:} The $p_\eta$ principal components obtained from 
+    the posterior means. {\it Right:} An 
+    illustration of how the weights for the first PC will change as the first 
+    cosmological parameter varies \textcolor{red}{This last plot is wonky because 
+    it was made with only the $N=6$ test cosmologies, not a large uniform or FF design, 
+    Steve can update this}.}
+    \label{fig:mean_PCs_oneW}
+\end{figure}
+
+Here we show prediction results for $N=6$ held-out cosmologies for the Mira-Titan dataset. 
+We compare our method with Cosmic Emu \citep{moran2023mira}, the emulator constructed using the full suite 
+of $m=111$ Mira-Titan model runs. Cosmic Emu uses a Bayesian approach where the smooth 
 spectrum for each cosmology is modeled with a process convolution on Brownian motion. 
 Nonstationarity is permitted through modeling the bandwidth parameter with a process 
 convolution as well; this composition is referred to as a deep process convolution 
@@ -718,14 +708,14 @@ upon multiple functional realizations, but our approach utilizes DGPs within a
 hierarchical model in lieu of deep process convolutions. After obtaining the estimated 
 smooth spectra from the training cosmologies, each method utilizes GPs in order to 
 estimate the weights of the PCs from the estimated spectra. Below, we compare prediction 
-performance between Cosmic Emu and DGP.FCO for the 6 held-out cosmologies. 
-\textcolor{magenta}{In addition, we can also predict over a large uniform or full 
-factorial design to obtain estimated main effects for each cosmological parameter in 
-$\psi$, interactions amongst the $p_\psi=8$ parameters, and decompose the overall 
-variation by main effects, two-way interactions, and so on. Should this be included?}
+performance between Cosmic Emu and DGP.FCO for the $N=6$ held-out cosmologies. 
+% \textcolor{magenta}{In addition, we can also predict over a large uniform or full 
+% factorial design to obtain estimated main effects for each cosmological parameter in 
+% $\psi$, interactions amongst the $p_\psi=8$ parameters, and decompose the overall 
+% variation by main effects, two-way interactions, and so on. Should this be included?}
 
 Plots for the average root mean squared error (RMSE) for each prediction method over the 
-6 cosmologies and each $k$ value are shown in Figure \ref{fig:plot_rmse_k}. Comparisons 
+$N=6$ cosmologies and each $k$ value are shown in Figure \ref{fig:plot_rmse_k}. Comparisons 
 of the spectrum estimation for training cosmologies are shown as well (using RMSE against 
 the weighted average of observations). For predictions, DGP.FCO achieves the greatest 
 reduction in RMSE in the region where perturbation theory and the low-resolution runs 
@@ -738,8 +728,8 @@ cosmology are shown in Figure \ref{fig:plot_pred_1to6}.
 \begin{figure}[ht]
     \centering
     \includegraphics[width=6in]{rmse_by_k.png}
-    \caption{Left: Average RMSE of each prediction method across all $k$ values. 
-             Right: Average RMSE for each method when using the held-out computer 
+    \caption{{\it Left:} Average RMSE of each prediction method across all $k$ values. 
+             {\it Right:} Average RMSE for each method when using the held-out computer 
              model runs to train the model. In each case, the truth is assumed to 
              be the weighted average of the computer model runs.}
     \label{fig:plot_rmse_k}
@@ -926,9 +916,9 @@ Therefore, we have the result that $S|\bar{Y} \sim \mathcal{N}(\boldsymbol{m}, C
 \section{Mira-Titan Predictive Plots}
 \label{sec:apdx_mira_plots}
 
-\textcolor{magenta}{The different appendices from dissertation as necessary. 
-Can also put details of dataset in supplementary material.} 
-\textcolor{red}{Fix references as necessary, e.g. Moran et al. 2024.}
+% \textcolor{magenta}{Steve The different appendices from dissertation as necessary. 
+% Can also put details of dataset in supplementary material.} 
+% \textcolor{red}{Fix references as necessary, e.g. Moran et al. 2024.}
 
 \begin{figure}[ht]
     \centering
@@ -952,6 +942,32 @@ Can also put details of dataset in supplementary material.}
              either 5 (top) or 15 (bottom).}    
     \label{fig:sims_MSE}
 \end{figure}
+
+\section{Details on Basis Decomposition for Predictions}
+\label{sec:apdx_basis}
+
+Here, we begin with a $n \times m$ matrix composed of $m=111$ posterior means, 
+each of length $n$, denoted by $\boldsymbol\eta$. To facilitate more efficient estimation, 
+we use singular value decomposition \citep[SVD; e.g.,][]{banerjee2014linear}, 
+where $\boldsymbol\eta = UDV^T$; $U$ and $V$ are orthogonal matrices of size $n \times n$ 
+and $m\times m$, respectively. $D$ is a diagonal matrix containing the singular values. 
+For this application, $\boldsymbol\eta$ has rank $r=\text{min}\{m,n\}$ (111 for Mira-Titan, 
+32 for CAMB), which determines the number of non-zero elements in $D$. We find an alternative 
+decomposition where $\Sigma$ is a diagonal matrix with the non-zero singular values of 
+$\boldsymbol\eta$, and $U_1$ and $V_1$ are matrices with orthonormal columns of size 
+$n_\eta \times r$ and $m \times r$, respectively. 
+
+Following \cite{higdon2008computer, higdon2010estcosmo}, we equivalently decompose 
+$\boldsymbol\eta$ into a principal component (PC) basis matrix 
+$B^* = \frac{1}{\sqrt{m}}U_1\Sigma$ along with its corresponding weights 
+$\Gamma^* = \sqrt{m}V_1$. Without loss of generality, we can perform this decomposition 
+after an overall mean trend is removed. If we use $p_\eta < r$ PCs, this will reduce 
+$B$ and $\Gamma$ to be the first $p_\eta$ columns of $B^*$ and $\Gamma^*$ respectively and 
+result in an approximation where 
+
+\begin{equation}
+    \boldsymbol\eta= UDV^T = U_1\Sigma V_1^T \approx B\Gamma^T.
+\end{equation}
 
 \bibliographystyle{jasa}
 \bibliography{references}
