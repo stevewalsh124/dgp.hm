@@ -34,7 +34,7 @@ x <- log10(k)
 # Get precision info 
 precs_lo <- ifelse(1:n %in% index_list$lowres.ix, prec_lowres, 0) * nrun
 precs_hi <- ifelse(1:n %in% index_list$highres.ix, prec_highres, 0)
-precs_pt <- ifelse(1:n %in% index_list$pert.ix, 10000, 0)
+precs_pt <- ifelse(1:n %in% index_list$pert.ix, 10^8, 0)
 Lam_lo <- rollmean(precs_lo, k = 10, fill = "extend")
 Lam_hi <- rollmean(precs_hi, k = 10, fill = "extend")
 Lam_pt <- rollmean(precs_pt, k = 10, fill = "extend")
@@ -205,3 +205,5 @@ plot.warp <- function(fit, wl = 1, wh = length(fit$x), ref.scale = 1, ...){
 load("../fitting/results/fit_M001.rda")
 par(mfrow=c(1,2))
 plot.warp(fit, xlab="X", ylab="W")
+
+plot(fit)
