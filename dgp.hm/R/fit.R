@@ -30,9 +30,9 @@ fit_one_layer_hm <- function(x, y, Sigma_hat, nmcmc = 10000, verb = TRUE, theta_
   if (!is.matrix(x)) {
     x <- matrix(x, ncol = 1)
   } else if (ncol(x) != 1) stop("x must be one-dimensional")
-  test <- deepgp:::check_inputs(x, y, 0) # do not need to check nugget
-  settings <- deepgp:::check_settings(settings, layers = 1, noisy = TRUE) # TRUE/FALSE??
-  initial <- list(theta = theta_0) # force tau2 = 1
+  if (nrow(x) != length(y)) stop("dimensions of x and y do not match")
+  settings <- check_prior_settings(settings, layers = 1)
+  initial <- list(theta = theta_0)
   if (!(v %in% c(0.5, 1.5, 2.5))) 
     stop("v must be one of 0.5, 1.5, or 2.5")
   if (nrow(Sigma_hat) != nrow(x))
@@ -61,10 +61,11 @@ fit_two_layer_hm <- function (x, y, Sigma_hat, nmcmc = 10000, verb = TRUE,
   if (!is.matrix(x)) {
     x <- matrix(x, ncol = 1)
   } else if (ncol(x) != 1) stop("x must be one-dimensional")
-  test <- deepgp:::check_inputs(x, y, 0) # do not need to check nugget
-  settings <- deepgp:::check_settings(settings, layers = 2, noisy = TRUE) # TRUE/FALSE??
-  initial <- list(w = w_0, theta_y = theta_y_0, theta_w = theta_w_0) # force tau2 = 1
-  initial <- deepgp:::check_initialization(initial, layers = 2, x = x, D = 1)
+  if (nrow(x) != length(y)) stop("dimensions of x and y do not match")
+  settings <- check_prior_settings(settings, layers = 2)
+  initial <- list(w = ifelse(is.null(w_0), x, w_0), 
+                  theta_y = theta_y_0, 
+                  theta_w = theta_w_0)
   if (is.null(x_grid)) 
     x_grid <- matrix(seq(0, 1, length = 50), ncol = 1)
   if (!(v %in% c(0.5, 1.5, 2.5))) 
@@ -98,8 +99,8 @@ gibbs_one_layer_hm <- function(x, y, nmcmc, verb, initial, settings, v,
   
   for (j in 2:nmcmc) {
     if (verb & (j %% 500 == 0)) cat(j, "\n")
-    samp <- sample_theta_hm(y, dx, theta[j - 1], alpha = settings$alpha$theta, 
-                            beta = settings$beta$theta, l = settings$l, 
+    samp <- sample_theta_hm(y, dx, theta[j - 1], alpha = settings$theta$alpha, 
+                            beta = settings$theta$beta, l = settings$l, 
                             u = settings$u, ll_prev = ll, v = v, 
                             Sigma_hat = Sigma_hat)
     theta[j] <- samp$theta
@@ -138,8 +139,8 @@ gibbs_two_layer_hm <- function(x, y, x_grid, nmcmc, verb, initial, settings, v,
     
     # Sample outer lengthscale (theta_y)
     samp <- sample_theta_hm(y, dw, theta_y[j - 1], 
-                            alpha = settings$alpha$theta_y, 
-                            beta = settings$beta$theta_y, l = settings$l, 
+                            alpha = settings$theta_y$alpha, 
+                            beta = settings$theta_y$beta, l = settings$l, 
                             u = settings$u, ll_prev = ll_outer, 
                             v = v, Sigma_hat = Sigma_hat)
     theta_y[j] <- samp$theta
@@ -147,8 +148,8 @@ gibbs_two_layer_hm <- function(x, y, x_grid, nmcmc, verb, initial, settings, v,
 
     # Sample inner lengthscale (theta_w)
     samp <- sample_theta_hm(w_grid[, j - 1], dx_grid, theta_w[j - 1], 
-                            alpha = settings$alpha$theta_w, 
-                            beta = settings$beta$theta_w, l = settings$l, 
+                            alpha = settings$theta_w$alpha, 
+                            beta = settings$theta_w$beta, l = settings$l, 
                             u = settings$u, v = v, Sigma_hat = 0)
     theta_w[j] <- samp$theta
     

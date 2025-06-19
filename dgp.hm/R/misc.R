@@ -114,3 +114,23 @@ monowarp_ref <- function(x, xg, wg, index) {
 
   return(w)
 }
+
+# Check prior settings --------------------------------------------------------
+
+check_prior_settings <- function(settings, layers = 1) {
+  
+  if (is.null(settings$l)) settings$l <- 1
+  if (is.null(settings$u)) settings$u <- 2
+
+  if (layers == 1) {
+    if (is.null(settings$theta$alpha)) settings$theta$alpha <- 1.2
+    if (is.null(settings$theta$beta)) settings$theta$beta <- 4
+  } else if (layers == 2) {
+    if (is.null(settings$theta_w$alpha)) settings$theta_w$alpha <- 1.2
+    if (is.null(settings$theta_w$beta)) settings$theta_w$beta <- 2
+    if (is.null(settings$theta_y$alpha)) settings$theta_y$alpha <- 1.2
+    if (is.null(settings$theta_y$beta)) settings$theta_y$beta <- 1
+  }
+  
+  return(settings)
+}
