@@ -19,7 +19,6 @@ library(Matrix) # bdiag
 # Read command line arguments -------------------------------------------------
 
 model <- 1 # integer 0-116 (0, 112:116 are testing)
-deep <- 1 
 
 args <- commandArgs(TRUE)
 if(length(args) > 0) 
@@ -27,7 +26,6 @@ if(length(args) > 0)
     eval(parse(text = args[[i]]))
 
 cat("model is ", model, "\n")
-if (deep) cat("model is deep \n") else cat("model is NOT deep \n")
 
 # Load data for a particular model --------------------------------------------
 
@@ -88,8 +86,8 @@ y_lra <- rowMeans(y_lo)
 # See "Weighted average from multiple computer experiments"
 # in Walsh dissertation: 3.7.1 Appendix E: Derivations
 y_avg <- (1 / Lam_z) * (Lam_pt * y_pt + Lam_lo * y_lra + Lam_hi * y_hi)
-write.csv(y_avg, file = paste0("../CosmicEmu_etc/y_avg_",model,".csv"),
-          row.names = F)
+#write.csv(y_avg, file = paste0("../CosmicEmu_etc/y_avg_",model,".csv"),
+#          row.names = F)
 
 # Scale the responses
 mean_y <- mean(y_avg)
@@ -130,20 +128,9 @@ Sigma_hat <- solve(block1 + block2 + block3)
 
 # Run MCMC --------------------------------------------------------------------
 
-if (deep) {
-  # load in initialized estimates for warping and hyperparameters for fit
-  w_0 <- read.csv("results/w0.csv")[[1]]
-  params0 <- read.csv("results/params0.csv")
-  fit <- fit_two_layer_hm(x, y_avg, nmcmc = 10000, w_0 = w_0, 
-                          theta_y_0 = params0$theta_y0,
-                          theta_w_0 = params0$theta_w0,
-                          Sigma_hat = Sigma_hat)
-} else {
-  fit <- fit_one_layer_hm(x, y_avg, nmcmc = 10000, Sigma_hat = Sigma_hat)
-}
-
+fit <- fit_two_layer_hm(x, y_avg, nmcmc = 3000, Sigma_hat = Sigma_hat)
 # plot(fit) # optionally investigate trace plots
-fit <- trim(fit, 5000, 5)
+fit <- trim(fit, 1000, 2)
 fit <- est_true(fit)
 
 # Unscale results before storing

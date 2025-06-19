@@ -116,9 +116,9 @@ fit <- fit_two_layer_hm(x, y_avg, nmcmc = 50000, Sigma_hat = Sigma_hat)
 fit <- trim(fit, 49000, 10)
 
 # Unscale results before storing
-w0 <- c(fit$w[[length(fit$w)]])
-params0 <- data.frame(theta_y0 = fit$theta_y[length(fit$theta_y)],
-                      theta_w0 = fit$theta_w[length(fit$theta_w)])
+w0 <- c(fit$w[, fit$nmcmc])
+params0 <- data.frame(theta_y0 = fit$theta_y[fit$nmcmc],
+                      theta_w0 = fit$theta_w[fit$nmcmc])
 
 write.csv(params0, paste0("results/params0.csv"), row.names = FALSE)
 write.csv(w0, paste0("results/w0.csv"), row.names = FALSE)

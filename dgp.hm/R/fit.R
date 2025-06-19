@@ -63,9 +63,8 @@ fit_two_layer_hm <- function (x, y, Sigma_hat, nmcmc = 10000, verb = TRUE,
   } else if (ncol(x) != 1) stop("x must be one-dimensional")
   if (nrow(x) != length(y)) stop("dimensions of x and y do not match")
   settings <- check_prior_settings(settings, layers = 2)
-  initial <- list(w = ifelse(is.null(w_0), x, w_0), 
-                  theta_y = theta_y_0, 
-                  theta_w = theta_w_0)
+  if (is.null(w_0)) w_0 <- x
+  initial <- list(w = w_0, theta_y = theta_y_0, theta_w = theta_w_0)
   if (is.null(x_grid)) 
     x_grid <- matrix(seq(0, 1, length = 50), ncol = 1)
   if (!(v %in% c(0.5, 1.5, 2.5))) 
