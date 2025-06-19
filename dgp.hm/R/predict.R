@@ -14,13 +14,7 @@ est_true <- function(fit, tolpower = -10, return_all = FALSE) {
     stop("only applicable to gphm or dgp2hm classes")
   
   deep <- (class(fit) == "dgp2hm")
-  
-  # get squared distance matrix
-  if (deep) { # pre-calculate grid indices
-    grid_index <- deepgp:::fo_approx_init(fit$x_grid, fit$x)
-  } else { # pre-calculate pairwise distances for x
-    d2 <- deepgp::sq_dist(fit$x)
-  }
+  if (!deep) d2 <- deepgp::sq_dist(fit$x)
   
   # From Section 3.3.2: Bayesian UQ Algorithm (Walsh dissertation 2023)
   # Get Sigma_epsilon (covariance matrix for correlated errors) and its inverse
@@ -42,7 +36,7 @@ est_true <- function(fit, tolpower = -10, return_all = FALSE) {
     # construct the covariance matrix for the true spectrum (Sigma_S)
     # cov mtx of [S]; based on a matern covariance function
     if (deep) {
-      w <- monowarp_ref(fit$x, fit$x_grid, fit$w_grid[, i], grid_index)
+      w <- fit$w[, i]
       d2 <- deepgp::sq_dist(w)
       theta <- fit$theta_y[i]
     } else theta <- fit$theta[i]

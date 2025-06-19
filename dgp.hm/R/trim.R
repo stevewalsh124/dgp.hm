@@ -51,6 +51,7 @@ trim.dgp2hm <- function(object, burn, thin = 1) {
   object$theta_y <- object$theta_y[indx, drop = FALSE]
   object$theta_w <- object$theta_w[indx, drop = FALSE]
   object$w <- object$w[, indx, drop = FALSE]
+  object$w_grid <- object$w_grid[, indx, drop = FALSE]
   object$ll <- object$ll[indx, drop = FALSE]
   
   toc <- proc.time()[[3]]

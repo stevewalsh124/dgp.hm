@@ -117,6 +117,7 @@ gibbs_two_layer_hm <- function(x, y, x_grid, nmcmc, verb, initial, settings, v,
   
   ng <- nrow(x_grid)
   dx_grid <- deepgp::sq_dist(x_grid)
+  grid_index <- deepgp:::fo_approx_init(x_grid, x)
   
   theta_y <- vector(length = nmcmc)
   theta_y[1] <- initial$theta_y
@@ -124,13 +125,13 @@ gibbs_two_layer_hm <- function(x, y, x_grid, nmcmc, verb, initial, settings, v,
   theta_w[1] <- initial$theta_w
   w_grid <- matrix(nrow = ng, ncol = nmcmc)
   w_grid[, 1] <- deepgp:::fo_approx(x, initial$w, x_grid) # snap initial$w to grid
+  w <- matrix(nrow = nrow(x), ncol = nmcmc)
+  w[, 1] <- monowarp_ref(x, x_grid, w_grid[, 1], grid_index)
   ll_store <- vector(length = nmcmc)
   ll_store[1] <- NA
   ll_outer <- NULL
   
-  grid_index <- deepgp:::fo_approx_init(x_grid, x)
-  w <- monowarp_ref(x, x_grid, w_grid[, 1], grid_index)
-  dw <- deepgp::sq_dist(w)
+  dw <- deepgp::sq_dist(w[, 1])
   
   for (j in 2:nmcmc) {
     if (verb & (j %% 500 == 0)) cat(j, "\n")
@@ -156,21 +157,23 @@ gibbs_two_layer_hm <- function(x, y, x_grid, nmcmc, verb, initial, settings, v,
                         theta_y[j], theta_w[j], ll_prev = ll_outer, v = v, 
                         Sigma_hat = Sigma_hat)
     w_grid[, j] <- samp$w_grid
+    w[, j] <- samp$w
     dw <- samp$dw
     ll_outer <- samp$ll
     ll_store[j] <- ll_outer
   }
   
-  return(list(theta_y = theta_y, theta_w = theta_w, w_grid = w_grid, ll = ll_store))
+  return(list(theta_y = theta_y, theta_w = theta_w, w = w, w_grid = w_grid, 
+              ll = ll_store))
 }
 
 # sample_w_hm -----------------------------------------------------------------
 
-sample_w_hm <- function(y, w_grid_t, dw_t, x, x_grid, dx_grid, grid_index, 
+sample_w_hm <- function(y, w_grid, dw, x, x_grid, dx_grid, grid_index, 
                         theta_y, theta_w, ll_prev = NULL, v, Sigma_hat) {
 
   if (is.null(ll_prev)) 
-    ll_prev <- logl_hm(y, dw_t, theta_y, v, Sigma_hat)
+    ll_prev <- logl_hm(y, dw, theta_y, v, Sigma_hat)
   
   w_grid_prior <- mvtnorm::rmvnorm(1, sigma = deepgp:::Matern(dx_grid, 1, theta_w, 0, v))
   a <- runif(1, min = 0, max = 2*pi)
@@ -183,9 +186,9 @@ sample_w_hm <- function(y, w_grid_t, dw_t, x, x_grid, dx_grid, grid_index,
 
   while (accept == FALSE) {
     count <- count + 1
-    w_grid_new <- w_grid_t*cos(a) + w_grid_prior*sin(a)
-    w_new <- monowarp_ref(x, x_grid, w_grid_new, grid_index)
-    dw <- deepgp::sq_dist(w_new)
+    w_grid_new <- w_grid*cos(a) + w_grid_prior*sin(a)
+    w <- monowarp_ref(x, x_grid, w_grid_new, grid_index)
+    dw <- deepgp::sq_dist(w)
     ll_new <- logl_hm(y, dw, theta_y, v, Sigma_hat)
     if (ll_new > ll_threshold) {
       accept <- TRUE
@@ -196,7 +199,7 @@ sample_w_hm <- function(y, w_grid_t, dw_t, x, x_grid, dx_grid, grid_index,
     } # end of else statement
   } # end of while loop
 
-  return(list(w_grid = w_grid_new, dw = dw, ll = ll_new))
+  return(list(w_grid = w_grid_new, w = w, dw = dw, ll = ll_new))
 }
 
 # sample_theta_hm -------------------------------------------------------------
