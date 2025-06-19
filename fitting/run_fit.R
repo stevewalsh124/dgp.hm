@@ -128,7 +128,7 @@ Sigma_hat <- solve(block1 + block2 + block3)
 
 # Run MCMC --------------------------------------------------------------------
 
-fit <- fit_two_layer_hm(x, y_avg, nmcmc = 3000, Sigma_hat = Sigma_hat)
+fit <- fit_two_layer_hm(x, y_avg, nmcmc = 2000, Sigma_hat = Sigma_hat)
 # plot(fit) # optionally investigate trace plots
 fit <- trim(fit, 1000, 2)
 fit <- est_true(fit)
@@ -141,7 +141,7 @@ results <- data.frame(x = log10(k),
                       lb = fit$lb * sd_y + mean_y,
                       ubb = fit$ubb * sd_y + mean_y, 
                       lbb = fit$lbb * sd_y + mean_y)
-write.csv(results, paste0("results/", ifelse(deep, "dgp", "gp"), "_", 
+write.csv(results, paste0("results/dgp_", 
                           model_name, ".csv"), row.names = FALSE)
 if(model == 1) write.table(log10(k), file = "results/logk.txt",row.names = FALSE, col.names = FALSE)
 if(model_name == "M001") save(fit, file = "results/fit_M001.rda")
