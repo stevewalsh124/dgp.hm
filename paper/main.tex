@@ -245,7 +245,7 @@ low resolution average, and high resolution). Specifically, denote $\Lambda_p$,
 $\Lambda_\ell$, and $\Lambda_h$ as the $n\times n$ diagonal matrices with elements
 \begin{equation}\label{eq:lambda}
 \Lambda_p^{(ii)} = \begin{cases}
-    10^5 &\text{for } k_i < 0.04 \\
+    10^8 &\text{for } k_i < 0.04 \\
     0  &\text{otherwise}\\
     \end{cases}
 \quad
@@ -260,7 +260,7 @@ $\Lambda_\ell$, and $\Lambda_h$ as the $n\times n$ diagonal matrices with elemen
     \end{cases}
 \end{equation}
 for $i=1,\dots, n$.  In $\Lambda_p$, we use the sufficiently high precision 
-of $10^5$ to impose the deterministic nature of the perturbation theory output.
+of $10^8$ to impose the deterministic nature of the perturbation theory output.
 In $\Lambda_\ell$, the multiplication by 16 accounts for the sample size of the
 low resolution runs.
 We then calculate a weighted average for each cosmology: 
@@ -577,32 +577,17 @@ by subtracting the posterior mean in order to more easily visualize the credible
 interval bounds.  The UQ from the DGP.FCO model accounts for varying precisions 
 across differing $k$ values, as well as the spatial correlation within the 
 functional realizations.  To provide insight into the nonstationarity of the power
-matter spectrum, Figure \ref{fig:plot_warp} shows the elliptical slice samples of $W$.
-These warpings depart from the identiy mapping around $x=0.4$ \textcolor{red}{(@Steve - 
-please change the x-axis to match the actual x-axis values, then adjust this number)}, 
+matter spectrum, the right panel of Figure \ref{fig:plot_fit} shows the elliptical slice samples of $W$.
+These warpings depart from the identiy mapping around $x\approx-1$, 
 stretching inputs where dynamics are shifting more rapidly for larger $k$ values.
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=6in]{plot_fit.png}
+    \includegraphics[width=6in]{plot_fit.jpeg}
     \caption{95\% credible intervals for the power spectrum of the first Mira-Titan
     cosmology (centered by the predicted posterior mean). Perturbation theory, 
-    low-resolution, and high-resolution runs are shown for context.
-    \textcolor{red}{(@Steve - combine this plot with Figure 6.  The two panels of Figure 6
-    are redundant and unecessary (yet oddly, they don't match?).  Have this Mira-Titan 
-    plot take up 2/3 of the space, then have just the right panel from Figure 6 take 
-    up the remaining 1/3.  Update the figure caption and referencing accordingly.)}}
+    low-resolution, and high-resolution runs are shown for context.}
     \label{fig:plot_fit}
-\end{figure}
-
-\begin{figure}[ht]
-   \centering
-   \includegraphics[width=6in]{plot_warp_M001.png}
-   \caption{Left: MCMC samples of $W$ for model M001 after burnin and thinning. 
-            Right: Corresponding 95\% credible intervals for $W$, where departure 
-            from the identity line represents nonstationary behavior.
-            \textcolor{red}{(remove this figure, combine right panel with previous)}}
-   \label{fig:plot_warp}
 \end{figure}
 
 \section{Prediction for Unobserved Cosmologies}
