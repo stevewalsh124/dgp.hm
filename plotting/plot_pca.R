@@ -161,9 +161,10 @@ mean(colMeans(mses) < colMeans(mses_emu))
 # Make plot of basis function decomposition
 # run predict.R first to load des_test and aps[[1]]
 # mean_PCs_oneW; hydro_plotting.R has original with GSMF
+setwd("../pca"); source("predict.R"); setwd("../plotting")
 par(mfrow=c(1,3), mar=c(4,4,1.8,1))
-plot(apply(eta,1,mean),type="l", xlab=expression(log[10](k)), ylab='script P')
-matplot(bases, type="l", xlab=expression(log[10](k)), ylab = 'deviation from average')
+plot(log10(k), apply(eta,1,mean),type="l", xlab=expression(log[10](k)), ylab='script P')
+matplot(log10(k), bases, type="l", xlab=expression(log[10](k)), ylab = 'deviation from average')
 des_test <- read.csv("../Mira-Titan-IV-Data/design_test.txt",sep="",header = F)
 x1_pred <- des_test[,1]
 plot(x1_pred[order(x1_pred)], aps[[1]]$Y_hat[order(x1_pred)], type="l", 
