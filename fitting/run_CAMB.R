@@ -183,17 +183,17 @@ for(model in 1:32){ # integer 1-32
     # load in initialized estimates for warping and hyperparameters for fit
     # w_0 <- read.csv("results/w0.csv")[[1]]
     # params0 <- read.csv("results/params0.csv")
-    fit <- fit_two_layer_hm(x, y_avg, nmcmc = 15000, #w_0 = w_0, 
+    fit <- fit_two_layer_hm(x, y_avg, nmcmc = 5000, #w_0 = w_0, 
                             # theta_y_0 = params0$theta_y0,
                             # theta_w_0 = params0$theta_w0,
                             # settings = list(pmx=T),
                             Sigma_hat = Sigma_hat)
   } else {
-    fit <- fit_one_layer_hm(x, y_avg, nmcmc = 10000, Sigma_hat = Sigma_hat)
+    fit <- fit_one_layer_hm(x, y_avg, nmcmc = 5000, Sigma_hat = Sigma_hat)
   }
   
   # plot(fit) # optionally investigate trace plots
-  fit <- trim(fit, 10000, 4)
+  fit <- trim(fit, 1000, 4)
   fit <- est_true(fit)
   
   coverages[model] = round(mean(fit$lb < y_cambi & fit$ub > y_cambi), 3)
