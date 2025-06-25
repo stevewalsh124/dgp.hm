@@ -5,8 +5,8 @@
 
 library(dgp.hm)
 
-# make a PDF of plots?
-PDF <- F
+# make JPEGs of plots?
+JPG <- F
 
 # load the precision data (k, prec_highres, prec_lowres, index_list)
 load("../Mira-Titan-IV-Data/precision_and_indexes.Rdata")
@@ -144,30 +144,40 @@ legend("topright",legend = c("DPC","DGP.HM"),
 mtext(expression(log[10](k)),side=1,line=2.5,outer=T)
 mtext(paste0("Average RMSE"),side=2,line=2.5,outer=T)
 
-
-# boxplot of RMSEs by method
-par(mfrow=c(1,1))
-boxplot(c(sqrt(mses)),c(sqrt(mses_emu)),c(sqrt(mses_conv_t)),c(sqrt(mses_dgp_t)), 
-        names=c("DGP-GPPC","EMU","conv_t","dgp_t"), xlab="RMSE", horizontal = T,
-        col = c(cbcols[5],cbcols[2],cbcols[3],cbcols[6]))
-
-# compare average MSE for both prediction methods
-mean(mses_emu)
-mean(mses)
-
-# find proportion of k values where our method has lower MSE
-mean(colMeans(mses) < colMeans(mses_emu))
-
 # Make plot of basis function decomposition
-# run predict.R first to load des_test and aps[[1]]
+# run predict.R code below first to load des_test and aps[[1]] 
 # mean_PCs_oneW; hydro_plotting.R has original with GSMF
-setwd("../pca"); source("predict.R"); setwd("../plotting")
+load("trained_GP_for_pca.rda")
+
+# Read in test design
+theta_fixed <- rep(0.5, 7)  # or use colMeans(des_test)[2:8] or something else
+x1_seq <- seq(0, 1, length.out = 100)  # sweeping over theta_1
+des_test <- cbind(x1_seq, matrix(rep(theta_fixed, each = 100), ncol = 7))
+ntest <- nrow(des_test)
+
+# make the predictions for the given des_test design
+aps <- list()
+for (i in 1:n_pc) {
+  print(paste("GP pred",i))
+  aps[[i]] = predict(as[[i]],des_test)
+}
+
+# create matrix of overall mean to add back on to predictions
+mean_pred = matrix(mean_mat[,1],nrow=n_k,ncol=nrow(des_test))
+
+# scale each PC by its predicted weight
+eta_preds <- list()
+for (i in 1:n_pc) eta_preds[[i]] = outer(bases[,i],aps[[i]]$Y_hat)
+
+# combine all weighted PCs and the overall mean
+etaEmu <- mean_pred + Reduce('+', eta_preds)
+
+# mean_PCs_oneW.jpeg; PCA picture
+if(JPG) jpeg("../paper/mean_PCs_oneW.jpeg", width = 12, height = 4, units = "in", res = 300)
 par(mfrow=c(1,3), mar=c(4,4,1.8,1))
 plot(log10(k), apply(eta,1,mean),type="l", xlab=expression(log[10](k)), ylab='script P')
 matplot(log10(k), bases, type="l", xlab=expression(log[10](k)), ylab = 'deviation from average')
-des_test <- read.csv("../Mira-Titan-IV-Data/design_test.txt",sep="",header = F)
 x1_pred <- des_test[,1]
-plot(x1_pred[order(x1_pred)], aps[[1]]$Y_hat[order(x1_pred)], type="l", 
-     xlab = expression(theta[1]), ylab = expression(W[1]))
-
-if(PDF) dev.off()
+plot(x1_pred[order(x1_pred)], aps[[5]]$Y_hat[order(x1_pred)], type="l", 
+     xlab = expression(psi[1]), ylab = expression(gamma[5]))
+if(JPG) dev.off()
