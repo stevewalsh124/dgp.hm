@@ -608,72 +608,91 @@ the $p_\psi$-dimensional input $\psi_j$ and the $n$-dimensional output $\hat{S}_
 function of $x_i = \log_{10}(k_i)$) for $j \in \{1,\ldots,m\}$.
 
 To handle the functional nature of this output, we reformulate the problem using principal
-components (PCs; \textcolor{red}{@Steve - can you add a textbook reference?}).  
-We first center all $\hat{S}_j$ by subtracting $\bar{S} = \frac{1}{111}\sum_{j=1}^{111} \hat{S}_j$, then
-we combine them into an $n\times m$ matrix $\boldsymbol\eta$.  We use principal components to decompose 
-$\boldsymbol\eta = BW^\top$ where $B$ is the $n\times p_\eta$ matrix of basis functions and $W$
-is the $m\times p_\eta$ matrix of basis weights.  Details on this decomposition are 
-reserved for \ref{sec:apdx_basis}.  For the CAMB dataset, $p_\eta=6$; for Mira-Titan, $p_\eta=8$.
-As a visual, the left panel of Figure \ref{fig:mean_PCs_oneW} shows $\bar{S}$ for the Mira-Titan 
-training cosmologies.  The center panel shows the $p_\eta=8$ basis functions.
+components \citep[PCs, e.g.][]{banerjee2014linear}.  
+We first center all $\hat{S}_j$ by subtracting $\bar{S} = \frac{1}{m}\sum_{j=1}^{m} \hat{S}_j$, 
+then we combine them into an $n\times m$ matrix $\boldsymbol\eta$.  We use the first $p_\eta$ 
+principal components to decompose $\boldsymbol\eta = B\Gamma^\top$ where $B$ is the 
+$n\times p_\eta$ matrix of basis functions and $\Gamma$ is the $m\times p_\eta$ matrix of basis weights.  
+Details on this decomposition are reserved for \ref{sec:apdx_basis}. For both the CAMB and Mira-Titan 
+datasets, we set $p_\eta=10$. As a visual, the left panel of Figure \ref{fig:mean_PCs_oneW} shows 
+$\bar{S}$ for the Mira-Titan training cosmologies.  The center panel shows the $p_\eta$ basis functions.
 
 \begin{figure}
     \centering
-    \includegraphics[width=\textwidth]{mean_PCs_oneW.png}
+    \includegraphics[width=\textwidth]{mean_PCs_oneW.jpeg}
     \caption{{\it Left:} The estimated mean trend of the $m=111$ posterior means from 
     the Mira-Titan dataset. {\it Middle:} The $p_\eta$ principal components obtained from 
     the posterior means. {\it Right:} An 
-    illustration of how the weights for the first PC will change as the first 
-    cosmological parameter varies \textcolor{red}{This last plot is wonky because 
-    it was made with only the $N=6$ test cosmologies, not a large uniform or FF design, 
-    Steve can update this}.
-    \textcolor{red}{This figure also needs work.  Axes need to be fixed.  Caption needs re-write.
-    Right panel needs to be redone.  It should look smooth like a GP.  Or else just remove it.}}
+    illustration of how the weights for the fifth PC ($\gamma_5$) will change as the first 
+    cosmological parameter ($\psi_1$) varies.}
     \label{fig:mean_PCs_oneW}
 \end{figure}
 
  
-Let $w_i^{(j)}$ denote the $ij^\textrm{th}$ element of $W$, representing the basis weight for the 
+Let $\gamma_i^{(j)}$ denote the $ij^\textrm{th}$ element of $\Gamma$, representing the basis weight for the 
 $j^\textrm{th}$ cosmology and the $i^\textrm{th}$ PC.
-Conditional on $B$, our training data now consists of scalars $w_i^{(j)}$ as a function of $\psi_j$
+Conditional on $B$, our training data now consists of scalars $\gamma_i^{(j)}$ as a function of $\psi_j$
 for $j \in \{1,\ldots,m\}$ and $i \in \{1,\ldots,p_\eta\}$.  If we can effectively predict these basis weights
-as a function of $\psi$ (i.e., $\hat{w}_i(\psi)$ for $i \in \{1,\ldots,p_\eta\}$), then we may obtain predictions 
+as a function of $\psi$ (i.e., $\hat{\gamma}_i(\psi)$ for $i \in \{1,\ldots,p_\eta\}$), then we may obtain predictions 
 of the power spectrum as
 \[
-\hat{S}(\psi) = \sum_{i=1}^{p_\eta} \hat{w}_i(\psi) B_i,
+\hat{S}(\psi) = \sum_{i=1}^{p_\eta} \hat{\gamma}_i(\psi) B_i,
 \]
 where $B_i$ is the $i^\textrm{th}$ basis function (column) of $B$.
 
-% This is old: switched to SEPIA
-% We assume a powered exponential kernel for the Gaussian process and employ 
-% \texttt{GPfit} to perform a multi-start gradient based search for GP's hyperparameters 
-% \citep{macdonald2015gpfit}. 
-In alignment with \cite{heitmann2009coyote} and \cite{higdon2010estcosmo}, we use 
-GPs to model these principal components' weights. For direct comparison alongside
-\cite{moran2023mira}, we employ a Python implementation of this approach called 
-SEPIA \citep{gattiker2020sepia}. That is, each $w_i(\psi)$ is modeled as a 
-zero-mean Gaussian process with a squared exponential (i.e., Gaussian) covariance function:
-\[
-w_i(\psi) \sim GP\left(0,\ \frac{1}{\lambda_{z_i}} R^{(i)} + \frac{1}{\lambda_{s_i}} I \right),
-\]
-with covariance function
-\[
-R^{(i)}_{uv} = \exp\left(-\sum_{k=1}^{p_\psi} \beta_{ik} (x_{uk} - x_{vk})^2 \right),
-\]
-where $\beta_{ik}$ is the inverse squared lengthscale for the $k$th input dimension, 
-$\lambda_{z_i}$ is the marginal precision for $w_i(\psi)$, and $\lambda_{s_i}$ is the nugget 
-precision (set to zero if no nugget is used).
-\textcolor{red}{(@Steve - there is a lot missing here.  The inputs to the covariance kernel
-here need to be $\psi$.  Are we using a nugget?  If not, just remove it.  How are these parameters
-being estimated?  Make sure this kernel notation matches what we used earlier as neatly as possible.)}
+% SEPIA information:
+% In alignment with \cite{heitmann2009coyote} and \cite{higdon2010estcosmo}, we use 
+% GPs to model these principal components' weights. For direct comparison alongside
+% \cite{moran2023mira}, we employ a Python implementation of this approach called 
+% SEPIA \citep{gattiker2020sepia}. That is, each $\gamma_i(\psi)$ is modeled as a 
+% zero-mean Gaussian process with a squared exponential (i.e., Gaussian) covariance function:
+% \[
+% \gamma_i(\psi) \sim GP\left(0,\ \frac{1}{\lambda_{z_i}} R^{(i)} + \frac{1}{\lambda_{s_i}} I \right),
+% \]
+% with covariance function
+% \[
+% R^{(i)}_{uv} = \exp\left(-\sum_{k=1}^{p_\psi} \beta_{ik} (x_{uk} - x_{vk})^2 \right),
+% \]
+% where $\beta_{ik}$ is the inverse squared lengthscale for the $k$th input dimension, 
+% $\lambda_{z_i}$ is the marginal precision for $\gamma_i(\psi)$, and $\lambda_{s_i}$ is the nugget 
+% precision (set to zero if no nugget is used).
+% \textcolor{red}{(@Steve - The inputs to the covariance kernel
+% here need to be $\psi$.  Are we using a nugget?  If not, just remove it.  How are these parameters
+% being estimated?  Make sure this kernel notation matches what we used earlier as neatly as possible.)}
 
-Using these trained GPs from the PCs, we predict the spectra for each of the $N$ held-out 
-cosmologies for both the CAMB and Mira-Titan datasets. \textcolor{red}{(@Steve - this needs work too.
-Please include the formula for the GP posterior mean, which is how we obtain $\hat{w}_i$.  We never
-had use to include it earlier, but we should use it here.  If you need, you can introduce new matrix/vector
-notation to represent the training data in this scenario.  At this point, you should refer back to the right
-panel of Figure \ref{fig:mean_PCs_oneW} and narrate how this shows the predicted GP mean for $w_1$ (for Mira-Titan)
-as a function of the first cosmological parameter $\psi_1$.)}
+In alignment with \cite{higdon2010estcosmo} and \cite{moran2023mira}, we use 
+GPs to model the principal components' weights. 
+We assume a powered exponential kernel for the Gaussian process and employ 
+\texttt{GPfit} to perform a multi-start gradient based search for GP's hyperparameters 
+\citep{macdonald2015gpfit}. That is, the $i$th vector of PC weights $\gamma_i(\psi)$, 
+$i \in \{1,\ldots,p_\eta\}$, will be modeled as a zero mean GP: 
+$\gamma_i(\psi) \sim \mathrm{GP}(0, \sigma^2R)$, with
+
+\begin{equation*}
+    R_{uv} = \prod_{j=1}^{p_\psi}\exp\left\{-10^{\beta_j}|\psi_{uj}-\psi_{vj}|^\alpha\right\}.
+\end{equation*}
+
+We fix $\alpha=1.95$ and estimate $\sigma^2$ and each $\beta_j$ with $j \in \{1,...,p_\psi\}$, and repeat this
+process for all of the $p_\eta$ PCs. Using these trained GPs from the PCs, we predict the spectra for 
+each of the $N$ held-out cosmologies (such as $\psi^*$) for both the CAMB and Mira-Titan datasets. 
+
+We fix the power parameter $\alpha = 1.95$ and estimate the lengthscale parameters $\beta_1, \ldots, \beta_{p_\psi}$ 
+from the data using maximum likelihood. To obtain the predicted basis weight $\hat{\gamma}_i(\psi^*)$ 
+for a new cosmology $\psi^* \in \mathbb{R}^{p_\psi}$, 
+we use the posterior mean from a zero-mean GP model fit to the training data 
+$\{(\psi_j, \gamma_i^{(j)})\}_{j=1}^m$. Under a zero-mean GP, the posterior mean is given by:
+
+\begin{equation*}
+\hat{\gamma}_i(\psi^*) = r(\psi^*)^\top R^{-1} \boldsymbol{\gamma}_i,
+\end{equation*}
+
+where $\boldsymbol{\gamma}_i = [\gamma_i^{(1)}, \gamma_i^{(2)}, \ldots, \gamma_i^{(m)}]^\top$ is the vector of 
+$m$ observed PC weights for the $i$th component, $R$ is the $m \times m$ correlation matrix between 
+all pairs of training inputs defined above, and $r(\psi^*) \in \mathbb{R}^m$ is the vector of correlations between 
+the test input $\psi^*$ and each training input $\psi_j$. To illustrate, in the right panel of Figure \ref{fig:mean_PCs_oneW}, 
+we show how the predicted GP mean for the weight of the fifth PC ($\gamma_5$) for Mira-Titan 
+varies as a function of the first cosmological parameter $\psi_1$, while the other parameters are fixed at a (scaled)
+midpoint value of 0.5.
 
 \subsection{Predicting Spectra for CAMB}
 \label{subsec:camb_pred}
@@ -994,16 +1013,13 @@ Therefore, we have the result that $S|\bar{Y} \sim \mathcal{N}(\boldsymbol{m}, C
 \section{Details on Basis Decomposition for Predictions}
 \label{sec:apdx_basis}
 
-\textcolor{red}{(@Steve - revise the text so it works for any $m$, not just 111.  
-Also, replace $\Gamma$ with $W$ so it matches the text I revised earlier.)}
-
-Here, we begin with a $n \times m$ matrix composed of $m=111$ posterior means, 
+Here, we begin with a $n \times m$ matrix composed of $m$ posterior means, 
 each of length $n$, denoted by $\boldsymbol\eta$. To facilitate more efficient estimation, 
 we use singular value decomposition \citep[SVD; e.g.,][]{banerjee2014linear}, 
 where $\boldsymbol\eta = UDV^T$; $U$ and $V$ are orthogonal matrices of size $n \times n$ 
 and $m\times m$, respectively. $D$ is a diagonal matrix containing the singular values. 
-For this application, $\boldsymbol\eta$ has rank $r=\text{min}\{m,n\}$ (111 for Mira-Titan, 
-32 for CAMB), which determines the number of non-zero elements in $D$. We find an alternative 
+Here, $\boldsymbol\eta$ has rank $r=\text{min}\{m,n\}$ (for our applications, $r=111$ for Mira-Titan 
+and $r=32$ for CAMB), which determines the number of non-zero elements in $D$. We find an alternative 
 decomposition where $\Sigma$ is a diagonal matrix with the non-zero singular values of 
 $\boldsymbol\eta$, and $U_1$ and $V_1$ are matrices with orthonormal columns of size 
 $n_\eta \times r$ and $m \times r$, respectively. 
