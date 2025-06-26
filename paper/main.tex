@@ -743,16 +743,18 @@ constructed on the same $m=111$ Mira-Titan cosmologies. Cosmic Emu uses a Bayesi
 where the ``true'' spectrum for each cosmology is modeled with a process convolution on Brownian motion. 
 Nonstationarity is permitted through modeling the bandwidth parameter with a process 
 convolution as well; this composition is referred to as a deep process convolution 
-\citep[DPC,][]{moran2023mira}. Cosmic Emu also uses a PC approach to predict power matter 
+\citep[DPC;][]{moran2023mira}. Cosmic Emu also uses a principal components model to predict power matter 
 spectra for held-out cosmologies as a function of $\psi$ \citep{gattiker2020sepia}.
 
 Using our proposed DGP.FCO approach and Cosmic Emu, we obtain two sets of predictions for $\hat{S}_t(\psi_t)$ 
 with $t\in\{1,\ldots,6\}$ indexing the six held-out cosmologies.  In this real-world example, we have
 no ``truth" for the Mira-Titan hold-outs against which to benchmark. In an effort to assess the 
-accuracy of these predictions, we also separately fit the DGP.FCO model on each of these hold outs
-and use the corresponding posterior means as a reference. The individual predictions for each method and 
-cosmology are shown in Figure \ref{fig:plot_pred_1to6}, where the posterior mean is subtracted so that
-predictions lines closer to zero represent a better fit. 
+accuracy of these predictions, we also separately fit our DGP.FCO model on each of these testing cosmologies
+(leveraging the perturbation theory, low resolution runs, and high resolution run to predict the underlying
+power matter spectrum).  Although these predicted ``in-sample'' spectra are not formal ``truths,'' we find them to be
+useful benchmarks for our ``out-of-sample'' predictions.  The individual predictions for each method and 
+held-out cosmology are shown in Figure \ref{fig:plot_pred_1to6}, centered by the in-sample DGP.FCO
+posterior means.  Predictions closer to zero represent a better fit. 
 
 \begin{figure}[!b]
     \centering
@@ -763,18 +765,19 @@ predictions lines closer to zero represent a better fit.
     \label{fig:plot_pred_1to6}
 \end{figure}
 
-From these predictions, we can calculate MSE when treating the trained DGP.FCO predictions as a benchmark. 
-Our DGP.FCO prediction achieves the greatest reduction in MSE in the region where perturbation theory
-and the low-resolution runs are deemed unbiased (see Figure \ref{fig:mse_by_k}). For the region where only 
-the high-resolution run is unbiased, Cosmic Emu generally has a slightly lower average RMSE. Our average MSE 
-is lower at 55\% of $k$ values considered. These results indicate that DGP.FCO competes favorably with the 
-state-of-the-art Cosmic Emu model.
+From these predictions, we can calculate MSE against the in-sample DGP.FCO predictions across the 6
+test cosmologies. 
+Our out-of-sample DGP.FCO + PC prediction achieves the greatest reduction in MSE in the region 
+where perturbation theory and the low-resolution runs are deemed unbiased (see Figure \ref{fig:mse_by_k}). 
+For the region where only the high-resolution run is unbiased, Cosmic Emu has a marginally lower
+MSE. Our MSE is lower at 55\% of $k$ values considered. These results indicate that DGP.FCO 
+competes favorably with the state-of-the-art Cosmic Emu model.
 
 \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{mse_by_k.jpeg}
-    \caption{Average MSE across each of the 6 hold out cosmologies, for each $k$ value. Cosmic Emu 
-    predictions are shown in dotted blue, and DGP.FCO predictions are shown in dashed orange.}
+    \caption{MSE across each of the 6 hold out cosmologies for each $k$ value. Cosmic Emu 
+    performance is shown in dotted blue, and DGP.FCO performance is shown in dashed orange.}
     \label{fig:mse_by_k}
 \end{figure}
 
