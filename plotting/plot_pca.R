@@ -26,8 +26,6 @@ cbcols <- palette.colors(palette = "Okabe-Ito")
 #1 black, 2 orange, 3 skyblue , 4 bluishgreen, 5 yellow 
 #6 blue, 7 vermillion,  8 reddishpurple, 9 gray 
 
-if(PDF) pdf(paste0("compare_pred_",n_pc,"_",pwdExp,".pdf"))
-
 # read in predicted power matter spectra for 6 test models
 etaEmu <- read.csv(paste0("../pca/etaEmu",n_pc,"_",pwdExp,".csv"))
 colnames(etaEmu) <- c("E001", "E002", "E003", "E009", "E010", "M000")
@@ -75,6 +73,7 @@ for(i in 1:6){
   
   # select a mean term to make plots and calculate MSEs
   meanterm = y_avg
+
   
   # Make a plot showing each computer model, along with predictions
   # Average is removed to better visualize the variability and bias
@@ -98,9 +97,9 @@ for(i in 1:6){
         col=cbcols[9], lwd=3)
   # plot our prediction using DGPs and then GPs on weights of PCs (DGP-GPPC)
   lines(log10(k), (etaEmu[,model_name]) - meanterm, 
-        col=cbcols[3], lwd=2, lty=3)
+        col=cbcols[7], lwd=2, lty=3)
   # plot the cosmicEmu prediction
-  lines(log10(k),cosmscrPsz - meanterm, col=cbcols[7], lwd=2, lty=2)
+  lines(log10(k),cosmscrPsz - meanterm, col=cbcols[3], lwd=2, lty=2)
   # # plot the proc convln estimate (trained with model runs)
   # lines(log10(k), convln_pred[which(c(112:116,0)==model),] - meanterm, 
   #       col=cbcols[3],lty=2, lwd=2)
@@ -127,27 +126,88 @@ for(i in 1:6){
 mtext(expression(log[10](k)),side=1,line=2.75,outer=T)
 mtext(paste0("Average RMSE"),side=2,line=2.5,outer=T)
 
-# compare RMSEs for each k value, by method
-par(mfrow=c(1,2),oma=c(4,4,1.5,1),mar=c(0,0,0,0))
+if(JPG) jpeg("../paper/pred_1to6.jpeg", width = 12, height = 4, units = "in", res = 300)
+par(mfrow=c(2,3),oma=c(4,4,1.5,1),mar=c(0,0,0,0))
+# For each of the six test models...
+for(i in 1:6){
+  
+  # Specify testing model name
+  model <- c(112:116,0)[i]
+  if (model <= 111) {
+    model_name <- paste0("M", if (model < 100) {"0"}, if (model < 10) {"0"}, model) 
+  } else {
+    test_names <- c("E001", "E002", "E003", "E009", "E010")
+    model_name <- test_names[model - 111]
+  }
+  
+  # load test file's computer model runs
+  # 1st column is k, 2nd is linear pert theory, 3:18 is low-res, 19 is hi-res
+  file_name <- paste0("../Mira-Titan-IV-Data/Mira-Titan-2021/STEP499/pk_", 
+                      model_name, "_test.dat")
+  pk2 <- read.table(file_name)
+  
+  # load the weighted average from the computer model runs
+  y_avg <- read.csv(paste0("../CosmicEmu_etc/y_avg_",model,".csv"))$x
+  
+  # load the test file's posterior mean (excluded from the training set)
+  post_means_test <- read.csv("../fitting/results/post_means_test.csv")
+  
+  # read in Cosmic Emu prediction, then convert to script P
+  cosmicEmu <- read.csv(paste0("../CosmicEmu_etc/EMU",
+                               i-1,".txt"), sep="", header = F)
+  cosmscrPsz <- scrP(cosmicEmu[,2],k)
+  
+  # select a mean term to make plots and calculate MSEs
+  meanterm = post_means_test[,model_name]#loess(y_avg ~ log10(k), span = 0.1)$fitted
+  
+  # calculate MSEs for each model
+  mses[i,] <- (etaEmu[,model_name] - meanterm)^2
+  mses_emu[i,] <- (cosmscrPsz - meanterm)^2
+  mses_conv_t[i,] <- (as.numeric(convln_pred[i,]) - meanterm)^2
+  mses_dgp_t[i,] <- (post_means_test[,model_name] - meanterm)^2
 
-plot(log10(k),colMeans(sqrt(mses_emu)), type="l", col=cbcols[7], lwd=2,
-     ylim = range(0,colMeans(sqrt(mses)),colMeans(sqrt(mses_emu))))
-lines(log10(k),colMeans(sqrt(mses)), col=cbcols[3], lwd=2)
-legend("topright",legend = c("cosmicEMU","DGP.HM"),
-       col = c(cbcols[7],cbcols[3]), lwd=c(2,2))
-plot(log10(k),colMeans(sqrt(mses_conv_t)), col=cbcols[7], type="l",
-     yaxt="n", ylim = range(0,colMeans(sqrt(mses))))
-lines(log10(k),colMeans(sqrt(mses_dgp_t)), col=cbcols[3])
-legend("topright",legend = c("DPC","DGP.HM"),
-       col = c(cbcols[7],cbcols[3]), lwd=c(1,1))
+  # Make a plot showing each computer model, along with predictions
+  # Average is removed to better visualize the variability and bias
+  # par(mar=c(4,4.5,1,1), mfrow=c(1,1))
+  # plot our dgp.fco prediction
+  plot(log10(k), post_means_test[,model_name] - meanterm, col=cbcols[1], lwd=1,
+       ylim = c(-.07,.07), type="l",
+          xlab=expression(log[10](k)),
+       yaxt=ifelse(i %in% c(2,3,5,6),"n","s"),
+       xaxt=ifelse(i %in% c(1,2,3),"n","s"),
+          ylab='script P')
+  # plot the cosmic emu prediction
+  lines(log10(k), cosmscrPsz - meanterm, col=cbcols[3], lty=3)
+  # # plot the emu train
+  # lines(log10(k), as.numeric(convln_pred[i,]) - meanterm, col=cbcols[6], lty=2, lwd=2)
+  # plot the dgp.fco train
+  lines(log10(k), etaEmu[,model_name] - meanterm, type="l", col = cbcols[7], lty=2)
+  
+  mtext(model_name, line = -2, adj=0.1)
+  
+}
+mtext(expression(log[10](k)),side=1,line=2.75,outer=T)
+mtext(paste0("Deviation from Posterior Mean"),side=2,line=2.5,outer=T)
+if(JPG) dev.off()
 
+# compare MSEs for each k value, by method
+if(JPG) jpeg("../paper/mse_by_k.jpeg", width = 12, height = 4, units = "in", res = 300)
+par(mfrow=c(1,1),oma=c(4,4,1.5,1),mar=c(0,0,0,0))
+# plot cosmic emu col=3 (blue)
+plot(log10(k),colMeans((mses_emu)), type="l", col=cbcols[3], lwd=2, lty=3,
+     ylim = range(0,colMeans((mses)),colMeans((mses_emu))), ylab="")
+# plot our dgp.fco col=7 (orange)
+lines(log10(k),colMeans((mses)), col=cbcols[7], lwd=2, lty=2)
+legend("topright",legend = c("Cosmic Emu","DGP.FCO"),
+       col = c(cbcols[3],cbcols[7]), lty=c(3,2), lwd=c(2,2))
 mtext(expression(log[10](k)),side=1,line=2.5,outer=T)
-mtext(paste0("Average RMSE"),side=2,line=2.5,outer=T)
+mtext(paste0("Average MSE"),side=2,line=2.5,outer=T)
+if(JPG) dev.off()
 
 # Make plot of basis function decomposition
 # run predict.R code below first to load des_test and aps[[1]] 
 # mean_PCs_oneW; hydro_plotting.R has original with GSMF
-load("trained_GP_for_pca.rda")
+load("../pca/trained_GP_for_pca.rda")
 
 # Read in test design
 theta_fixed <- rep(0.5, 7)  # or use colMeans(des_test)[2:8] or something else

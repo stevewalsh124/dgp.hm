@@ -307,7 +307,7 @@ a particular cosmology.  We consider $\bar{Y}$ a noisy realization of $S$.
 Specifically, we assume $\bar{Y}$ is a random realization of a Gaussian 
 process centered at $S$ with some covariance, i.e., 
 $\bar{Y}\mid S \sim \mathrm{GP}(S, \Sigma_\varepsilon)$.  While previous works
-have considered diagonal $\Sigma_\varepsilon$ \citep{moran2024dpc}, we find it
+have considered diagonal $\Sigma_\varepsilon$ \citep{moran2023mira}, we find it
 essential to account for the smoothly varying spatial dependence
 (as visualized in Figure \ref{fig:plot_data}).  We thus specify a dense 
 covariance matrix $\Sigma_\varepsilon$ that simulataneously
@@ -412,7 +412,7 @@ structure to incorporate functional correlated outputs (FCO).
 \label{subsec:sim}
 
 We compare DGP.FCO to competing models with a simulation study where the underlying 
-true curve is known. Following \cite{moran2024dpc}, we consider two test functions 
+true curve is known. Following \cite{moran2023mira}, we consider two test functions 
 defined as
 \[
 \begin{aligned}
@@ -692,49 +692,47 @@ all pairs of training inputs defined above, and $r(\psi^*) \in \mathbb{R}^m$ is 
 the test input $\psi^*$ and each training input $\psi_j$. To illustrate, in the right panel of Figure \ref{fig:mean_PCs_oneW}, 
 we show how the predicted GP mean for the weight of the fifth PC ($\gamma_5$) for Mira-Titan 
 varies as a function of the first cosmological parameter $\psi_1$, while the other parameters are fixed at a (scaled)
-midpoint value of 0.5.
+midpoint value of 0.5. With these estimates $\hat{\gamma}(\psi^*)$, we predict power spectra at 
+held-out cosmologies for both the CAMB and Mira-Titan datasets.
 
 \subsection{Predicting Spectra for CAMB}
 \label{subsec:camb_pred}
 
-\textcolor{red}{(@Steve - we removed the text earlier that talked about the training/testing split in the
-wrong section.  You need to introduce it here now.)} From our $m=32$ posterior means using DGP.FCO, 
-these are input into SEPIA \textcolor{red}{(What does this mean?  Just refer to the equations from the previous
-section for how we obtain predictions.)} in order to predict power spectra
-for the $N=32$ test cosmologies.
+In order to predict power spectra from the CAMB dataset, we split the 64 cosmologies such that $m=32$
+are used to train the DGP.FCO model and the remaining $N=32$ are reserved as hold-out cosmologies for
+prediction. With our $m=32$ posterior means using DGP.FCO, we obtain $N=32$ predicted power spectra from
+the functional prediction model outlined in Section \ref{subsec:pca} for the test cosmologies.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.85\textwidth]{pred_diffs_CAMB.jpeg}
+    \caption{Predictions of power matter spectra for each of the 32 CAMB test cosmologies,
+             after centering and scaling (to accentuate differences). 
+             The true infinite resolution run is shown in black, the prediction 
+             trained on the infinite resolution spectra is in dashed blue, and the prediction from 
+             the DGP.FCO posterior means is in dotted orange.}
+    \label{fig:pca_preds_v_camb}
+\end{figure}
 
 Since CAMB offers the ``true'' infinite-resolution spectra, we have the opportunity to benchmark our
 results in two ways.  First, we may compare our predictions to the true power spectrum for each held-out
 cosmology.  Second, we may leverage the infinite-resolution spectra for the training cosmologies in
 place of our estimated $\hat{S}_j$, to get a sense of the ``best-case" predictions that could originate
-from the PC decomposition.  Figure \ref{fig:pca_preds_v_camb} compares our predictions (DGP.FCO + PC, red)
-to this ``best-case'' prediction (true + PC, blue) and the actual true spectrum for \textcolor{red}{10?} 
-of the held-out test cosmologies.  There is a high level of agreement between the pairs of predictions 
-across cosmologies.  We then compare the mean squared errors of our predictions and the ``best-case'' 
+from the PC decomposition.  Figure \ref{fig:pca_preds_v_camb} compares our predictions (DGP.FCO + PC, orange)
+to these ``best-case'' predictions (true + PC, blue) and the actual true spectra for each of the 32
+held-out test cosmologies.  There is a high level of agreement between the pairs of predictions across 
+cosmologies. 
+We then compare the mean squared errors of our predictions and the ``best-case'' 
 predictions across all held-out cosmologies, with results shown in Figure \ref{fig:mse_camb}.  We again
 see only minimal differences, which we take to indicate that DGP.FCO is offering effective
 estimates of the true spectra for each cosmology.
 
 \begin{figure}
     \centering
-    \includegraphics[width=4in]{preds_diff1_4_8.jpg}
-    \caption{Predictions of power matter spectra for 16 of the CAMB test cosmologies,
-             after centering and scaling. 
-             The true infinite resolution run is shown in black, the prediction 
-             (trained on the infinite resolution) is in blue, and the prediction from 
-             the DGP.FCO posterior mean is in red.
-             \textcolor{red}{(This figure does not look polished.  Make it wider.  I recommend
-             showing 2 rows of 5 plots.  Also, change line types so we are less reliant on color.
-             Missing x-axis label.  No need to number the panels.)}}   
-    \label{fig:pca_preds_v_camb}
-\end{figure}
-
-\begin{figure}
-    \centering
-    \includegraphics[width=3in]{mse_dot.jpg}
+    \includegraphics[width=\textwidth]{mse_dot.jpeg}
     \caption{Comparison of MSE for CAMB predictions, when training with DGP.FCO posterior 
-             means (left), and training with the ``true" infinite-resolution spectra (right).
-             \textcolor{red}{(This figure also needs refinement.)}}   
+             means and training with the ``true" infinite-resolution spectra. The identity line 
+             provides equal MSE values amongst both methods.}   
     \label{fig:mse_camb}
 \end{figure}
 
@@ -742,98 +740,73 @@ estimates of the true spectra for each cosmology.
 \label{subsec:mira_pred}
 
 Here we show prediction results for $N=6$ held-out cosmologies for the Mira-Titan dataset. 
-\textcolor{red}{(This sentence is misleading.... we only offer one figure that shows RMSE.)}
 We compare our method with Cosmic Emu \citep{moran2023mira}, the state-of-the-art emulator 
 constructed on the same $m=111$ Mira-Titan cosmologies. Cosmic Emu uses a Bayesian approach 
 where the ``true'' spectrum for each cosmology is modeled with a process convolution on Brownian motion. 
 Nonstationarity is permitted through modeling the bandwidth parameter with a process 
 convolution as well; this composition is referred to as a deep process convolution 
-\citep{moran2024dpc}.  \textcolor{red}{(Add sentence about hwo Cosmic Emu also uses a PC
-approach to predict power matter spectra for held-out cosmologies as a function of $\psi$.)}
+\citep[DPC,][]{moran2023mira}. Cosmic Emu also uses a PC approach to predict power matter 
+spectra for held-out cosmologies as a function of $\psi$ \citep{gattiker2020sepia}.
 
-%Both Cosmic Emu and DGP.FCO are capable of modeling a true underlying functions based 
-%upon multiple functional realizations, but our approach utilizes DGPs within a 
-%hierarchical model in lieu of deep process convolutions. After obtaining the estimated 
-%smooth spectra from the training cosmologies, each method utilizes GPs in order to 
-%estimate the weights of the PCs from the estimated spectra. Below, we compare prediction 
-%performance between Cosmic Emu and DGP.FCO for the $N=6$ held-out cosmologies. 
-% \textcolor{magenta}{In addition, we can also predict over a large uniform or full 
-% factorial design to obtain estimated main effects for each cosmological parameter in 
-% $\psi$, interactions amongst the $p_\psi=8$ parameters, and decompose the overall 
-% variation by main effects, two-way interactions, and so on. Should this be included?}
+Using our proposed DGP.FCO approach and Cosmic Emu, we obtain two sets of predictions for $\hat{S}_t(\psi_t)$ 
+with $t\in\{1,\ldots,6\}$ indexing the six held-out cosmologies.  In this real-world example, we have
+no ``truth" for the Mira-Titan hold-outs against which to benchmark. In an effort to assess the 
+accuracy of these predictions, we also separately fit the DGP.FCO model on each of these hold outs
+and use the corresponding posterior means as a reference. The individual predictions for each method and 
+cosmology are shown in Figure \ref{fig:plot_pred_1to6}, where the posterior mean is subtracted so that
+predictions lines closer to zero represent a better fit. 
 
-Using our proposed approach and Cosmic Emu, we obtain two sets of predictions for $\hat{S}_t(\psi_t)$ 
-with $t\in\{1,\ldots,6\}$ indexing the six held-out cosmologies.  To summarize and compare
-performance, we evaluate the root mean squared error across $t$ for each wavenumber $x_i = \log_{10}(k_i)$.
-\textcolor{red}{(This is again missing key details.  What is the truth you are using to calculate
-RMSE???)}  The left panel of Figure \ref{fig:plot_rmse_k} shows these RMSEs for the held-out cosmologies.
-Comparisons of the spectrum estimation for training cosmologies are shown as well (using RMSE against 
-the weighted average of observations). \textcolor{red}{(What does this previous sentence mean??? We
-have discussed that the weighted average is not a good estimate of the true spectrum.  So we should not
-be comparing our estimated means to the weighted averages.  I am so confused....)}
-
-For predictions, DGP.FCO achieves the greatest 
-reduction in RMSE in the region where perturbation theory and the low-resolution runs 
-are deemed unbiased. For the region where only the high-resolution run is unbiased, 
-Cosmic Emu has a lower average RMSE. Over all $k$ values and predictions, DGP.FCO has 
-an average RMSE of 0.0089 and Cosmic Emu has an average RMSE of 0.0106. Our RMSE is 
-lower at 56\% of $k$ values considered. The individual predictions for each method and 
-cosmology are shown in Figure \ref{fig:plot_pred_1to6}.  \textcolor{red}{(Why is this figure in the appendix?
-But even more concerning, why are we subtracting the weighted average?  In every other plot we subtract our
-estimated mean.  This switch to using the weighted average in the final subsection is very concerning
-to me.  Also - what is the reader supposed to be gleaning from each of these plots?  Any time you
-have a figure, you need to include narration in the text that explains what the takeaways are.)}
-
-\begin{figure}[ht]
+\begin{figure}[!b]
     \centering
-    \includegraphics[width=6in]{rmse_by_k.png}
-    \caption{{\it Left:} Average RMSE of each prediction method across all $k$ values. 
-             {\it Right:} Average RMSE for each method when using the held-out computer 
-             model runs to train the model. In each case, the truth is assumed to 
-             be the weighted average of the computer model runs.
-             \textcolor{red}{(Shouldn't the average be across the 6 cosmologies?  Saying it 
-             is across the $k$ values is misleading.  Again, I am concerned for us to use
-             the weighted average as the truth.  This seems to go starkly against things
-             that we have said earlier in the paper.)}}
-    \label{fig:plot_rmse_k}
+    \includegraphics[width=\textwidth]{pred_1to6.jpeg}
+    \caption{Results of all six predictions for both methods on the held-out 
+    cosmologies (DGP.FCO posterior mean subtracted). CosmicEMU is dotted blue and DGP.FCO is dashed orange.
+    Closer to the dotted zero line indicates a better fit with the DGP.FCO posterior mean.}
+    \label{fig:plot_pred_1to6}
 \end{figure}
 
-% \begin{figure}[ht]
-%     \centering
-%     \includegraphics[width=6in]{rmse_box.png}
-%     \caption{Boxplot of all RMSEs of each method across all six test models. 
-%.             From top to bottom: box plots for our training method, process 
-%              convolution training method, Cosmic EMU predictions, and our DGP-PC predictions.}
-%     \label{fig:plot_rmse_box}
-% \end{figure}
+From these predictions, we can calculate MSE when treating the trained DGP.FCO predictions as a benchmark. 
+Our DGP.FCO prediction achieves the greatest reduction in MSE in the region where perturbation theory
+and the low-resolution runs are deemed unbiased (see Figure \ref{fig:mse_by_k}). For the region where only 
+the high-resolution run is unbiased, Cosmic Emu generally has a slightly lower average RMSE. Our average MSE 
+is lower at 55\% of $k$ values considered. These results indicate that DGP.FCO competes favorably with the 
+state-of-the-art Cosmic Emu model.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{mse_by_k.jpeg}
+    \caption{Average MSE across each of the 6 hold out cosmologies, for each $k$ value. Cosmic Emu 
+    predictions are shown in dotted blue, and DGP.FCO predictions are shown in dashed orange.}
+    \label{fig:mse_by_k}
+\end{figure}
 
 \section{Discussion}
 \label{sec:disc}
 
-\textcolor{red}{(@Steve - I think you should revisit this section once the rest of the
-revisions are done.  Make sure it aligns with what the paper ends up being.  I am not going
-through this sectio myself at this time.)}
+In this work, we introduce a novel Bayesian hierarchical framework that leverages deep 
+Gaussian processes (DGPs) to model smooth latent functions from correlated functional outputs, 
+such as those arising in cosmological simulations. Our model, DGP.FCO, builds on the compositional nature 
+of DGPs and introduces a third layer to explicitly model correlated observational errors within 
+each spectrum. Through a simulation study, we demonstrate that DGP.FCO offers improved uncertainty 
+quantification compared to existing methods.
 
-In this work, we propose a novel Bayesian hierarchical model which utilizes DGPs 
-in order to estimate a smooth underlying function from correlated functional observations 
-(as cosmological computer model runs). In addition to the compositional form of the DGP, 
-we include a third component modeling the correlated errors for each spectrum. 
-With all smooth spectra estimated from the training set of 111 batches of model runs, 
-we can predict spectra for unobserved cosmologies.
+We apply DGP.FCO to both the CAMB and Mira-Titan datasets, generating posterior mean estimates 
+and predicting at held-out cosmological settings. Across both datasets, DGP.FCO 
+consistently performs well against competitive baselines, showcasing strong generalization and 
+flexibility in complex, functional data regimes.
 
-Multiple avenues for future research emerge: in addition to estimating dark matter 
-power spectra, batches of hydrodynamical simulations exist, and this method could 
-easily be adapted to handle such datasets. Other applications outside of cosmology 
-can be explored, wherever multiple functional outputs exist, perhaps with spatial 
-correlation (for example, observing multiple tropical cyclone forecasts). More detailed 
-sensitivity analyses for the cosmological parameters can be explored to gain insights 
-into how each of these parameters interact, and which are most significant. From a 
-modeling perspective, changes to the model could include modeling the latent layer 
-$W$ jointly across different cosmologies, as well as considering different redshift 
-values other than $z=0$. Leveraging a hybrid model between DGP.FCO and Cosmic Emu 
-may also help to obtain accurate estimates on the lower and higher ends of $k$ values, 
-respectively. Additionally, Bayesian smoothing spline ANOVA (BSS-ANOVA) or other methods 
-could be compared in addition to DGPs. 
+Looking ahead, several avenues for future research arise. Beyond modeling dark matter power 
+spectra, DGP.FCO could be extended to hydrodynamical simulation outputs in cosmology, which 
+often share similar functional structures and error correlations. More broadly, this approach may be 
+applicable in other scientific domains involving structured functional outputs, especially those 
+with spatial or temporal dependencies.
+
+In addition, generating predictions over large cosmological grids opens the door to detailed 
+sensitivity analyses, enabling researchers to disentangle parameter interactions and identify 
+the most influential physical drivers of the spectra. From a modeling standpoint, further 
+developments could include joint modeling of latent layers across cosmologies, and extensions 
+to redshifts beyond $z=0$. Lastly, a hybrid framework combining DGP.FCO with Cosmic Emu, leveraging 
+the strengths of each at different scales of $k$, may yield even more accurate predictions.
 
 \section{Acknowledgments}
 \label{sec:ack}
@@ -978,23 +951,6 @@ C = (\Sigma_\epsilon^{-1} + \Sigma_S^{-1})^{-1}
 \]
 
 Therefore, we have the result that $S|\bar{Y} \sim \mathcal{N}(\boldsymbol{m}, C)$.
-
-
-\section{Mira-Titan Predictive Plots}
-\label{sec:apdx_mira_plots}
-
-% \textcolor{magenta}{Steve The different appendices from dissertation as necessary. 
-% Can also put details of dataset in supplementary material.} 
-% \textcolor{red}{Fix references as necessary, e.g. Moran et al. 2024.}
-
-\begin{figure}[ht]
-    \centering
-    \includegraphics[width=6in]{pred_1to6.png}
-    \caption{Results of all six predictions for both methods on the held-out 
-    cosmologies (weighted average subtracted). CosmicEMU is dashed, DGP.FCO is dotted, 
-    and solid gray lines show results of held-out computer model runs.}
-    \label{fig:plot_pred_1to6}
-\end{figure}
 
 \section{Simulation Study Additional Results}
 \label{sec:apdx_sims}
