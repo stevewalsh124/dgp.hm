@@ -830,7 +830,6 @@ to the results reported within this paper.
 \section{Integrated Likelihood}
 \label{sec:apdx_int_lik}
 Here, we establish that under the model:
-
 $$
 \begin{aligned}
 Y_i|S,W &\sim N\big(S, \Sigma_\varepsilon\big), \quad i \in \{1,\dots, r\}\\
@@ -838,7 +837,6 @@ S|W &\sim N\big(\boldsymbol{\mu}, \Sigma_S(w,w')\big)\\
 W &\sim N\big(\mathbf{0}, \Sigma_W(x,x')\big) \\
 \end{aligned}
 $$
-
 We can obtain the integrated likelihood $p(Y_i|W)=\int p(Y_i|S,W)p(S|W) dS$, 
 with the following calculations:
 $$
@@ -850,7 +848,6 @@ p(Y_i|W) &= \int p(Y_i|S,W)p(S|W)dS \\
 + \boldsymbol{\mu}^T \Sigma_S^{-1} \boldsymbol{\mu} \right]\right)dS \\
 \end{aligned}
 $$
-
 If we focus only on terms containing $S$, we have 
 $$
 \begin{aligned}
@@ -861,7 +858,6 @@ $$
 +\Sigma_S^{-1})^{-1}(\Sigma_S^{-1} \boldsymbol{\mu} + \Sigma_\varepsilon^{-1} Y_i) \right]\right)
 \end{aligned}
 $$
-
 To complete the square, we add and subtract $(\Sigma_S^{-1} \boldsymbol{\mu} 
 + \Sigma_\varepsilon^{-1} Y_i)^T(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})^{-1}
 (\Sigma_S^{-1} \boldsymbol{\mu} + \Sigma_\varepsilon^{-1} Y_i)$, 
@@ -884,7 +880,6 @@ $$
 (Y_i-\boldsymbol{\mu}) \big)\Big)
 \end{aligned}
 $$
-
 With the last equality resulting from the use of the Sherman–Morrison–Woodbury formula, 
 yielding $\big(\Sigma_\varepsilon^{-1} - \Sigma_\varepsilon^{-1}(\Sigma_\varepsilon^{-1}+
 \Sigma_S^{-1})^{-1}\Sigma_\varepsilon^{-1} = (\Sigma_S^{-1} - \Sigma_S^{-1}
@@ -901,47 +896,39 @@ Therefore, we have that $Y_i|W \sim N\big(\boldsymbol{\mu}, \Sigma_S(w,w')+\Sigm
 \label{sec:apdx_SgivenY}
 
 From our model specification, we have the following:
-
 \[
 S \sim \mathcal{N}(\boldsymbol{\mu}, \Sigma_S)
 \]
 \[
 \bar{Y} \mid S \sim \mathcal{N}(S, \Sigma_\epsilon)
 \]
-
 Then, to find the distribution of $S|\bar{Y}$, we apply Bayes' Theorem below, 
 where $\propto$ indicates proportionality:
 \[
 P(S \mid \bar{Y}) \propto P(\bar{Y} \mid S) P(S)
 \]
-
 \[
 \propto \exp\left(-\tfrac{1}{2} (\bar{Y} - S)^T \Sigma_\epsilon^{-1} (\bar{Y} - S) \right) 
 \cdot \exp\left(-\tfrac{1}{2} (S - \boldsymbol{\mu})^T \Sigma_S^{-1} (S - \boldsymbol{\mu})\right)
 \]
-
 \[
 \propto \exp\left(-\tfrac{1}{2} \left[ \bar{Y}^T \Sigma_\epsilon^{-1} \bar{Y} 
 - 2 S^T \Sigma_\epsilon^{-1} \bar{Y} + S^T \Sigma_\epsilon^{-1} S + S^T \Sigma_S^{-1} S 
 - 2 S^T \Sigma_S^{-1} \boldsymbol{\mu} + \boldsymbol{\mu}^T \Sigma_S^{-1} \boldsymbol{\mu} \right] \right)
 \]
-
 \[
 \propto \exp\left( -\tfrac{1}{2} \left[ S^T (\Sigma_\epsilon^{-1} + \Sigma_S^{-1}) S 
 - 2 S^T (\Sigma_\epsilon^{-1} \bar{Y} + \Sigma_S^{-1} \boldsymbol{\mu}) \right] \right)
 \]
-
 From properties of the multivariate normal distribution \citep[e.g., Equation 7.1 of][]{hoff2009first},
 we can establish that the mean and covariance of $S|\bar{Y}$ will be $\boldsymbol{m}$
 and $C$ respectively, where we can solve for these values with:
-
 \[
 C^{-1} = \Sigma_\epsilon^{-1} + \Sigma_S^{-1}
 \]
 \[
 C^{-1} \boldsymbol{m} = \Sigma_\epsilon^{-1} \bar{Y} + \Sigma_S^{-1} \boldsymbol{\mu}
 \]
-
 Then,
 \[
 C = (\Sigma_\epsilon^{-1} + \Sigma_S^{-1})^{-1}
@@ -951,7 +938,6 @@ C = (\Sigma_\epsilon^{-1} + \Sigma_S^{-1})^{-1}
 \left( \Sigma_\epsilon^{-1} \bar{Y} + \Sigma_S^{-1} \boldsymbol{\mu} \right)
 = C \cdot \left( \Sigma_\epsilon^{-1} \bar{Y} + \Sigma_S^{-1} \boldsymbol{\mu} \right)
 \]
-
 Therefore, we have the result that $S|\bar{Y} \sim \mathcal{N}(\boldsymbol{m}, C)$.
 
 \section{Simulation Study Additional Results}
