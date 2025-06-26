@@ -784,19 +784,20 @@ competes favorably with the state-of-the-art Cosmic Emu model.
 \section{Discussion}
 \label{sec:disc}
 
-In this work, we introduce a novel Bayesian hierarchical framework that leverages deep 
+In this work, we introduced a novel Bayesian hierarchical framework that leverages deep 
 Gaussian processes (DGPs) to model smooth latent functions from correlated functional outputs, 
-such as those arising in cosmological simulations. Our model, DGP.FCO, builds on the compositional nature 
-of DGPs and introduces a third layer to explicitly model correlated observational errors within 
-each spectrum. Through a simulation study, we demonstrate that DGP.FCO offers improved uncertainty 
+such as those arising in cosmological simulations. Our model (DGP.FCO) builds on the 
+compositional nature of DGPs and introduces an additional outer layer to explicitly 
+model correlated observational errors within each spectrum. Through a simulation study, 
+we demonstrated that DGP.FCO offers improved uncertainty 
 quantification compared to existing methods.
 
-We apply DGP.FCO to both the CAMB and Mira-Titan datasets, generating posterior mean estimates 
+We applied DGP.FCO to both the CAMB and Mira-Titan datasets, generating posterior mean estimates 
 and predicting at held-out cosmological settings. Across both datasets, DGP.FCO 
 consistently performs well against competitive baselines, showcasing strong generalization and 
 flexibility in complex, functional data regimes.
 
-Looking ahead, several avenues for future research arise. Beyond modeling dark matter power 
+Several avenues for future research arise. Beyond modeling dark matter power 
 spectra, DGP.FCO could be extended to hydrodynamical simulation outputs in cosmology, which 
 often share similar functional structures and error correlations. More broadly, this approach may be 
 applicable in other scientific domains involving structured functional outputs, especially those 
@@ -807,7 +808,7 @@ sensitivity analyses, enabling researchers to disentangle parameter interactions
 the most influential physical drivers of the spectra. From a modeling standpoint, further 
 developments could include joint modeling of latent layers across cosmologies, and extensions 
 to redshifts beyond $z=0$. Lastly, a hybrid framework combining DGP.FCO with Cosmic Emu, leveraging 
-the strengths of each at different scales of $k$, may yield even more accurate predictions.
+the strengths of each at different scales of $k$, may yield more accurate predictions.
 
 \section{Acknowledgments}
 \label{sec:ack}
