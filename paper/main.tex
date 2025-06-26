@@ -600,7 +600,7 @@ from training cosmologies to predict the matter power spectra for held-out cosmo
 
 Let $\psi \in \mathbb{R}^{p_\psi}$ denote the set of parameters that define a particular cosmology.
 Mira-Titan has 8 such parameters as described in Section \ref{sec:data}; CAMB has 6.
-Our goal is to effectively predict the power matter spectrum as a function of $\psi$, i.e. $\hat{S}(\psi)$, 
+Our goal is to effectively predict the power matter spectrum as a function of $\psi$, i.e., $\hat{S}(\psi)$, 
 for a held-out cosmology.  We observe $m$-many training cosmologies and fit our DGP.FCO 
 model (Section \ref{sec:inference}) to each one.  Let $\hat{S}_j$ for $j \in \{1,\ldots,m\}$ denote
 the estimated posterior mean of each training cosmology.  In total, our training data comprises
@@ -608,7 +608,7 @@ the $p_\psi$-dimensional input $\psi_j$ and the $n$-dimensional output $\hat{S}_
 function of $x_i = \log_{10}(k_i)$) for $j \in \{1,\ldots,m\}$.
 
 To handle the functional nature of this output, we reformulate the problem using principal
-components \citep[PCs, e.g.][]{banerjee2014linear}.  
+components \citep[PCs; e.g.,][]{banerjee2014linear}.  
 We first center all $\hat{S}_j$ by subtracting $\bar{S} = \frac{1}{m}\sum_{j=1}^{m} \hat{S}_j$, 
 then we combine them into an $n\times m$ matrix $\boldsymbol\eta$.  We use the first $p_\eta$ 
 principal components to decompose $\boldsymbol\eta = B\Gamma^\top$ where $B$ is the 
@@ -635,9 +635,9 @@ Conditional on $B$, our training data now consists of scalars $\gamma_i^{(j)}$ a
 for $j \in \{1,\ldots,m\}$ and $i \in \{1,\ldots,p_\eta\}$.  If we can effectively predict these basis weights
 as a function of $\psi$ (i.e., $\hat{\gamma}_i(\psi)$ for $i \in \{1,\ldots,p_\eta\}$), then we may obtain predictions 
 of the power spectrum as
-\[
+\begin{equation}\label{eq:spred}
 \hat{S}(\psi) = \sum_{i=1}^{p_\eta} \hat{\gamma}_i(\psi) B_i,
-\]
+\end{equation}
 where $B_i$ is the $i^\textrm{th}$ basis function (column) of $B$.
 
 % SEPIA information:
@@ -661,39 +661,33 @@ where $B_i$ is the $i^\textrm{th}$ basis function (column) of $B$.
 % being estimated?  Make sure this kernel notation matches what we used earlier as neatly as possible.)}
 
 In alignment with \cite{higdon2010estcosmo} and \cite{moran2023mira}, we use 
-GPs to model the principal components' weights. 
-We assume a powered exponential kernel for the Gaussian process and employ 
-\texttt{GPfit} to perform a multi-start gradient based search for GP's hyperparameters 
-\citep{macdonald2015gpfit}. That is, the $i$th vector of PC weights $\gamma_i(\psi)$, 
-$i \in \{1,\ldots,p_\eta\}$, will be modeled as a zero mean GP: 
-$\gamma_i(\psi) \sim \mathrm{GP}(0, \sigma^2R)$, with
-
+GPs with a power exponential kernel to model the principal components' weights. 
+That is, each vector of PC weights $\gamma_i(\psi)$, $i \in \{1,\ldots,p_\eta\}$, 
+will be modeled as a zero mean GP: $\gamma_i(\psi) \sim \mathrm{GP}(0, \sigma^2R)$, with kernel
 \begin{equation*}
-    R_{uv} = \prod_{j=1}^{p_\psi}\exp\left\{-10^{\beta_j}|\psi_{uj}-\psi_{vj}|^\alpha\right\}.
+    R^{u,v} = \prod_{j=1}^{p_\psi}\exp\left(-10^{\beta_j}|\psi_{uj}-\psi_{vj}|^\alpha\right).
 \end{equation*}
-
-We fix $\alpha=1.95$ and estimate $\sigma^2$ and each $\beta_j$ with $j \in \{1,...,p_\psi\}$, and repeat this
-process for all of the $p_\eta$ PCs. Using these trained GPs from the PCs, we predict the spectra for 
-each of the $N$ held-out cosmologies (such as $\psi^*$) for both the CAMB and Mira-Titan datasets. 
-
-We fix the power parameter $\alpha = 1.95$ and estimate the lengthscale parameters $\beta_1, \ldots, \beta_{p_\psi}$ 
-from the data using maximum likelihood. To obtain the predicted basis weight $\hat{\gamma}_i(\psi^*)$ 
-for a new cosmology $\psi^* \in \mathbb{R}^{p_\psi}$, 
-we use the posterior mean from a zero-mean GP model fit to the training data 
-$\{(\psi_j, \gamma_i^{(j)})\}_{j=1}^m$. Under a zero-mean GP, the posterior mean is given by:
+We fix $\alpha=1.95$ and estimate $\sigma^2$ and each lengthscale $\beta_1,\ldots,\beta_{p_\psi}$ 
+with the \texttt{GPfit} {\sf R}-package \citep{macdonald2015gpfit}, which employs multi-start 
+gradient-based maximum likelihood estimation.  We repeat this estimation
+process for all of the $p_\eta$ PCs.  Conditioned on kernel hyperparameters,
+posterior predictions of $\hat{\gamma}_i(\psi^*)$ for a new cosmological parameterization 
+$\psi^* \in \mathbb{R}^{p_\psi}$ follows:
 
 \begin{equation*}
 \hat{\gamma}_i(\psi^*) = r(\psi^*)^\top R^{-1} \boldsymbol{\gamma}_i,
 \end{equation*}
 
-where $\boldsymbol{\gamma}_i = [\gamma_i^{(1)}, \gamma_i^{(2)}, \ldots, \gamma_i^{(m)}]^\top$ is the vector of 
-$m$ observed PC weights for the $i$th component, $R$ is the $m \times m$ correlation matrix between 
-all pairs of training inputs defined above, and $r(\psi^*) \in \mathbb{R}^m$ is the vector of correlations between 
-the test input $\psi^*$ and each training input $\psi_j$. To illustrate, in the right panel of Figure \ref{fig:mean_PCs_oneW}, 
-we show how the predicted GP mean for the weight of the fifth PC ($\gamma_5$) for Mira-Titan 
-varies as a function of the first cosmological parameter $\psi_1$, while the other parameters are fixed at a (scaled)
-midpoint value of 0.5. With these estimates $\hat{\gamma}(\psi^*)$, we predict power spectra at 
-held-out cosmologies for both the CAMB and Mira-Titan datasets.
+where $\boldsymbol{\gamma}_i = [\gamma_i^{(1)}, \gamma_i^{(2)}, \ldots, \gamma_i^{(m)}]^\top$ 
+is the vector of $m$ observed PC weights for the $i^\textrm{th}$ component, 
+$R$ is the $m \times m$ correlation matrix between 
+all pairs of training inputs defined above, and $r(\psi^*) \in \mathbb{R}^m$ is 
+the vector of correlations between the test input $\psi^*$ and each training input 
+$\psi_j$. To illustrate, the right panel of Figure \ref{fig:mean_PCs_oneW} shows
+the predicted weight of the fifth PC ($\gamma_5$) for Mira-Titan as a function 
+of the first cosmological parameter ($\psi_1$), while the other parameters are fixed 
+at their midpoint.  With all estimated PC weights, $\hat{\gamma_i}(\psi^*), i=1,\ldots,p_\eta$, 
+we predict power spectra following Eq.~\ref{eq:spred}.  
 
 \subsection{Predicting Spectra for CAMB}
 \label{subsec:camb_pred}
