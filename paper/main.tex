@@ -692,33 +692,37 @@ we predict power spectra following Eq.~\ref{eq:spred}.
 \subsection{Predicting Spectra for CAMB}
 \label{subsec:camb_pred}
 
-In order to predict power spectra from the CAMB dataset, we split the 64 cosmologies such that $m=32$
-are used to train the DGP.FCO model and the remaining $N=32$ are reserved as hold-out cosmologies for
-prediction. With our $m=32$ posterior means using DGP.FCO, we obtain $N=32$ predicted power spectra from
-the functional prediction model outlined in Section \ref{subsec:pca} for the test cosmologies.
+For the CAMB dataset, we split the 64 available cosmologies such that $m=32$
+are used for training and $N=32$ are reserved as hold-out/test cosmologies for prediction. 
+For each training cosmology, we collect our DGP.FCO predicted spectrum, then conduct the principal
+components model just described to predict $\hat{S}(\psi)$ for each test cosmology.  
 
 \begin{figure}
     \centering
     \includegraphics[width=0.85\textwidth]{pred_diffs_CAMB.jpeg}
     \caption{Predictions of power matter spectra for each of the 32 CAMB test cosmologies,
              after centering and scaling (to accentuate differences). 
-             The true infinite resolution run is shown in black, the prediction 
-             trained on the infinite resolution spectra is in dashed blue, and the prediction from 
-             the DGP.FCO posterior means is in dotted orange.}
+             The true infinite resolution run is shown in black, the PC prediction 
+             trained on the infinite resolution spectra is in dashed blue, and the PC prediction trained
+             on the DGP.FCO posterior means is in dotted orange.}
     \label{fig:pca_preds_v_camb}
 \end{figure}
 
 Since CAMB offers the ``true'' infinite-resolution spectra, we have the opportunity to benchmark our
 results in two ways.  First, we may compare our predictions to the true power spectrum for each held-out
 cosmology.  Second, we may leverage the infinite-resolution spectra for the training cosmologies in
-place of our estimated $\hat{S}_j$, to get a sense of the ``best-case" predictions that could originate
-from the PC decomposition.  Figure \ref{fig:pca_preds_v_camb} compares our predictions (DGP.FCO + PC, orange)
-to these ``best-case'' predictions (true + PC, blue) and the actual true spectra for each of the 32
-held-out test cosmologies.  There is a high level of agreement between the pairs of predictions across 
-cosmologies. 
+place of our estimated $\hat{S}_j$ from our DGP.FCO model, to get a sense of the ``best-case" predictions 
+that could originate from the PC decomposition.  
+Figure \ref{fig:pca_preds_v_camb} compares our predictions (DGP.FCO + PC, dotted orange)
+to these ``best-case'' predictions (true + PC, dashed blue) and the actual true spectra (solid black)
+for each of the 32 held-out test cosmologies.  
+The agreement between our predictions and the ``best-case'' predictions indicates that DGP.FCO is effectively
+capturing the true power matter spectra of the training cosmologies.
+The high level of agreement between the pairs of predictions and the true spectra across cosmologies
+indicates our PC model is providing effective predictions of held-out power spectra.
 We then compare the mean squared errors of our predictions and the ``best-case'' 
 predictions across all held-out cosmologies, with results shown in Figure \ref{fig:mse_camb}.  We again
-see only minimal differences, which we take to indicate that DGP.FCO is offering effective
+see only minimal differences between the two, confirming that DGP.FCO is offering effective
 estimates of the true spectra for each cosmology.
 
 \begin{figure}
