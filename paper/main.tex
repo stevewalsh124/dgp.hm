@@ -32,12 +32,11 @@
 %\doublespacing
 
 \title{Bayesian Deep Gaussian Processes for Correlated Functional Data: \\
-        A Case Study in Cosmological Power Spectra}
+        A Case Study in Cosmological Matter Power Spectra}
 \author{Stephen A. Walsh\thanks{Corresponding author: Division of Natural Sciences, 
         Math and Technology, Elms College, {\tt walshst@elms.edu}} \and 
         Annie S. Booth\thanks{Department of Statistics, Virginia Tech} \and
         David Higdon\footnotemark[2] \and
-        Marco A.R. Ferreira\footnotemark[2] \and
         Jared Clark\footnotemark[2] \and
         Kelly Moran\thanks{Los Alamos National Laboratory} \and
         Katrin Heitmann\thanks{Argonne National Laboratory}}
@@ -96,19 +95,19 @@ of the matter power spectrum, which describes the distribution of matter as a
 function of spatial scale. 
 %It is often represented as a function of wavenumber $k$ (units Mpc$^{-1}$), which is 
 %inversely related to spatial scale. 
-On large scales, power spectrum behave according to linear perturbation 
+On large scales, power spectra behave according to linear perturbation 
 theory \citep{pietroni2008flowing, lesgourgues2009non}.  On smaller scales, nonlinear 
 dynamics require the use of computationally intensive simulations, yielding
 correlated functional data.
 %the Coyote Universe \citep{lawrence2010coyote} and the Mira-Titan Universe \citep{moran2023mira} 
 %are two simulation suites dedicated to this effort.  
 Our overarching goal is to leverage such simulation data to 
-first estimate and then predict underlying power matter spectra for various 
+first estimate and then predict underlying matter power spectra for various 
 cosmological parameterizations.
 
 The Mira-Titan simulation suite \citep{moran2023mira}
 defines ``cosmologies'' according to eight cosmological parameters (more on this
-in Section \ref{sec:data}).  For a particular cosmology, the simulation of the power matter spectrum 
+in Section \ref{sec:data}).  For a particular cosmology, the simulation of the matter power spectrum 
 is rather complex.  Although we presume there exists some true matter spectrum as a function
 of wavenumber, we are not able to directly observe it.  Rather, the simulation returns
 a convoluted patchwork of potential spectra, which vary in fidelity and are only trusted
@@ -118,7 +117,7 @@ matter spectrum.
 
 There are several challenges to estimating the underlying spectrum.  Our model
 must: handle multiple correlated functional observations, offer enough 
-flexibility to accommodate the nonstationarity present in power matter spectra 
+flexibility to accommodate the nonstationarity present in matter power spectra 
 (which vary in smoothness across wavenumbers), provide effective uncertainty
 quantification (UQ), and allow for the incorporation of expert knowledge 
 regarding the wavenumbers over which various outputs are trusted.  To this end, 
@@ -139,16 +138,16 @@ The CAMB model exhibits similar behavior to Mira-Titan but crucially
 provides a ``true" power spectrum for each cosmology.
 
 Our second objective is to leverage simulation data from a limited set of
-cosmologies in order to predict power matter spectra for unobserved cosmologies.
+cosmologies in order to predict matter power spectra for unobserved cosmologies.
 Due to the computationally expensive nature of the Mira-Titan simulation suite
 (one batch of simulations can take multiple weeks to run on a supercomputer),
 it is infeasible to evaluate the simulation for every possible eight-dimensional
 cosmological configuration which may be of interest.  Instead, we desire
 a statistical ``emulator'' or ``surrogate model'' 
 \citep{santner2003design,gramacy2020surrogates} which will provide quick and effective
-predictions of power matter spectra for any cosmological parameterization.
+predictions of matter power spectra for any cosmological parameterization.
 \citet{moran2023mira} provide a state-of-the-art emulator for the Mira-Titan
-simulation suite, which was trained on 117 simulations, and is termed 
+simulation suite, which was trained on 111 simulations, and is termed 
 the ``Cosmic Emu.''\footnote{\url{https://github.com/lanl/CosmicEmu}}
 We leverage the same training data, in conjunction with our Bayesian hierarchical
 DGP model and basis function representations, to train a GP surrogate 
@@ -188,8 +187,9 @@ Bayesian DGP model in a public git repository.\footnote{\url{https://github.com/
 \section{Mira-Titan}
 \label{sec:data}
 
-The Mira-Titan simulation dataset consists of simulated power spectra for 
-117 unique cosmologies. Each of these cosmologies is specified by eight cosmological 
+The Mira-Titan simulation dataset consists of simulated matter power spectra for 
+117 unique cosmologies (111 for training, 6 for testing). 
+Each of these cosmologies is specified by eight cosmological 
 parameters: matter density, baryon density, amplitude of density fluctuations, 
 dimensionless Hubble parameter, spectral index of scalar perturbations,
 dark energy equation of state parameters, and neutrino density. For more details 
@@ -204,12 +204,12 @@ There is an optional ninth parameter, the redshift, which we fix at 0.
 \begin{figure}[ht]
     \centering 
     \includegraphics[width=\linewidth]{plot_data.jpeg}
-    \caption{{\it Left:} The perturbation theory (solid green), low resolution runs (solid grey), 
+    \caption{{\it Left:} The perturbation theory (solid green), low resolution runs (solid gray), 
     and high resolution run  (solid pink) for a particular cosmology. 
     The weighted average of these is shown in dashed orange. Dotted lines at the bottom
     indicate where each data type is deemed approximately unbiased. 
     {\it Middle:} Same as left, but restricted to wavenumber ($k$) values where the low resolution 
-    runs are approximately unbiased.
+    runs are approximately unbiased, i.e., the span of the gray dashed line in the left sub-figure.
     {\it Right:} Same as middle, but with LOESS-smooth weighted average subtracted.}
     \label{fig:plot_data}
 \end{figure}
@@ -277,7 +277,7 @@ effectively inferring the true spectrum.
 
 %We consider a training-testing split with 111 cosmologies used for estimation and 6 
 %cosmologies held out for testing.  Our ultimate objective is to effectively predict
-%the underlying power matter spectra for the held-out cosmologies based on their 
+%the underlying matter power spectra for the held-out cosmologies based on their 
 %8-dimensional input configuration (Section \ref{sec:pred}).  But first, we must 
 %obtain effective estimates of the underlying spectrum for each training 
 %cosmology (Section \ref{sec:hm_fit}). \textcolor{red}{(@Steve - maybe this is a
@@ -302,7 +302,7 @@ for the CAMB suite in Section \ref{subsec:camb}.
 \subsection{Model Specification}
 \label{sec:mod_spec}
 
-Let $S$ represent the true (but unknown) underlying power matter spectrum for
+Let $S$ represent the true (but unknown) underlying matter power spectrum for
 a particular cosmology.  We consider $\bar{Y}$ a noisy realization of $S$.
 Specifically, we assume $\bar{Y}$ is a random realization of a Gaussian 
 process centered at $S$ with some covariance, i.e., 
@@ -381,13 +381,13 @@ generate posterior samples of $W$, using Eq.~(\ref{eq:prior}) for proposal gener
 Eq.~(\ref{eq:likelihood}) for likelihood-based acceptance.  
 For $\theta_S$ and $\theta_W$, after pre-scaling, we adopt the default prior specifications 
 provided in the {\tt deepgp} {\sf R}-package \citep{deepgp}.
-We then integrate Metropolis-Hastings sampling of these parameters in a Gibbs framework 
-with the ESS sampling of $W$ \citep{sauer2023active}.
+We then integrate Metropolis-Hastings sampling of these parameters in a Gibbs (i.e., one parameter 
+at a time updating) framework with the ESS sampling of $W$ \citep{sauer2023active}.
 
 Given burned-in posterior samples $W^{(t)}$ and $\theta_S^{(t)}$
 for $t\in\mathcal{T}$ ($\theta_W^{(t)}$ is only used to sample $W^{(t)}$), 
 we may leverage Bayes' Theorem to obtain the
-posterior distribution of the true power matter spectrum for a particular cosmology as
+posterior distribution of the true matter power spectrum for a particular cosmology as
 \[
 S^{(t)}\mid\bar{Y}, \Sigma_\varepsilon \sim \mathrm{GP}(m^{(t)}, C^{(t)})
 \quad\textrm{where}\quad
@@ -497,7 +497,7 @@ MSE neglects UQ and was comparable across competing methods.
 \subsection{CAMB Estimation}
 \label{subsec:camb}
 
-The CAMB \citep{lewis2011CAMB} dataset contains power spectra based
+The CAMB \citep{lewis2011CAMB} dataset contains matter power spectra based
 on six cosmological parameter settings. It includes sixty-four cosmologies,
 each containing fifteen low-resolution spectra ($y_{l_r}$) and one high-resolution spectrum ($y_h$).
 Each spectrum is observed along the same grid of wavenumbers ($k_i$ for $i=1,\dots,n$). 
@@ -600,7 +600,7 @@ from training cosmologies to predict the matter power spectra for held-out cosmo
 
 Let $\psi \in \mathbb{R}^{p_\psi}$ denote the set of parameters that define a particular cosmology.
 Mira-Titan has 8 such parameters as described in Section \ref{sec:data}; CAMB has 6.
-Our goal is to effectively predict the power matter spectrum as a function of $\psi$, i.e., $\hat{S}(\psi)$, 
+Our goal is to effectively predict the matter power spectrum as a function of $\psi$, i.e., $\hat{S}(\psi)$, 
 for a held-out cosmology.  We observe $m$-many training cosmologies and fit our DGP.FCO 
 model (Section \ref{sec:inference}) to each one.  Let $\hat{S}_j$ for $j \in \{1,\ldots,m\}$ denote
 the estimated posterior mean of each training cosmology.  In total, our training data comprises
@@ -678,6 +678,7 @@ $\psi^* \in \mathbb{R}^{p_\psi}$ follows:
 \hat{\gamma}_i(\psi^*) = r(\psi^*)^\top R^{-1} \boldsymbol{\gamma}_i,
 \end{equation*}
 
+\noindent
 where $\boldsymbol{\gamma}_i = [\gamma_i^{(1)}, \gamma_i^{(2)}, \ldots, \gamma_i^{(m)}]^\top$ 
 is the vector of $m$ observed PC weights for the $i^\textrm{th}$ component, 
 $R$ is the $m \times m$ correlation matrix between 
@@ -700,7 +701,7 @@ components model just described to predict $\hat{S}(\psi)$ for each test cosmolo
 \begin{figure}
     \centering
     \includegraphics[width=0.85\textwidth]{pred_diffs_CAMB.jpeg}
-    \caption{Predictions of power matter spectra for each of the 32 CAMB test cosmologies,
+    \caption{Predictions of matter power spectra for each of the 32 CAMB test cosmologies,
              after centering and scaling (to accentuate differences). 
              The true infinite resolution run is shown in black, the PC prediction 
              trained on the infinite resolution spectra is in dashed blue, and the PC prediction trained
@@ -717,7 +718,7 @@ Figure \ref{fig:pca_preds_v_camb} compares our predictions (DGP.FCO + PC, dotted
 to these ``best-case'' predictions (true + PC, dashed blue) and the actual true spectra (solid black)
 for each of the 32 held-out test cosmologies.  
 The agreement between our predictions and the ``best-case'' predictions indicates that DGP.FCO is effectively
-capturing the true power matter spectra of the training cosmologies.
+capturing the true matter power spectra of the training cosmologies.
 The high level of agreement between the pairs of predictions and the true spectra across cosmologies
 indicates our PC model is providing effective predictions of held-out power spectra.
 We then compare the mean squared errors of our predictions and the ``best-case'' 
@@ -751,7 +752,7 @@ with $t\in\{1,\ldots,6\}$ indexing the six held-out cosmologies.  In this real-w
 no ``truth" for the Mira-Titan hold-outs against which to benchmark. In an effort to assess the 
 accuracy of these predictions, we also separately fit our DGP.FCO model on each of these testing cosmologies
 (leveraging the perturbation theory, low resolution runs, and high resolution run to predict the underlying
-power matter spectrum).  Although these predicted ``in-sample'' spectra are not formal ``truths,'' we find them to be
+matter power spectrum).  Although these predicted ``in-sample'' spectra are not formal ``truths,'' we find them to be
 useful benchmarks for our ``out-of-sample'' predictions.  The individual predictions for each method and 
 held-out cosmology are shown in Figure \ref{fig:plot_pred_1to6}, centered by the in-sample DGP.FCO
 posterior means.  Predictions closer to zero represent a better fit. 
@@ -892,7 +893,7 @@ $[\Sigma_S(\Sigma_\varepsilon^{-1}+\Sigma_S^{-1})\Sigma_\varepsilon](\Sigma_\var
 
 Therefore, we have that $Y_i|W \sim N\big(\boldsymbol{\mu}, \Sigma_S(w,w')+\Sigma_\varepsilon(w,w')\big)$.
 
-\section{Conditional Distribution of Power Spectrum, Given Weighted Average}
+\section{Conditional Distribution of Matter Power Spectrum, Given Weighted Average}
 \label{sec:apdx_SgivenY}
 
 From our model specification, we have the following:
