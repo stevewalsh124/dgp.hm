@@ -67,9 +67,3 @@ pdflatex main.tex
 ```
 You may need to repeat these commands to make sure the reference information is compiled fully.
 
-## Things still on the TO-DO list
-
-* Identify what we should use as the "true" value for the testing cosmologies (right now, we are using the weighted average)
-* Decide on whether to incorporate other competitors besides CosmicEmu (deep process convolutions, loess smoothers?)
-
-
