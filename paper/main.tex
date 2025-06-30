@@ -78,14 +78,6 @@ principal components analysis, Mira-Titan, surrogate, uncertainty quantification
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%To further our understanding of the structure and movement of the universe, 
-%researchers utilize numerous cosmological surveys such as the Sloan Digital Sky 
-%Survey \citep{york2000sloan} and the upcoming Nancy Grace Roman Space Telescope 
-%\citep{Dore2019WFIRST} which are continuously growing in complexity. With these 
-%tools, cosmologists aim to continue learning more about cosmic acceleration 
-%\citep{caldwell2009physics}. To this end, one important ingredient to aid in this 
-%understanding of our universe is the matter power spectrum. 
-
 Computer simulation experiments are invaluable tools in the study of cosmology.
 Experiments that simulate the expansion of the universe are growing
 in prevalence and complexity \citep[e.g.,][]{lawrence2010coyote,derose2019aemulus,
@@ -93,15 +85,10 @@ nishimichi2019dark,angulo2021bacco,euclid2021euclid,moran2023mira}.
 We are particularly motivated by a simulation
 of the matter power spectrum, which describes the distribution of matter as a 
 function of spatial scale. 
-%It is often represented as a function of wavenumber $k$ (units Mpc$^{-1}$), which is 
-%inversely related to spatial scale. 
 On large scales, power spectra behave according to linear perturbation 
 theory \citep{pietroni2008flowing, lesgourgues2009non}.  On smaller scales, nonlinear 
 dynamics require the use of computationally intensive simulations, yielding
-correlated functional data.
-%the Coyote Universe \citep{lawrence2010coyote} and the Mira-Titan Universe \citep{moran2023mira} 
-%are two simulation suites dedicated to this effort.  
-Our overarching goal is to leverage such simulation data to 
+correlated functional data. Our overarching goal is to leverage such simulation data to 
 first estimate and then predict underlying matter power spectra for various 
 cosmological parameterizations.
 
@@ -166,24 +153,6 @@ state-of-the-art competitors on the CAMB and Mira-Titan simulations.
 Section \ref{sec:disc} concludes with a discussion of our contributions and avenues for 
 future research.  We provide reproducible code and an {\sf R} package for our 
 Bayesian DGP model in a public git repository.\footnote{\url{https://github.com/stevewalsh124/dgp.hm}}
-%\textcolor{cyan}{Please note: this repository is currently private until we 
-%hear back regarding permissions for sharing the Mira-Titan data alongside our code.}
-
-%Leveraging these simulations allows for emulation and prediction of the matter power 
-%spectrum under varying specifications for eight different cosmological parameters 
-%(i.e., different cosmologies). Estimating and understanding the influence of these 
-%parameters on cosmic expansion are areas of active research. In addition to 
-%presenting the Mira-Titan simulation suite, \cite{moran2023mira} builds off 
-%of previous spectrum emulation \citep{lawrence2017mira} to provide the final 
-%emulator (Cosmic Emu) based on the full suite of 117 batches of simulations. 
-
-%In this work, we expand on the previous emulation approaches and propose a 
-%novel synthesis of methods to quantify uncertainty and predict matter power 
-%spectra for different cosmologies using deep Gaussian processes (DGPs). In order 
-%to handle multiple realizations of functional output (from the Mira-Titan 
-%simulation suite), we use hierarchical modeling and basis functions within our 
-%DGP framework to accurately estimate and predict power spectra for different 
-%cosmologies. 
 
 \section{Mira-Titan}
 \label{sec:data}
@@ -197,11 +166,7 @@ dark energy equation of state parameters, and neutrino density. For more details
 on these parameters and their effects, see \cite{dodelson2020modern, aghanim2020planck, heitmann2016mira}. 
 Parameter ranges are specified in Table 2.1 of \cite{moran2023mira}.
 There is an optional ninth parameter, the redshift, which we fix at 0.
-%Different simulation output exists for different values of a ninth value, 
-%the redshift; in this work, we fix 
-%this value at 0. 
 
-% after \linewidth:, trim=0 13 0 45, clip=TRUE
 \begin{figure}[ht]
     \centering 
     \includegraphics[width=\linewidth]{plot_data.jpeg}
@@ -277,14 +242,6 @@ expert knowledge regarding the precisions, it fails to account for the spatial
 dependence inherent in the smooth but stochastic spectra, which is pivotal to 
 effectively inferring the smooth spectrum.
 
-%We consider a training-testing split with 111 cosmologies used for estimation and 6 
-%cosmologies held out for testing.  Our ultimate objective is to effectively predict
-%the underlying matter power spectra for the held-out cosmologies based on their 
-%8-dimensional input configuration (Section \ref{sec:pred}).  But first, we must 
-%obtain effective estimates of the underlying spectrum for each training 
-%cosmology (Section \ref{sec:hm_fit}). \textcolor{red}{(@Steve - maybe this is a
-%good place to introduce the ``hold out'' and ``within sample'' terms?)}
-
 \section{Bayesian Hierarchical Modeling for Particular Cosmologies}
 \label{sec:hm_fit}
 
@@ -294,8 +251,7 @@ Let input $X$ represent the vector with elements $x_i = \log_{10}(k_i)$ for $i=1
 In the previous section, we used lowercase $\bar{y}$ to denote 
 the observed weighted average; now, we use $\bar{Y}$ to indicate the corresponding 
 random variable within the statistical model.  
-%Together, $X$ and $\bar{Y}$ comprise the 
-%training data for a particular cosmology. 
+
 $\bar{Y}$ is typically pre-processed
 based on domain expertise.  Pre-processing for Mira-Titan was described in Section 
 \ref{sec:data}; we will detail pre-processing 
@@ -596,7 +552,6 @@ stretching inputs where dynamics are shifting more rapidly for larger $k$ values
 
 Here we detail our second contribution - using the Bayesian DGP.FCO model predictions
 from training cosmologies to predict the matter power spectra for held-out cosmologies. 
-%This is achieved with modeling the weights of different basis functions as GPs.
 
 \subsection{Functional Prediction Model}
 \label{subsec:pca}
@@ -642,26 +597,6 @@ of the power spectrum as
 \hat{S}(\psi) = \sum_{i=1}^{p_\eta} \hat{\gamma}_i(\psi) B_i,
 \end{equation}
 where $B_i$ is the $i^\textrm{th}$ basis function (column) of $B$.
-
-% SEPIA information:
-% In alignment with \cite{heitmann2009coyote} and \cite{higdon2010estcosmo}, we use 
-% GPs to model these principal components' weights. For direct comparison alongside
-% \cite{moran2023mira}, we employ a Python implementation of this approach called 
-% SEPIA \citep{gattiker2020sepia}. That is, each $\gamma_i(\psi)$ is modeled as a 
-% zero-mean Gaussian process with a squared exponential (i.e., Gaussian) covariance function:
-% \[
-% \gamma_i(\psi) \sim GP\left(0,\ \frac{1}{\lambda_{z_i}} R^{(i)} + \frac{1}{\lambda_{s_i}} I \right),
-% \]
-% with covariance function
-% \[
-% R^{(i)}_{uv} = \exp\left(-\sum_{k=1}^{p_\psi} \beta_{ik} (x_{uk} - x_{vk})^2 \right),
-% \]
-% where $\beta_{ik}$ is the inverse squared lengthscale for the $k$th input dimension, 
-% $\lambda_{z_i}$ is the marginal precision for $\gamma_i(\psi)$, and $\lambda_{s_i}$ is the nugget 
-% precision (set to zero if no nugget is used).
-% \textcolor{red}{(@Steve - The inputs to the covariance kernel
-% here need to be $\psi$.  Are we using a nugget?  If not, just remove it.  How are these parameters
-% being estimated?  Make sure this kernel notation matches what we used earlier as neatly as possible.)}
 
 In alignment with \cite{higdon2010estcosmo} and \cite{moran2023mira}, we use 
 GPs with a power exponential kernel to model the principal components' weights. 
