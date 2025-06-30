@@ -219,7 +219,7 @@ ntest <- nrow(des_test)
 aps <- list()
 for (i in 1:n_pc) {
   print(paste("GP pred",i))
-  aps[[i]] = predict(as[[i]],des_test)
+  aps[[i]] = GPfit::predict.GP(as[[i]], des_test)
 }
 
 # create matrix of overall mean to add back on to predictions
