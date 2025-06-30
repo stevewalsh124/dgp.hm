@@ -11,7 +11,8 @@
 library(dgp.hm)
 library(zoo)
 
-JPG = FALSE
+# make JPEGs of plots?
+JPG <- FALSE
 
 # Get model data
 model <- 1
@@ -134,7 +135,7 @@ legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
 if(JPG) jpeg("../paper/plot_fit.jpeg", width = 12, height = 4, units = "in", res = 300)
 
 # Set layout: 2 columns, relative widths 2:1
-layout(matrix(1:2, nrow = 1), widths = c(2, 1))
+layout(matrix(1:2, nrow = 1), widths = c(1, 1))
 
 # Left plot (2/3 width)
 par(mar = c(4, 4, 2, 1))  # set margins: bottom, left, top, right
@@ -165,7 +166,7 @@ if (indx[1] == 0) indx[1] <- 1
 o <- order(fit$x)
 w <- fit$w[o, indx]
 for (i in 1:length(indx)) w[, i] <- w[, i] - mean(w[, i])
-matplot(log10(k), w, type = "l", xlab = "X", ylab = "W", col = "grey", 
+matplot(log10(k), w, type = "l", xlab = expression(paste(log[10](k))), ylab = "W", col = "grey", 
         ylim = c(min(w), max(w)))
 if(JPG) dev.off()
 

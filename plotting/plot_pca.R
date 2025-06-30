@@ -1,6 +1,6 @@
 #############################################################
-# compare predictions: DGP and GP-PC approach vs cosmic emu #
-# also compare estimation method from process convolution.  #
+# Compare predictions: DGP.FCO approach vs Cosmic Emu       #
+# Create plots based on the predictions for each method.    #
 #############################################################
 
 library(dgp.hm)
@@ -177,11 +177,11 @@ for(i in 1:6){
        xaxt=ifelse(i %in% c(1,2,3),"n","s"),
           ylab='script P')
   # plot the cosmic emu prediction
-  lines(log10(k), cosmscrPsz - meanterm, col=cbcols[3], lty=3)
+  lines(log10(k), cosmscrPsz - meanterm, col=cbcols[3], lty=3, lwd=2)
   # # plot the emu train
   # lines(log10(k), as.numeric(convln_pred[i,]) - meanterm, col=cbcols[6], lty=2, lwd=2)
   # plot the dgp.fco train
-  lines(log10(k), etaEmu[,model_name] - meanterm, type="l", col = cbcols[7], lty=2)
+  lines(log10(k), etaEmu[,model_name] - meanterm, type="l", col = cbcols[7], lty=2, lwd=2)
   
   mtext(model_name, line = -2, adj=0.1)
   
@@ -234,10 +234,11 @@ etaEmu <- mean_pred + Reduce('+', eta_preds)
 
 # mean_PCs_oneW.jpeg; PCA picture
 if(JPG) jpeg("../paper/mean_PCs_oneW.jpeg", width = 12, height = 4, units = "in", res = 300)
-par(mfrow=c(1,3), mar=c(4,4,1.8,1))
-plot(log10(k), apply(eta,1,mean),type="l", xlab=expression(log[10](k)), ylab='script P')
-matplot(log10(k), bases, type="l", xlab=expression(log[10](k)), ylab = 'deviation from average')
+par(mfrow=c(1,3), mar=c(4,5,1.8,1))
+plot(log10(k), apply(eta,1,mean),type="l", xlab=expression(log[10](k)), ylab=expression(paste("\U1D4AB","  (k), centered")), cex.axis=1.5, cex.lab=1.5)
+matplot(log10(k), bases, type="l", xlab=expression(log[10](k)), ylab = 'deviation from average', cex.axis=1.5, cex.lab=1.5)
 x1_pred <- des_test[,1]
 plot(x1_pred[order(x1_pred)], aps[[5]]$Y_hat[order(x1_pred)], type="l", 
-     xlab = expression(psi[1]), ylab = expression(gamma[5]))
+     xlab = expression(psi[1]), ylab = expression(gamma[5]), cex.axis=1.5, cex.lab=1.5)
 if(JPG) dev.off()
+

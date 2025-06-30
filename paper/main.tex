@@ -171,7 +171,7 @@ There is an optional ninth parameter, the redshift, which we fix at 0.
     \centering 
     \includegraphics[width=\linewidth]{plot_data.jpeg}
     \caption{{\it Left:} The perturbation theory (solid green), low resolution runs (solid gray), 
-    and high resolution run  (solid pink) for a particular cosmology. 
+    and high resolution run  (solid pink) for the first cosmology. 
     The weighted average of these is shown in dashed orange. Dotted lines at the bottom
     indicate where each data type is deemed approximately unbiased. 
     {\it Middle:} Same as left, but restricted to wavenumber ($k$) values where the low resolution 
@@ -469,8 +469,12 @@ spectrum is notably smoother than its low- and high-resolution counterparts.
 \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{CAMB_fit_model1.jpeg}
-    \caption{Example of DGP.FCO model fit for the first batch of model runs from the CAMB data, 
-             with a LOESS mean of the weighted average subtracted to emphasize details. We can 
+    \caption{{\it Left:} The infinite-resolution (dotted blue), 
+             low-resolution runs (solid gray), and high-resolution run (solid pink) 
+             for the first CAMB cosmology.
+             {\it Right:} Example of DGP.FCO model fit for the first CAMB cosmology, 
+             with a LOESS mean of the 
+             weighted average subtracted to emphasize details. We can 
              compare the orange lines (posterior mean and dotted 95\% credible interval) to the 
              light blue line, representing the infinite-resolution ``true" spectrum.}   
     \label{fig:fit_camb}
@@ -526,8 +530,9 @@ to \cite{walsh2023bayesian} for a more detailed exposition. This yields
 $\Sigma_\varepsilon=\left(\Lambda_p^{-1} + \Sigma_\ell + \Lambda_h^{-1}\right)^{-1}$.
 
 We then fit our DGP.FCO model on each of 111 training cosmologies, reserving 6 cosmologies
-for later hold-out testing.  Figure \ref{fig:plot_fit} 
-visualizes the DGP.FCO fit for the first training cosmology.  We center the plot
+for later hold-out testing.  The left panel of Figure \ref{fig:plot_fit} 
+visualizes the DGP.FCO fit for the first training cosmology (compare this with the left
+panel of Figure \ref{fig:plot_data}).  We center the plot
 by subtracting the posterior mean in order to more easily visualize the credible
 interval bounds.  The UQ from the DGP.FCO model accounts for varying precisions 
 across differing $k$ values, as well as the spatial correlation within the 
@@ -539,7 +544,7 @@ stretching inputs where dynamics are shifting more rapidly for larger $k$ values
 
 \begin{figure}[ht]
     \centering
-    \includegraphics[width=6in]{plot_fit.jpeg}
+    \includegraphics[width=\textwidth]{plot_fit.jpeg}
     \caption{{\it Left:} 95\% credible intervals for the power spectrum of the first Mira-Titan
     cosmology (centered by the predicted posterior mean). Perturbation theory, 
     low-resolution, and high-resolution runs are shown for context. {\it Right:} Posterior draws
@@ -666,7 +671,7 @@ estimates of the true spectra for each cosmology.
 
 \begin{figure}
     \centering
-    \includegraphics[width=\textwidth]{mse_dot.jpeg}
+    \includegraphics[width=2in]{mse_dot.jpeg}
     \caption{Comparison of MSE for CAMB predictions, when training with DGP.FCO posterior 
              means and training with the ``true" infinite-resolution spectra. The identity line 
              provides equal MSE values among both methods.}   
