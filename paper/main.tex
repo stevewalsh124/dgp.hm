@@ -326,8 +326,9 @@ use locations $X$ as the inputs to kernel $\Sigma_S(\cdot)$, yet we have found t
 prior to lack sufficient flexibility for our motivating
 application.  In the Mira-Titan setting, some nonstationarity is expected due to 
 baryonic acoustic oscillations when $-2 \leq \log_{10}(k) \leq -1$. To account 
-for this, we incorporate a latent monotonic Gaussian process \citep[monoGP;][]{barnett2025monotonic},
-which accommodates nonstationarity by warping $X$ via 
+for this, we incorporate a latent Gaussian process that we force to be monotonic
+following \citet[][denoted ``monoGP'']{barnett2025monotonic}.  This latent layer
+accommodates nonstationarity by warping $X$ via 
 $W \sim \mathrm{monoGP}\left(\boldsymbol{\mu}_W, \Sigma_W(X)\right)$.
 $W$ is also an $n$-vector whose entries $w_i$ correspond to warped versions of each $x_i$.
 Again, we set $\boldsymbol{\mu}_W = \mathbf{0}$ without loss of generality (we have
