@@ -53,7 +53,7 @@ Understanding the structure of our universe and the distribution of matter is an
 area of active research.  As cosmological surveys grow in complexity, the development 
 of emulators to efficiently and effectively predict matter power spectra is essential.  
 We are particularly motivated by the Mira-Titan Universe simulation
-suite which, for a specified cosmological parameterization (termed a ``cosmology''), 
+suite that, for a specified cosmological parameterization (termed a ``cosmology''), 
 provides multiple response curves of various fidelities, including correlated 
 functional realizations.  Our objective is two-fold.  First, we estimate 
 the underlying true matter power spectra, with appropriate uncertainty 
@@ -87,8 +87,8 @@ principal components analysis, Mira-Titan, surrogate, uncertainty quantification
 %understanding of our universe is the matter power spectrum. 
 
 Computer simulation experiments are invaluable tools in the study of cosmology.
-Experiments which simulate the expansion of the universe are growing
-in prevalance and complexity \citep[e.g.,][]{lawrence2010coyote,derose2019aemulus,
+Experiments that simulate the expansion of the universe are growing
+in prevalence and complexity \citep[e.g.,][]{lawrence2010coyote,derose2019aemulus,
 nishimichi2019dark,angulo2021bacco,euclid2021euclid,moran2023mira}.  
 We are particularly motivated by a simulation
 of the matter power spectrum, which describes the distribution of matter as a 
@@ -109,11 +109,12 @@ The Mira-Titan simulation suite \citep{moran2023mira}
 defines ``cosmologies'' according to eight cosmological parameters (more on this
 in Section \ref{sec:data}).  For a particular cosmology, the simulation of the matter power spectrum 
 is rather complex.  Although we presume there exists some true matter spectrum as a function
-of wavenumber, we are not able to directly observe it.  Rather, the simulation returns
-a convoluted patchwork of potential spectra, which vary in fidelity and are only trusted
-over particular wavenumber ranges.  Our first objective is to synthesize expert knowledge
-and all available simulation information into an effective estimate of the true underlying
-matter spectrum.  
+of wavenumber, we are not able to directly observe it.  Rather, the simulations for a 
+particular cosmology return a collection of multiple potential spectra, 
+which vary in fidelity and are only trusted over particular wavenumber ranges.  
+Our first objective is to synthesize expert knowledge and all available 
+simulation information into an effective estimate of the true underlying
+matter spectrum.
 
 There are several challenges to estimating the underlying spectrum.  Our model
 must: handle multiple correlated functional observations, offer enough 
@@ -121,7 +122,7 @@ flexibility to accommodate the nonstationarity present in matter power spectra
 (which vary in smoothness across wavenumbers), provide effective uncertainty
 quantification (UQ), and allow for the incorporation of expert knowledge 
 regarding the wavenumbers over which various outputs are trusted.  To this end, 
-we propose a Bayesian hierarchical model which treats functional simulation 
+we propose a Bayesian hierarchical model that treats functional simulation 
 outputs as realizations of a Gaussian process (GP) 
 centered on the true underlying spectrum, which itself is a realization of a deep Gaussian process 
 \citep[DGP;][]{damianou2013deep}.  The GP accommodates correlated observations
@@ -130,9 +131,9 @@ flexibility.  The Bayesian framework facilitates UQ and the incorporation of pri
 knowledge.  While Bayesian DGPs have been previously deployed for computer experiments 
 with scalar responses \citep[e.g.,][]{sauer2023active,sauer2023vecchia,ming2023deep}, 
 they have yet to be extended to correlated functional outputs. 
-To demonstrate the profiency of our Bayesian hierarchical DGP, 
+To demonstrate the proficiency of our Bayesian hierarchical DGP, 
 we benchmark its performance in two unique settings: with synthetic data 
-mimicing the Mira-Titan data and with real-world data from 
+mimicking the Mira-Titan data and with predictions of the linear power spectrum from 
 the Code for Anisotropies in the Microwave Background \citep[CAMB;][]{lewis2011CAMB}.
 The CAMB model exhibits similar behavior to Mira-Titan but crucially
 provides a ``true" power spectrum for each cosmology.
@@ -142,9 +143,9 @@ cosmologies in order to predict matter power spectra for unobserved cosmologies.
 Due to the computationally expensive nature of the Mira-Titan simulation suite
 (one batch of simulations can take multiple weeks to run on a supercomputer),
 it is infeasible to evaluate the simulation for every possible eight-dimensional
-cosmological configuration which may be of interest.  Instead, we desire
+cosmological configuration that may be of interest.  Instead, we desire
 a statistical ``emulator'' or ``surrogate model'' 
-\citep{santner2003design,gramacy2020surrogates} which will provide quick and effective
+\citep{santner2003design,gramacy2020surrogates} that will provide quick and effective
 predictions of matter power spectra for any cosmological parameterization.
 \citet{moran2023mira} provide a state-of-the-art emulator for the Mira-Titan
 simulation suite, which was trained on 111 simulations, and is termed 
@@ -214,11 +215,11 @@ There is an optional ninth parameter, the redshift, which we fix at 0.
     \label{fig:plot_data}
 \end{figure}
 
-For each cosmology, Mira-Titan contains a batch of 18 simulated spectra: an inexpensive 
-spectrum estimated from linear perturbation theory ($y_p$), 16 spectra estimated from 
-low resolution simulations ($y_{\ell_r}, r \in \{1,\dots,16\}$), and one spectrum from 
+For each cosmology, Mira-Titan contains a batch of 18 simulated power spectra: an inexpensive 
+power spectrum estimated from perturbation theory ($y_p$), 16 power spectra estimated from 
+low resolution simulations ($y_{\ell_r}, r \in \{1,\dots,16\}$), and one power spectrum from 
 a high resolution simulation ($y_h$). 
-These spectra are represented as a function of wavenumber $k$.  Following 
+These power spectra are represented as a function of wavenumber $k$.  Following 
 \cite{moran2023mira}, we model on the emulation space 
 $\mathcal{P}(k)=\log_{10}\left(\frac{k^{1.5}P(k)}{2\pi^2}\right)$, where $P(k)$ represents the
 original spectra. Output is available for $n=351$ values of $k$, spanning
@@ -227,17 +228,17 @@ where it is deemed approximately unbiased. For $k<0.04$, only $y_p$ provides a r
 estimate of the true spectra. $y_{\ell_r}$ are valid for $0.04 \leq k \leq 0.25$, and 
 $y_h$ is valid for $0.04 \leq k \leq 5$.  Figure \ref{fig:plot_data} shows an example 
 of the output for a particular cosmology. When we focus on $k$ values where $y_{\ell_r}$ 
-is valid (center panel), the spatially correlated errors of the low-resolution and high-resolution runs 
-becomes apparent.
+is valid (center panel), the spatially correlated fluctuations of the low-resolution and 
+high-resolution runs becomes apparent.
 
 Notice, in the center/right panels of Figure \ref{fig:plot_data}, the precision of each
-low/high resolution spectra increases as $k$ increases.  The curves get progressively 
+low/high resolution spectrum increases as $k$ increases.  The curves get progressively 
 tighter from left to right.  We would like to conveniently wrap this domain-specific 
 knowledge inside our Bayesian framework later.  To this end, \cite{moran2023mira} 
 used the multiple low- and high-resolution spectra across all cosmologies to
 obtain precision estimates, $p_1,\dots, p_n$, across the $n$ 
 wavenumber values using a log-log regression model. A multiplier $c\approx 3.73$ for 
-the increase in precision from the low- to high- resolution output is also 
+the increase in precision from the low- to high-resolution output is also 
 estimated with this regression model. 
 We use these estimates to define three 
 diagonal precision matrices, one for each data type (perturbation theory, 
@@ -270,10 +271,10 @@ $\bar{y}_\ell = \frac{1}{16}\sum_{r=1}^{16} y_{\ell_r}$. In Figure \ref{fig:plot
 the weighted average is shown in dashed orange.  As an estimate of the true
 underlying spectrum, the weighted average fluctuates too drastically.  
 This is especially apparent after subtracting a LOESS-smoothed weighted average (right panel).
-Although the weighted average incorporates all available observatons and 
+Although the weighted average incorporates all available observations and 
 expert knowledge regarding the precisions, it fails to account for the spatial 
 dependence inherent in the smooth but stochastic spectra, which is pivotal to 
-effectively inferring the true spectrum.
+effectively inferring the smooth spectrum.
 
 %We consider a training-testing split with 111 cosmologies used for estimation and 6 
 %cosmologies held out for testing.  Our ultimate objective is to effectively predict
@@ -310,7 +311,7 @@ $\bar{Y}\mid S \sim \mathrm{GP}(S, \Sigma_\varepsilon)$.  While previous works
 have considered diagonal $\Sigma_\varepsilon$ \citep{moran2023mira}, we find it
 essential to account for the smoothly varying spatial dependence
 (as visualized in Figure \ref{fig:plot_data}).  We thus specify a dense 
-covariance matrix $\Sigma_\varepsilon$ that simulataneously
+covariance matrix $\Sigma_\varepsilon$ that simultaneously
 allows us to model the correlated errors and build domain-matter expertise
 into the prior. To this end, we embrace variations of the Mat\'ern kernel 
 \citep{stein1999interpolation}, tailored to each cosmology (more on this in later 
@@ -366,7 +367,7 @@ We first integrate over $S$ to condense our hierarchical model of Eq.~(\ref{eq:d
 \label{eq:likelihood}
 \bar{Y} \mid W, \Sigma_\varepsilon &\sim \textrm{GP}(\mathbf{0}, \Sigma_S(W) + \Sigma_\varepsilon) \\
 \label{eq:prior}
-W &\sim \mathrm{monoGP}\left(\mathbf{0}, \Sigma_W(X)\right)
+W &\sim \mathrm{monoGP}\left(\mathbf{0}, \Sigma_W(X)\right).
 \end{align}
 A detailed derivation, including generalizations for 
 $\boldsymbol{\mu}_S\neq\mathbf{0}$, is provided in \ref{sec:apdx_int_lik}. 
@@ -424,7 +425,7 @@ defined as
 \]
 For additional variation, the values of $m_1, m_2, u_1,$ and $u_2$ are randomly selected from
 $m_1 \sim \text{Uniform}(0.5,1.5)$, $u_1 \sim \text{Uniform}(1.5,2.5)$, and $m_2,u_2 
-\sim \text{Uniform}(0.6,1.4)$. The outputs of $f_1$ and $f_2$ (conditional on $m_1/u_1$ and 
+\sim \text{Uniform}(0.6,1.4)$. The outputs of $f_1$ and $f_2$ (conditional on $m_1,u_1$ and 
 $m_2,u_2$), determine the true function values for each simulation.
       
 For each of the two true functions, we consider two variance settings $A$ and $B$, where 
@@ -444,8 +445,8 @@ $\Sigma_A$ or $\Sigma_B$, where:
 \]
 Observations are kept noise-free, but we do add a jitter of $10^{-8}$ to the diagonal of $\Sigma_A$ 
 and $\Sigma_B$ for numerical stability.  Within $\Sigma_B$, $s$ introduces a degree of
-nonstationarity, more effectively mimicing the behavior of the 
-CAMB and Mira-Titan datasets.  Examples of simulation output are showin in 
+nonstationarity, more effectively mimicking the behavior of the 
+CAMB and Mira-Titan datasets.  Examples of simulation output are shown in 
 Figure \ref{fig:run_sim_f1A_f2B}.
 
 \begin{figure}
@@ -472,7 +473,7 @@ with re-randomized $m_1, u_1, m_2, u_2$.  We consider $r = 5$ and $r = 15$.
 We compare to an out-of-the-box DGP from the 
 \texttt{deepgp} package \citep{sauer2023active}, a heteroskedastic GP from
 the \texttt{hetGP} package \citep{binois2018practical, binois2021hetgp}, and
-a deep process convolution (DPC) approach, which is utilized within Cosmic 
+a deep process convolution (DPC) approach, which is utilized within the Cosmic 
 Emu \citep{moran2023mira}.  These competing methods view the training data as 
 noisy observations with no spatial dependence (i.e., they view the gray dots of
 Figure \ref{fig:run_sim_f1A_f2B} without the lines). In
@@ -575,7 +576,7 @@ across differing $k$ values, as well as the spatial correlation within the
 functional realizations.  To provide insight into the nonstationarity of the power
 matter spectrum, the right panel of Figure \ref{fig:plot_fit} shows burned-in elliptical 
 slice samples of $W$.
-These warpings depart from the identiy mapping around $x\approx-1$, 
+These warpings depart from the identity mapping around $x\approx-1$, 
 stretching inputs where dynamics are shifting more rapidly for larger $k$ values.
 
 \begin{figure}[ht]
@@ -731,7 +732,7 @@ estimates of the true spectra for each cosmology.
     \includegraphics[width=\textwidth]{mse_dot.jpeg}
     \caption{Comparison of MSE for CAMB predictions, when training with DGP.FCO posterior 
              means and training with the ``true" infinite-resolution spectra. The identity line 
-             provides equal MSE values amongst both methods.}   
+             provides equal MSE values among both methods.}   
     \label{fig:mse_camb}
 \end{figure}
 
@@ -761,7 +762,7 @@ posterior means.  Predictions closer to zero represent a better fit.
     \centering
     \includegraphics[width=\textwidth]{pred_1to6.jpeg}
     \caption{Results of all six predictions for both methods on the held-out 
-    cosmologies (DGP.FCO posterior mean subtracted). CosmicEMU is dotted blue and DGP.FCO is dashed orange.
+    cosmologies (DGP.FCO posterior mean subtracted). Cosmic Emu is dotted blue and DGP.FCO is dashed orange.
     Closer to the dotted zero line indicates a better fit with the DGP.FCO posterior mean.}
     \label{fig:plot_pred_1to6}
 \end{figure}
@@ -817,7 +818,9 @@ the strengths of each at different scales of $k$, may yield more accurate predic
 This work was in part supported by the U.S. Department
 of Energy, Office of Science, Office of Advanced Scientific Computing Research, 
 Scientific Discovery through Advanced Computing (SciDAC) program through 
-Grant 420453 ``Enabling Cosmic Discoveries in the Exascale Era."
+Grant 420453 ``Enabling Cosmic Discoveries in the Exascale Era." Work at Argonne 
+National Laboratory was supported under the U.S. Department of Energy 
+contract DE-AC02-06CH11357.
 
 The authors are pleased to acknowledge Advanced Research Computing at Virginia Tech 
 (\url{https://arc.vt.edu/}) as well as the Shared Computing Cluster (SCC) administered
