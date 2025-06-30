@@ -219,14 +219,15 @@ For each cosmology, Mira-Titan contains a batch of 18 simulated power spectra: a
 power spectrum estimated from perturbation theory ($y_p$), 16 power spectra estimated from 
 low resolution simulations ($y_{\ell_r}, r \in \{1,\dots,16\}$), and one power spectrum from 
 a high resolution simulation ($y_h$). 
-These power spectra are represented as a function of wavenumber $k$.  Following 
+These power spectra are represented as a function of wavenumber $k$, expressed in units of 
+$\text{Mpc}^{-1}$ (inverse megaparsecs).  Following 
 \cite{moran2023mira}, we model on the emulation space 
 $\mathcal{P}(k)=\log_{10}\left(\frac{k^{1.5}P(k)}{2\pi^2}\right)$, where $P(k)$ represents the
 original spectra. Output is available for $n=351$ values of $k$, spanning
-$0.001 \leq k \leq 5$, but each data type has unique wavenumber ranges
-where it is deemed approximately unbiased. For $k<0.04$, only $y_p$ provides a reliable 
-estimate of the true spectra. $y_{\ell_r}$ are valid for $0.04 \leq k \leq 0.25$, and 
-$y_h$ is valid for $0.04 \leq k \leq 5$.  Figure \ref{fig:plot_data} shows an example 
+$0.001 \leq k \leq 5 \text{ Mpc}^{-1}$, but each data type has unique wavenumber ranges
+where it is deemed approximately unbiased. For $k<0.04 \text{ Mpc}^{-1}$, only $y_p$ provides a reliable 
+estimate of the true spectra. $y_{\ell_r}$ are valid for $0.04 \leq k \leq 0.25 \text{ Mpc}^{-1}$, and 
+$y_h$ is valid for $0.04 \leq k \leq 5 \text{ Mpc}^{-1}$.  Figure \ref{fig:plot_data} shows an example 
 of the output for a particular cosmology. When we focus on $k$ values where $y_{\ell_r}$ 
 is valid (center panel), the spatially correlated fluctuations of the low-resolution and 
 high-resolution runs becomes apparent.
