@@ -80,11 +80,11 @@ matplot(log10(k_ci), pk_cis, type="l", lty=1,
 # load the wavenumber vals
 kvals <- log10(k_ci)
 
-# Load the posterior means obtained from run_fit.R and collect_means.R
-eta <- read.csv("../fitting/results/CAMB/post_means_int_CAMB.csv")
+# Load the inf-res runs obtained from CAMB simulations
+eta <- read.table('../fitting/results/inf_res_int.txt')[,1:32]
 matplot(log10(k_ci), eta, type="l", lty=1, 
         xlab=expression(log[10](k)), ylab="script P(k)",
-        main = "Interpolated CAMB Posterior Means")
+        main = "Interpolated CAMB Inf-Res Runs")
 if(nruns != ncol(eta)) stop("nruns should equal ncol(eta)")
 
 #################################
@@ -134,5 +134,5 @@ toc <- proc.time()[3]
 toc - tic
 
 save.image(paste0("trained_GP_for_pca_CAMB",
-                  "des1",".rda"))
+                  "infres",".rda"))
 
