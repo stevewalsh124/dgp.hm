@@ -99,7 +99,7 @@ rug_y <- min(y_lo_raw, na.rm=TRUE)
 matplot(k, y_lo_raw, col = cbcols[9],
         type = "l", lty = 1, 
         ylim = range(y_lo_raw, y_pt_raw, y_hi_raw, na.rm = TRUE), lwd = 0.5,
-        xlab = expression(k), cex.axis = 1.25, cex.lab = 1.25,
+        xlab = expression(paste(k,"  (",Mpc^{-1},")")), cex.axis = 1.25, cex.lab = 1.25,
         ylab = expression(P(k)),
         log = "xy")
 lines(k, y_pt_raw, col = cbcols[4])
