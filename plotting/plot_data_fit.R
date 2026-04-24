@@ -1,4 +1,3 @@
-
 ###############################################################################
 # For a particular model, plot the different data types in the emulation space.
 # Additionally, plot the fitted mean and variance alongside the original data.
@@ -43,51 +42,122 @@ Lam_z <- Lam_pt + Lam_lo + Lam_hi
 
 # Get responses
 y_pt <- pk2[, 2]
-y_lo <- as.matrix(pk2[, 3:18]) # each column is one run
+y_lo <- as.matrix(pk2[, 3:18])
 y_hi <- pk2[, 19]
 
-# Transform to emulation space
+# Remove nonsense values BEFORE transforming
+y_pt[y_pt == 1] <- NA
+y_lo[y_lo == 0] <- NA
+y_lo[k > 2] <- NA
+y_hi[y_hi == 0] <- NA
+
+# Save raw versions before transforming
+y_pt_raw <- y_pt
+y_lo_raw <- y_lo
+y_hi_raw <- y_hi
+
+# Transform to emulation space (scrP should handle NAs gracefully)
 y_pt <- scrP(y_pt, k)
 y_lo <- scrP(y_lo, k)
 y_hi <- scrP(y_hi, k)
 
 # Get averages
-y_lra <- rowMeans(y_lo) # low resolution average
-y_avg <- (1 / Lam_z) * (Lam_pt * y_pt + Lam_lo * y_lra + Lam_hi * y_hi)
+y_lra <- rowMeans(y_lo, na.rm = TRUE)
+
+# Weighted average with effective weights
+pt_contrib <- ifelse(is.na(y_pt),  0, Lam_pt * y_pt)
+lo_contrib <- ifelse(is.na(y_lra), 0, Lam_lo * y_lra)
+hi_contrib <- ifelse(is.na(y_hi),  0, Lam_hi * y_hi)
+
+pt_weight  <- ifelse(is.na(y_pt),  0, Lam_pt)
+lo_weight  <- ifelse(is.na(y_lra), 0, Lam_lo)
+hi_weight  <- ifelse(is.na(y_hi),  0, Lam_hi)
+
+Lam_eff <- pt_weight + lo_weight + hi_weight
+y_avg <- (pt_contrib + lo_contrib + hi_contrib) / Lam_eff
 
 # Load in fitted values
 fit <- read.csv(paste0("../fitting/results/dgp_", model_name, ".csv"))
 
-###################
-# Plot data types #
-###################
+########################
+# Plot raw vs script P #
+########################
 
 # color-blind friendly color palette
 cbcols <- palette.colors(palette = "Okabe-Ito")
 #1 black, 2 orange, 3 skyblue , 4 bluishgreen, 5 yellow 
 #6 blue, 7 vermillion,  8 reddishpurple, 9 gray 
 
+if(JPG) jpeg("../paper/plot_raw_vs_scrP.jpeg", width = 8, height = 4, units = "in", res = 300)
+par(mfrow=c(1,2), mar=c(4.6, 4.6, 2.1, 2.1))
+
+# Left panel: raw (non-scrP) data
+y_avg_raw <- (1 / Lam_eff) * (pt_weight * y_pt_raw + 
+                              lo_weight * rowMeans(y_lo_raw, na.rm=TRUE) + 
+                              hi_weight * y_hi_raw)
+rug_y <- min(y_lo_raw, na.rm=TRUE)
+matplot(k, y_lo_raw, col = cbcols[9],
+        type = "l", lty = 1, 
+        ylim = range(y_lo_raw, y_pt_raw, y_hi_raw, na.rm = TRUE), lwd = 0.5,
+        xlab = expression(k), cex.axis = 1.25, cex.lab = 1.25,
+        ylab = expression(P(k)),
+        log = "xy")
+lines(k, y_pt_raw, col = cbcols[4])
+lines(k, y_hi_raw, col = cbcols[8], lwd = 2)
+lines(k[index_list$pert.ix],    rep(rug_y * 10^-0.2, length(index_list$pert.ix)),
+      col = cbcols[4], lty = 3, lwd = 3)
+lines(k[index_list$lowres.ix],  rep(rug_y * 10^-0.3, length(index_list$lowres.ix)),
+      col = cbcols[9], lty = 3, lwd = 3)
+lines(k[index_list$highres.ix], rep(rug_y * 10^-0.4, length(index_list$highres.ix)),
+      col = cbcols[8], lty = 3, lwd = 3)
+# lines(k, y_avg_raw, col = cbcols[2], lty = 2, lwd = 3)
+
+# Right panel: scrP data
+matplot(log10(k), y_lo, col = cbcols[9],
+        type = "l", lty = 1, ylim = range(y_avg, na.rm = TRUE), lwd = 0.5,
+        xlab = expression(paste(log[10](k))), cex.axis = 1.25, cex.lab = 1.25,
+        ylab = expression(paste("\U1D4AB", "  (k)")))
+lines(log10(k), y_pt, col = cbcols[4])
+lines(log10(k), y_hi, col = cbcols[8], lwd = 2)
+lines(log10(k)[index_list$pert.ix], rep(-1,   length(index_list$pert.ix)),
+      col = cbcols[4], lty = 3, lwd = 3)
+lines(log10(k)[index_list$lowres.ix], rep(-1.1, length(index_list$lowres.ix)),
+      col = cbcols[9], lty = 3, lwd = 3)
+lines(log10(k)[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)),
+      col = cbcols[8], lty = 3, lwd = 3)
+# lines(k, y_avg, col = cbcols[2], lty = 2, lwd = 3)
+
+if(JPG) dev.off()
+
+###################
+# Plot data types #
+###################
+
 # plot_data.png
 if(JPG) jpeg("../paper/plot_data.jpeg", width = 12, height = 4, units = "in", res = 300)
 par(mfrow=c(1,3), mar=c( 5.6, 4.6, 4.6, 2.1))
-matplot(log10(k), y_lo, col = cbcols[9], 
-        type = "l", lty = 1, ylim = range(y_avg), lwd=0.5,
-        xlab=expression(log[10](k)), cex.axis=1.75, cex.lab=1.75,
-        ylab=expression(paste("\U1D4AB","  (k)")))
+matplot(log10(k), y_lo, col = cbcols[9],
+        type = "l", lty = 1, ylim = range(y_avg, na.rm = TRUE), lwd = 0.5,
+        xlab = expression(paste(log[10](k))), cex.axis = 1.75, cex.lab = 1.75,
+        ylab = expression(paste("\U1D4AB", "  (k)")))
+
 lines(log10(k), y_pt, col = cbcols[4])
-lines(log10(k), y_hi, col = cbcols[8], lwd=2)
-lines(log10(k)[index_list$pert.ix], rep(-1, length(index_list$pert.ix)), 
-      col = cbcols[4], lty = 3, lwd=3)
-lines(log10(k)[index_list$lowres.ix], rep(-1.1, length(index_list$lowres.ix)), 
-      col = cbcols[9], lty = 3, lwd=3)
-lines(log10(k)[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)), 
-      col = cbcols[8], lty = 3, lwd=3)
+lines(log10(k), y_hi, col = cbcols[8], lwd = 2)
+
+lines(log10(k)[index_list$pert.ix],    rep(-1,   length(index_list$pert.ix)),
+      col = cbcols[4], lty = 3, lwd = 3)
+lines(log10(k)[index_list$lowres.ix],  rep(-1.1, length(index_list$lowres.ix)),
+      col = cbcols[9], lty = 3, lwd = 3)
+lines(log10(k)[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)),
+      col = cbcols[8], lty = 3, lwd = 3)
+
 lines(log10(k), y_avg, col = cbcols[2], lty = 2, lwd = 3)
 
 # Same as first plot, but only for the low-resolution indices
 matplot(log10(k)[index_list$lowres.ix], y_lo[index_list$lowres.ix,], col = cbcols[9], 
-        type = "l", lty = 1, ylim = range(y_avg[index_list$lowres.ix])+c(-.05,.05), lwd=0.5,
-        xlab=expression(log[10](k)), cex.axis=1.75, cex.lab=1.75,
+        type = "l", lty = 1, 
+        ylim = range(y_avg[index_list$lowres.ix], na.rm=TRUE)+c(-.05,.05), lwd=0.5,
+        xlab=expression(paste(log[10](k))), cex.axis=1.75, cex.lab=1.75,
         ylab=expression(paste("\U1D4AB","  (k)")))
 lines(log10(k), y_pt, col = cbcols[4])
 lines(log10(k)[index_list$lowres.ix], y_hi[index_list$lowres.ix], col = cbcols[8], lwd=2)
@@ -96,15 +166,13 @@ lines(log10(k)[index_list$lowres.ix], y_avg[index_list$lowres.ix],
 legend(x = "topleft", legend = c("pert","low res","hi res", "wt avg"),
        col = cbcols[c(4,9,8,2)], lty = c(1,1,1,2), 
        lwd = c(1,0.5,2,3), cex=1.25,
-       inset = 0.01, bty="n"  # nudges legend inward
+       inset = 0.01, bty="n"
 )
-
 loess_fit <- loess(y_avg ~ x, span = 0.15)
-
 # same as first plot, but LOESS-smoothed weighted average subtracted
-matplot(log10(k), y_lo - loess_fit$fitted, col = cbcols[9], xlim = c(log10(0.04),log10(0.25)),
+matplot(log10(k), y_lo - loess_fit$fitted, col = cbcols[9], xlim = c(log10(0.04), log10(0.25)),
         type = "l", lty = 1, ylim = c(-.02, .02), lwd=0.5,
-        xlab=expression(log[10](k)), cex.axis=1.75, cex.lab=1.75,
+        xlab=expression(paste(log[10](k))), cex.axis=1.75, cex.lab=1.75,
         ylab=expression(paste("\U1D4AB","  (k)", ", centered")))
 lines(log10(k), y_pt-loess_fit$fitted, col = cbcols[4])
 lines(log10(k), y_hi-loess_fit$fitted, col = cbcols[8], lwd=2)
@@ -119,14 +187,14 @@ if(JPG) dev.off()
 par(mfrow=c(1,1))
 # Plot model fit alongside data
 matplot(log10(k), y_lo, type="l", lty=1,
-        col=cbcols[9], xlab=expression(log[10](k)), 
-        ylab=expression(paste("\U1D4AB","(k)")),
+        col=cbcols[9], xlab=expression(paste(log[10](k))), 
+        ylab=expression(paste("\U1D4AB","  (k)")),
         ylim=range(fit$ub, fit$lb))
-lines(log10(k),y_pt, col=cbcols[4], lwd=2, lty=3)
-lines(log10(k),y_hi, col=cbcols[8], lwd=2, lty=3)
+lines(log10(k), y_pt, col=cbcols[4], lwd=2, lty=3)
+lines(log10(k), y_hi, col=cbcols[8], lwd=2, lty=3)
 lines(log10(k), y_avg, col=cbcols[2], lwd=2, lty=2)
-lines(log10(k),fit$ub, col=cbcols[1],lty=2,lwd=2)
-lines(log10(k),fit$lb, col=cbcols[1],lty=2,lwd=2)
+lines(log10(k), fit$ub, col=cbcols[1],lty=2,lwd=2)
+lines(log10(k), fit$lb, col=cbcols[1],lty=2,lwd=2)
 legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
        col = cbcols[c(4,9,8,2,1)], lty = c(3,1,3,2,2,2), 
        lwd = c(2,1,2,2,2))
@@ -142,12 +210,12 @@ par(mar = c(4, 4, 2, 1))  # set margins: bottom, left, top, right
 
 # Plot model fit alongside data (posterior mean removed)
 matplot(log10(k), y_lo - fit$m, type="l", lty=3,
-        col=cbcols[9], ylim = c(-.02,.02), xlab=expression(log[10](k)), 
+        col=cbcols[9], ylim = c(-.02,.02), xlab=expression(paste(log[10](k))), 
         ylab=expression(paste("\U1D4AB","  (k), mean removed")))
 abline(h=0, col=cbcols[1],lty=1,lwd=1)
 lines(log10(k), y_pt - fit$m, col=cbcols[4], lwd=3, lty=4)
 lines(log10(k), y_hi - fit$m, col=cbcols[8], lwd=3, lty=2)
-lines(log10(k), y_avg - fit$m , col=cbcols[2], lwd=2, lty=1)
+lines(log10(k), y_avg - fit$m, col=cbcols[2], lwd=2, lty=1)
 lines(log10(k), fit$ub - fit$m, col=cbcols[1],lty=2,lwd=2)
 lines(log10(k), fit$lb - fit$m, col=cbcols[1],lty=2,lwd=2)
 legend(x = "bottomright", legend = c("pert","low res","hi res", "wt avg", "UQ"),
@@ -169,5 +237,3 @@ for (i in 1:length(indx)) w[, i] <- w[, i] - mean(w[, i])
 matplot(log10(k), w, type = "l", xlab = expression(paste(log[10](k))), ylab = "W", col = "grey", 
         ylim = c(min(w), max(w)))
 if(JPG) dev.off()
-
-
