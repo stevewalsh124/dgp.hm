@@ -114,8 +114,8 @@ for(i in 1:6){
   
   # calculate MSEs for each model
   mses[i,] <- (etaEmu[,model_name] - meanterm)^2
-  mses_emu[i,] <- (cosmscrPsz - meanterm)^2
-  mses_conv_t[i,] <- (as.numeric(convln_pred[i,]) - meanterm)^2
+  mses_emu[i,] <- (cosmscrPsz - as.numeric(convln_pred[i,]))^2
+  mses_conv_t[i,] <- (as.numeric(convln_pred[i,]) - as.numeric(convln_pred[i,]))^2
   mses_dgp_t[i,] <- (post_means_test[,model_name] - meanterm)^2
   # cat(c("RMSE_dgp",sqrt(sum((etaEmu[,i] - meanterm)^2))),"\n")
   # cat(c("RMSE_emu",(sqrt(sum((cosmscrPsz - meanterm)^2)))),"\n")
@@ -162,8 +162,8 @@ for(i in 1:6){
   
   # calculate MSEs for each model
   mses[i,] <- (etaEmu[,model_name] - meanterm)^2
-  mses_emu[i,] <- (cosmscrPsz - meanterm)^2
-  mses_conv_t[i,] <- (as.numeric(convln_pred[i,]) - meanterm)^2
+  mses_emu[i,] <- (cosmscrPsz - as.numeric(convln_pred[i,]))^2
+  mses_conv_t[i,] <- (as.numeric(convln_pred[i,]) - as.numeric(convln_pred[i,]))^2
   mses_dgp_t[i,] <- (post_means_test[,model_name] - meanterm)^2
 
   # Make a plot showing each computer model, along with predictions
@@ -177,9 +177,9 @@ for(i in 1:6){
        xaxt=ifelse(i %in% c(1,2,3),"n","s"),
           ylab='script P')
   # plot the cosmic emu prediction
-  lines(log10(k), cosmscrPsz - meanterm, col=cbcols[3], lty=3, lwd=2)
+  lines(log10(k), cosmscrPsz - as.numeric(convln_pred[i,]), col=cbcols[3], lty=3, lwd=2)
   # # plot the emu train
-  # lines(log10(k), as.numeric(convln_pred[i,]) - meanterm, col=cbcols[6], lty=2, lwd=2)
+  # lines(log10(k), as.numeric(convln_pred[i,]) - as.numeric(convln_pred[i,]), col=cbcols[6], lty=2, lwd=2)
   # plot the dgp.fco train
   lines(log10(k), etaEmu[,model_name] - meanterm, type="l", col = cbcols[7], lty=2, lwd=2)
   
