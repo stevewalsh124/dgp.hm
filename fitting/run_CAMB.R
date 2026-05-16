@@ -17,14 +17,23 @@ library(zoo) # rollmean
 library(Matrix) # bdiag
 library(pracma) #interp1
 
+# set seed for reproducibility
+set.seed(1)
+
+# save workspace images to make plots later (in plot_data_CAMB.R)?
+save_image = F
+
 # keep track of coverages for CAMB based on DGP fit
 coverages = c()
 cov_mat = list()
 
+# keep track of MSEs for dgp.hm, standard gp equivalent, and ybar
+# 44 = number of k values, 32 = number of CAMB training cosmologies
+mses_dgp = mses_gp = mses_ybar = matrix(NA, 44, 32)
+
 for(model in 1:32){ # integer 1-32
   print(model)
-  deep = 1 
-  
+
   # Read command line arguments -------------------------------------------------
   
   args <- commandArgs(TRUE)
@@ -33,8 +42,7 @@ for(model in 1:32){ # integer 1-32
       eval(parse(text = args[[i]]))
   
   cat("model is ", model, "\n")
-  if (deep) cat("model is deep \n") else cat("model is NOT deep \n")
-  
+
   # Load data for a particular model --------------------------------------------
   # CAMB has runs 1-64; L1300 & L2100 has runs 1-32
   
@@ -179,26 +187,33 @@ for(model in 1:32){ # integer 1-32
   
   # Run MCMC --------------------------------------------------------------------
   
-  if (deep) {
-    # load in initialized estimates for warping and hyperparameters for fit
-    # w_0 <- read.csv("results/w0.csv")[[1]]
-    # params0 <- read.csv("results/params0.csv")
-    fit <- fit_two_layer_hm(x, y_avg, nmcmc = 5000, #w_0 = w_0, 
-                            # theta_y_0 = params0$theta_y0,
-                            # theta_w_0 = params0$theta_w0,
-                            # settings = list(pmx=T),
-                            Sigma_hat = Sigma_hat)
-  } else {
-    fit <- fit_one_layer_hm(x, y_avg, nmcmc = 5000, Sigma_hat = Sigma_hat)
-  }
+  # fit dgp.fco model with deep GP
+  fit <- fit_two_layer_hm(x, y_avg, nmcmc = 5000, Sigma_hat = Sigma_hat)
+  
+  # fit dgp.fco model without deep layer (standard GP version, so gp.fco)
+  fit_gp <- fit_one_layer_hm(x, y_avg, nmcmc = 5000, Sigma_hat = Sigma_hat)
   
   # plot(fit) # optionally investigate trace plots
   fit <- trim(fit, 1000, 4)
   fit <- est_true(fit)
   
+  fit_gp <- trim(fit_gp, 1000, 4)
+  fit_gp <- est_true(fit_gp)
+  
+  # Compute coverages of the 95% credible intervals for the dgp.fco fits
   coverages[model] = round(mean(fit$lb < y_cambi & fit$ub > y_cambi), 3)
   print(coverages[model])
   cov_mat[[model]] = (fit$lb < y_cambi & fit$ub > y_cambi)
+  
+  # Calculate MSEs for the 3 competing methods (dgp.fco, gp.fco, ybar)
+  mses_dgp[,model] = ((fit$m - y_cambi)^2)
+  print(paste("dgp.fco average MSE:", mean(mses_dgp[,model])))
+  
+  mses_gp[,model] = ((fit_gp$m - y_cambi)^2)
+  print(paste("gp.fco average MSE:", mean(mses_gp[,model])))
+  
+  mses_ybar[,model] = ((y_avg - y_cambi)^2)
+  print(paste("ybar average MSE:", mean(mses_ybar[,model])))
   
   # interpolate posterior mean to a high-resolution uniform grid
   x_unif = seq(0, 1, length.out = 400)
@@ -217,13 +232,16 @@ for(model in 1:32){ # integer 1-32
                         ubb = fit$ubb * sd_y + mean_y, 
                         lbb = fit$lbb * sd_y + mean_y)
   results_int = data.frame(x = x_unif*(b-a)+a, y = fitm_int1*sd_y+mean_y)
-  write.csv(results, paste0("results/CAMB/", ifelse(deep, "dgp", "gp"), "_",
-                            model, "camb.csv"), row.names = FALSE)
-  write.csv(results_int, paste0("results/CAMB/", ifelse(deep, "dgp", "gp"), "_",
-                                model, "postmean_int.csv"), row.names = FALSE)
-  if(model == 1) save(fit, file = "results/CAMB/fit_1camb.rda")
-  if(model == 1) save.image(file = "results/CAMB/fit_1camb_image.rda")
+  write.csv(results, paste0("results/CAMB/dgp_", model, "camb.csv"), row.names = FALSE)
+  write.csv(results_int, paste0("results/CAMB/dgp_", model, "postmean_int.csv"), row.names = FALSE)
+  if(model == 1 & save_image) save.image(file = "results/CAMB/fit_1camb_image.rda")
 }
 
-mean(coverages)
+if(save_image) save.image(file = "results/CAMB/fit_cambs_image.rda")
+
+# Print out results
+paste("dgp.fco coverages:", mean(coverages))
+paste("dgp.fco average MSE:", mean(mses_dgp))
+paste("gp.fco average MSE:", mean(mses_gp))
+paste("y bar average MSE:", mean(mses_ybar))
 # colMeans(matrix(unlist(cov_mat), 4, byrow = T))

@@ -74,3 +74,16 @@ legend("topright", c("inf-res","low-res","hi-res","wt avg","dgp.hm"),
        col=c(cbcols[3],cbcols[9],cbcols[8],cbcols[4],cbcols[2]), lwd=c(2,0.5,1.5,2,2))
 if(JPG) dev.off()
 
+# Read in the image with all CAMB model fit MSEs in order to make boxplots
+load(file = "../fitting/results/CAMB/fit_cambs_image.rda")
+if(JPG) dev.off()
+
+if(JPG) jpeg("../paper/CAMB_MSEs_box.jpeg", width = 4, height = 3, 
+             units = "in", res=300)
+par(mfrow=c(1,1), mar=c(2.5, 4.5, 1, 1) + 0.1)
+
+boxplot(colMeans(mses_dgp), colMeans(mses_gp), colMeans(mses_ybar),
+        names = c("DGP.FCO", "GP.FCO", expression(bar(y))),
+        ylab = "MSE", col = cbcols[c(4,6,7)])
+
+if(JPG) dev.off()
