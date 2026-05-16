@@ -111,6 +111,10 @@ lines(k[index_list$lowres.ix],  rep(rug_y * 10^-0.3, length(index_list$lowres.ix
 lines(k[index_list$highres.ix], rep(rug_y * 10^-0.4, length(index_list$highres.ix)),
       col = cbcols[8], lty = 3, lwd = 3)
 # lines(k, y_avg_raw, col = cbcols[2], lty = 2, lwd = 3)
+legend(x = "topright", legend = c("pert","low res","hi res"),
+       col = cbcols[c(4,9,8)], lty = c(1,1,1), 
+       lwd = c(1,0.5,2), cex=1,
+       inset = 0.01, bty="n")
 
 # Right panel: scrP data
 matplot(log10(k), y_lo, col = cbcols[9],
@@ -134,24 +138,24 @@ if(JPG) dev.off()
 ###################
 
 # plot_data.png
-if(JPG) jpeg("../paper/plot_data.jpeg", width = 12, height = 4, units = "in", res = 300)
-par(mfrow=c(1,3), mar=c( 5.6, 4.6, 4.6, 2.1))
-matplot(log10(k), y_lo, col = cbcols[9],
-        type = "l", lty = 1, ylim = range(y_avg, na.rm = TRUE), lwd = 0.5,
-        xlab = expression(paste(log[10](k))), cex.axis = 1.75, cex.lab = 1.75,
-        ylab = expression(paste("\U1D4AB", "  (k)")))
-
-lines(log10(k), y_pt, col = cbcols[4])
-lines(log10(k), y_hi, col = cbcols[8], lwd = 2)
-
-lines(log10(k)[index_list$pert.ix],    rep(-1,   length(index_list$pert.ix)),
-      col = cbcols[4], lty = 3, lwd = 3)
-lines(log10(k)[index_list$lowres.ix],  rep(-1.1, length(index_list$lowres.ix)),
-      col = cbcols[9], lty = 3, lwd = 3)
-lines(log10(k)[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)),
-      col = cbcols[8], lty = 3, lwd = 3)
-
-lines(log10(k), y_avg, col = cbcols[2], lty = 2, lwd = 3)
+if(JPG) jpeg("../paper/plot_data.jpeg", width = 12, height = 6, units = "in", res = 300)
+par(mfrow=c(1,2), mar=c( 5.6, 4.6, 4.6, 2.1))
+# matplot(log10(k), y_lo, col = cbcols[9],
+#         type = "l", lty = 1, ylim = range(y_avg, na.rm = TRUE), lwd = 0.5,
+#         xlab = expression(paste(log[10](k))), cex.axis = 1.75, cex.lab = 1.75,
+#         ylab = expression(paste("\U1D4AB", "  (k)")))
+# 
+# lines(log10(k), y_pt, col = cbcols[4])
+# lines(log10(k), y_hi, col = cbcols[8], lwd = 2)
+# 
+# lines(log10(k)[index_list$pert.ix],    rep(-1,   length(index_list$pert.ix)),
+#       col = cbcols[4], lty = 3, lwd = 3)
+# lines(log10(k)[index_list$lowres.ix],  rep(-1.1, length(index_list$lowres.ix)),
+#       col = cbcols[9], lty = 3, lwd = 3)
+# lines(log10(k)[index_list$highres.ix], rep(-1.2, length(index_list$highres.ix)),
+#       col = cbcols[8], lty = 3, lwd = 3)
+# 
+# lines(log10(k), y_avg, col = cbcols[2], lty = 2, lwd = 3)
 
 # Same as first plot, but only for the low-resolution indices
 matplot(log10(k)[index_list$lowres.ix], y_lo[index_list$lowres.ix,], col = cbcols[9], 
