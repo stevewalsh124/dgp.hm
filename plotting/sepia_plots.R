@@ -97,7 +97,7 @@ llim <- -3.5; ulim <- 3.5
 # Predictive plot: DGP.FCO-trained vs inf-res-trained, compared to actual inf-res #
 ###################################################################################
 
-if(JPG) jpeg("../paper/pred_diffs_CAMB.jpeg", width = 12, height = 4, units = "in", res=300)
+if(JPG) jpeg("../paper/pred_diffs_CAMB.jpeg", width = 12, height = 6, units = "in", res=300)
 
 par(mfrow=c(4,8),
     mar=c(0,0,0,0),
