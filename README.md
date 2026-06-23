@@ -2,7 +2,7 @@
 
 This repository contains work on Bayesian hierarchical models for cosmology data using deep Gaussian processes and principal components analysis.
 
-Maintainers: Steve Walsh (<walshst@elms.edu>) and Annie Booth (<annie_booth@ncsu.edu>)
+Maintainers: Steve Walsh (<walshst@elms.edu>) and Annie Booth (<annie_booth@vt.edu>)
 
 ## Data Description 
 
@@ -47,7 +47,7 @@ A summary of this repository's folder structure is provided below.
 * `dgp.hm`: contains the `dgp.hm` R package which is used for fitting the hierarchical models
 * `fitting`: contains R scripts and results for fitting the Bayesian hierarchical models
 * `paper`: contains files for the writing of our journal article
-* ` pca`: contains R scripts and results for fitting the PCA models
+* `pca`: contains R scripts and results for fitting the PCA models
 * `plotting`: contains R scripts to generate relevant plots (for all steps above)
 
 ## Helpful Package Installation and Terminal Commands
