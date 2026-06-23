@@ -26,7 +26,7 @@ The modeling process is conducted in stages as follows:
 
 1. First, download and install the `dgp.hm` R package which is stored in the `dgp.hm` folder.  Terminal commands are provided below.
 
-2. We fit a Bayesian hierarchical model (GP or DGP) to each individual cosmology and store the predicted means and variances.  This requires reading in the cosmology data, calculating a weighted average, scaling the precisions accordingly, estimating a covariance for the low resolution runs, and building this into a complete block covariance matrix.  For DGP models, we run one cosmology for a lot of MCMC iterations (in the `fitting/initialize.R` script) and use these burned-in values to initialize the other cosmologies.  Codes for fitting the models are in the `fitting/run_fit.R` script.  This script makes use of the `dgp.hm` R package which is stored in the like-named folder.  Results are stored in the `fitting/results` folder.
+2. We fit a Bayesian hierarchical model (GP or DGP) to each individual cosmology and store the predicted means and variances.  This requires reading in the cosmology data, calculating a weighted average, scaling the precisions accordingly, estimating a covariance for the low resolution runs, and building this into a complete block covariance matrix.  Codes for fitting these Bayesian MCMC models are in the `fitting/run_fit.R` script.  This script makes use of the `dgp.hm` R package which is stored in the like-named folder.  Results are stored in the `fitting/results` folder.
 
 3. We collect just the posterior predicted means (`fitting/collect_means.R`) and save them in two separate csv files, one for training (`fitting/results/post_means_train.csv`) and one for testing (`fitting/results/post_means_test.csv`).
 
@@ -50,7 +50,12 @@ A summary of this repository's folder structure is provided below.
 * ` pca`: contains R scripts and results for fitting the PCA models
 * `plotting`: contains R scripts to generate relevant plots (for all steps above)
 
-## Helpful Terminal Commands
+## Helpful Package Installation and Terminal Commands
+
+The `dgp.hm` package relies on `deepgp` version 1.1.3; please ensure you have that version with a command like
+```
+remotes::install_version("deepgp", version = "1.1.3", repos = "https://cloud.r-project.org")
+```
 
 To install the `dgp.hm` R package, run
 ```

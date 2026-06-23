@@ -12,6 +12,8 @@ License: LGPL
 Encoding: UTF-8
 NeedsCompilation: yes
 Imports:
-    deepgp,
+    deepgp (== 1.1.3),
     mvtnorm
+Remotes:
+    cran/deepgp@1.1.3
 RoxygenNote: 7.3.2

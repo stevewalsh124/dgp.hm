@@ -87,7 +87,7 @@ y_lra <- rowMeans(y_lo)
 # in Walsh dissertation: 3.7.1 Appendix E: Derivations
 y_avg <- (1 / Lam_z) * (Lam_pt * y_pt + Lam_lo * y_lra + Lam_hi * y_hi)
 write.csv(y_avg, file = paste0("../CosmicEmu_etc/y_avg_",model,".csv"),
-          row.names = F)
+          row.names = FALSE)
 
 # Scale the responses
 mean_y <- mean(y_avg)
